@@ -1,0 +1,210 @@
+import React, { useState } from 'react'
+
+const registeredStudents = [
+  { id: 1, name: 'Ananya Sharma', course: 'Full-Stack Development', status: 'Active', enrollDate: '2024-01-10' },
+  { id: 2, name: 'Rahul Verma', course: 'Data Science', status: 'Active', enrollDate: '2024-01-08' },
+  { id: 3, name: 'Priya Patel', course: 'React Development', status: 'Completed', enrollDate: '2023-11-15' },
+]
+
+const partnerCourses = [
+  { id: 1, title: 'Full-Stack Web Development', students: 45, completionRate: 78 },
+  { id: 2, title: 'Data Science Foundations', students: 32, completionRate: 82 },
+  { id: 3, title: 'Cloud Computing', students: 28, completionRate: 71 },
+]
+
+export default function CollegeDashboard() {
+  const [activeTab, setActiveTab] = useState('students')
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <section className="bg-white border-b border-gray-200">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-2xl font-bold text-gray-900">College Dashboard</h1>
+          <p className="mt-2 text-gray-600">Manage registered students, partner courses, and view reports</p>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Sidebar Navigation */}
+          <div className="lg:col-span-1">
+            <nav className="space-y-2">
+              <button
+                onClick={() => setActiveTab('students')}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'students'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Registered Students
+              </button>
+              <button
+                onClick={() => setActiveTab('courses')}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'courses'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Partner Courses
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'reports'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Reports
+              </button>
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {activeTab === 'students' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Registered Students</h2>
+                  <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
+                    Export List
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {registeredStudents.map((student) => (
+                    <div key={student.id} className="p-5 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                            <span className="text-lg font-bold text-primary-700">
+                              {student.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900">{student.name}</h3>
+                            <p className="text-sm text-gray-600">{student.course}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Enrolled on {new Date(student.enrollDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          student.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {student.status}
+                        </span>
+                      </div>
+                      <button className="text-sm text-primary-700 hover:text-primary-800 font-medium">
+                        View Details →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'courses' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Partner Courses</h2>
+                <div className="space-y-4">
+                  {partnerCourses.map((course) => (
+                    <div key={course.id} className="p-5 rounded-lg border border-gray-200">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-bold text-gray-900 mb-2">{course.title}</h3>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Students Enrolled: </span>
+                              <span className="font-semibold text-gray-900">{course.students}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Completion Rate: </span>
+                              <span className="font-semibold text-gray-900">{course.completionRate}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-gray-600">Completion Progress</span>
+                          <span className="font-semibold text-gray-900">{course.completionRate}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-primary-600 h-2 rounded-full"
+                            style={{ width: `${course.completionRate}%` }}
+                          />
+                        </div>
+                      </div>
+                      <button className="text-sm text-primary-700 hover:text-primary-800 font-medium">
+                        View Course Details →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'reports' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Reports & Analytics</h2>
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  <div className="p-6 rounded-lg border border-gray-200 bg-primary-50">
+                    <div className="text-3xl font-bold text-primary-700 mb-2">105</div>
+                    <div className="text-sm font-medium text-gray-700">Total Students</div>
+                  </div>
+                  <div className="p-6 rounded-lg border border-gray-200 bg-primary-50">
+                    <div className="text-3xl font-bold text-primary-700 mb-2">78%</div>
+                    <div className="text-sm font-medium text-gray-700">Average Completion Rate</div>
+                  </div>
+                  <div className="p-6 rounded-lg border border-gray-200 bg-primary-50">
+                    <div className="text-3xl font-bold text-primary-700 mb-2">45</div>
+                    <div className="text-sm font-medium text-gray-700">Certificates Issued</div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-5 rounded-lg border border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-3">Monthly Enrollment Report</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Download detailed enrollment and progress reports for your college.
+                    </p>
+                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
+                      Download Report
+                    </button>
+                  </div>
+
+                  <div className="p-5 rounded-lg border border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-3">Placement Report</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      View placement statistics and success rates of your students.
+                    </p>
+                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
+                      View Placement Stats
+                    </button>
+                  </div>
+
+                  <div className="p-5 rounded-lg border border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-3">Course Performance Report</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Analyze course completion rates and student performance metrics.
+                    </p>
+                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
+                      Generate Report
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
+
