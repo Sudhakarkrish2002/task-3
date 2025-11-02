@@ -26,33 +26,42 @@ export default function EmployerDashboard() {
             <nav className="space-y-2">
               <button
                 onClick={() => setActiveTab('post-job')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'post-job'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                Post Job
+                <span className="relative z-10">Post Job</span>
+                {activeTab === 'post-job' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('applicants')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'applicants'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                View Applicants
+                <span className="relative z-10">View Applicants</span>
+                {activeTab === 'applicants' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'profile'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                Company Profile
+                <span className="relative z-10">Company Profile</span>
+                {activeTab === 'profile' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
             </nav>
           </div>
@@ -116,9 +125,10 @@ export default function EmployerDashboard() {
                   </div>
                   <button
                     type="submit"
-                    className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold hover:bg-primary-700"
+                    className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
                   >
-                    Post Job
+                    <span className="relative z-10">Post Job</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </form>
               </div>
@@ -156,11 +166,13 @@ export default function EmployerDashboard() {
                         </span>
                       </div>
                       <div className="flex gap-3">
-                        <button className="flex-1 rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
-                          View Resume
+                        <button className="flex-1 rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                          <span className="relative z-10">View Resume</span>
+                          <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                         </button>
-                        <button className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 text-sm font-semibold hover:bg-gray-50">
-                          Schedule Interview
+                        <button className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-gray-50 hover:shadow-xl hover:shadow-gray-400/20 relative overflow-hidden">
+                          <span className="relative z-10">Schedule Interview</span>
+                          <span className="absolute inset-0 bg-linear-to-br from-gray-50 to-gray-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                         </button>
                       </div>
                     </div>
@@ -227,8 +239,9 @@ export default function EmployerDashboard() {
                     />
                   </div>
 
-                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold hover:bg-primary-700">
-                    Update Profile
+                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                    <span className="relative z-10">Update Profile</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
               </div>

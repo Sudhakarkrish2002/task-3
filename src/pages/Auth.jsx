@@ -71,7 +71,7 @@ export default function Auth() {
       {/* Header */}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          <h1 className="text-3xl sm:text-4xl pt-15 font-bold text-gray-900">
             Login or Create Your Account
           </h1>
           <p className="mt-4 text-lg text-gray-600">
@@ -86,33 +86,42 @@ export default function Auth() {
           <div className="flex flex-wrap gap-3 mb-8 border-b border-gray-200 pb-4">
             <button
               onClick={() => setActiveTab('student')}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 activeTab === 'student'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
               }`}
             >
-              Student Login
+              <span className="relative z-10">Student Login</span>
+              {activeTab === 'student' && (
+                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('employer')}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 activeTab === 'employer'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
               }`}
             >
-              Employer Login
+              <span className="relative z-10">Employer Login</span>
+              {activeTab === 'employer' && (
+                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('college')}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 activeTab === 'college'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
               }`}
             >
-              College Login
+              <span className="relative z-10">College Login</span>
+              {activeTab === 'college' && (
+                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+              )}
             </button>
           </div>
 
@@ -120,23 +129,29 @@ export default function Auth() {
           <div className="flex gap-4 mb-8">
             <button
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 isLogin
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
               }`}
             >
-              Login
+              <span className="relative z-10">Login</span>
+              {isLogin && (
+                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+              )}
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-colors ${
+              className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 !isLogin
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
               }`}
             >
-              Register as {getTabLabel(activeTab)}
+              <span className="relative z-10">Register as {getTabLabel(activeTab)}</span>
+              {!isLogin && (
+                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+              )}
             </button>
           </div>
 
@@ -191,9 +206,10 @@ export default function Auth() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold hover:bg-primary-700 transition-colors mt-6"
+                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6"
                 >
-                  Login as {getTabLabel(activeTab)}
+                  <span className="relative z-10">Login as {getTabLabel(activeTab)}</span>
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                 </button>
               </form>
             </div>
@@ -342,9 +358,10 @@ export default function Auth() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold hover:bg-primary-700 transition-colors mt-6"
+                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6"
                 >
-                  Create {getTabLabel(activeTab)} Account
+                  <span className="relative z-10">Create {getTabLabel(activeTab)} Account</span>
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                 </button>
               </form>
             </div>

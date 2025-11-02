@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 
 export default function Employers() {
@@ -47,12 +46,19 @@ export default function Employers() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+      <section className="relative pt-16 border-b border-primary-200 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/Assets/banner-employers.jpeg)'
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-linear-to-r from-primary-900/75 to-primary-700/60"></div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
             Hire Directly from Our Talent Pool
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-white/95 drop-shadow-md">
             Connect with skilled, industry-ready professionals and find your next great hire
           </p>
         </div>
@@ -375,9 +381,10 @@ export default function Employers() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold hover:bg-primary-700 transition-colors"
+                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
                 >
-                  Submit Registration & Post
+                  <span className="relative z-10">Submit Registration & Post</span>
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                 </button>
               </form>
             </div>
@@ -385,43 +392,132 @@ export default function Employers() {
         </div>
       </section>
 
-      {/* Companies Who Hired */}
+      {/* Companies Who Hired Through Our Platform */}
       <section className="py-12 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Companies Who Hired Through Our Platform</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Companies Who Hired Through Our Platform</h2>
             <p className="text-gray-600">Join hundreds of leading companies in finding the best talent</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {partnerCompanies.map((company) => (
-              <div
-                key={company.name}
-                className="flex h-28 items-center justify-center rounded-xl border-2 border-gray-200 bg-white hover:border-primary-400 hover:shadow-lg transition-all cursor-pointer group p-4"
-              >
-                <div className="text-center w-full">
+          {/* Row 1 - Scroll Left */}
+          <div className="partner-scroll-container mb-4">
+            <div className="partner-scroll-content scroll-left">
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
                   <img
-                    src={`https://logo.clearbit.com/${company.domain}`}
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
                     alt={company.name}
-                    className="h-14 w-auto mx-auto object-contain opacity-75 group-hover:opacity-100 transition-opacity"
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
                     onError={(e) => {
-                      // Fallback to text if logo fails to load
                       e.target.style.display = 'none'
-                      const fallback = e.target.nextSibling
-                      if (fallback) {
-                        fallback.style.display = 'block'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
                       }
                     }}
                   />
-                  <div className="text-xs font-bold text-gray-800 group-hover:text-primary-700 transition-colors hidden mt-2">
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
                     {company.name}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 - Scroll Right */}
+          <div className="partner-scroll-container">
+            <div className="partner-scroll-content scroll-right">
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
     </main>
   )
 }

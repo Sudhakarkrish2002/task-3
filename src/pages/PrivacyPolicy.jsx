@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-3">1. Introduction</h2>
               <p className="mb-3 leading-relaxed">
-                Kiwistron Edutech ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
+                KiwisEdutech ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
                 explains how we collect, use, disclose, and safeguard your information when you use our platform. 
                 Please read this policy carefully to understand our practices regarding your data.
               </p>
@@ -120,7 +120,7 @@ export default function PrivacyPolicy() {
                 <li><strong>Withdraw Consent:</strong> Withdraw consent for data processing where applicable</li>
               </ul>
               <p className="mb-3 leading-relaxed">
-                To exercise these rights, please contact us at privacy@kiwistronedutech.com
+                To exercise these rights, please contact us at privacy@kiwisedutech.com
               </p>
             </section>
 
@@ -167,9 +167,9 @@ export default function PrivacyPolicy() {
                 If you have any questions about this Privacy Policy, please contact us:
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="mb-1"><strong>Email:</strong> privacy@kiwistronedutech.com</p>
+                <p className="mb-1"><strong>Email:</strong> privacy@kiwisedutech.com</p>
                 <p className="mb-1"><strong>Phone:</strong> +91 98765 43210</p>
-                <p className="mb-1"><strong>Data Protection Officer:</strong> dpo@kiwistronedutech.com</p>
+                <p className="mb-1"><strong>Data Protection Officer:</strong> dpo@kiwisedutech.com</p>
                 <p><strong>Address:</strong> 123 Education Street, Tech Park Area, Bangalore - 560001, Karnataka, India</p>
               </div>
             </section>

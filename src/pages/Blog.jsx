@@ -110,7 +110,7 @@ export default function Blog() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
+      <section className="bg-linear-to-br from-primary-50 to-white border-b border-primary-200 pt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
             Insights, Tips & Industry News
@@ -129,13 +129,16 @@ export default function Blog() {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   selectedCategory === category
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)]'
+                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/30'
                 }`}
               >
-                {category}
+                {selectedCategory === category && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
+                <span className="relative z-10">{category}</span>
               </button>
             ))}
           </div>
@@ -160,7 +163,7 @@ export default function Blog() {
                   className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                 >
                   {/* Article Image Placeholder */}
-                  <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                  <div className="h-48 bg-linear-to-br from-primary-100 to-primary-200 flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-4xl mb-2">📄</div>
                       <div className="text-xs font-semibold text-primary-700 uppercase tracking-wide">
@@ -198,7 +201,7 @@ export default function Blog() {
                           <div className="text-xs text-gray-500">{formatDate(article.date)}</div>
                         </div>
                       </div>
-                      <button className="text-primary-700 hover:text-primary-800 font-medium text-sm">
+                      <button className="text-primary-700 hover:text-primary-800 font-medium text-sm transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block">
                         Read More →
                       </button>
                     </div>

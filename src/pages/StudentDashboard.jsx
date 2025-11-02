@@ -36,43 +36,55 @@ export default function StudentDashboard() {
             <nav className="space-y-2">
               <button
                 onClick={() => setActiveTab('courses')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'courses'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                My Courses
+                <span className="relative z-10">My Courses</span>
+                {activeTab === 'courses' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('certificates')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'certificates'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                My Certificates
+                <span className="relative z-10">My Certificates</span>
+                {activeTab === 'certificates' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('internships')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'internships'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                My Internships
+                <span className="relative z-10">My Internships</span>
+                {activeTab === 'internships' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'profile'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                Profile
+                <span className="relative z-10">Profile</span>
+                {activeTab === 'profile' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
             </nav>
           </div>
@@ -107,7 +119,7 @@ export default function StudentDashboard() {
                           />
                         </div>
                       </div>
-                      <button className="mt-3 text-sm text-primary-700 hover:text-primary-800 font-medium">
+                      <button className="mt-3 text-sm text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block">
                         Continue Learning →
                       </button>
                     </div>
@@ -134,8 +146,9 @@ export default function StudentDashboard() {
                           </svg>
                         </div>
                       </div>
-                      <button className="w-full rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
-                        Download Certificate
+                      <button className="w-full rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                        <span className="relative z-10">Download Certificate</span>
+                        <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                       </button>
                     </div>
                   ))}
@@ -169,7 +182,7 @@ export default function StudentDashboard() {
                         )}
                       </div>
                       {internship.status === 'Active' && (
-                        <button className="text-sm text-primary-700 hover:text-primary-800 font-medium">
+                        <button className="text-sm text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block">
                           View Details →
                         </button>
                       )}
@@ -228,8 +241,9 @@ export default function StudentDashboard() {
                     </div>
                   </div>
 
-                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold hover:bg-primary-700">
-                    Update Profile
+                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                    <span className="relative z-10">Update Profile</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
               </div>

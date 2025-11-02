@@ -111,7 +111,7 @@ export default function Internships() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
+      <section className="bg-linear-to-br from-primary-50 to-white border-b border-primary-200 pt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
             Internships to Launch Your Career
@@ -264,8 +264,9 @@ export default function Internships() {
                   <div className="text-xs text-gray-500">
                     {internship.applicants} applicants
                   </div>
-                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold hover:bg-primary-700 transition-all shadow-md hover:shadow-lg">
-                    Apply Now
+                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                    <span className="relative z-10">Apply Now</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
               </div>

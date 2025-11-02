@@ -110,12 +110,19 @@ export default function Courses() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+      <section className="relative pt-16 border-b border-primary-200 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/Assets/banner-courses.jpeg)'
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-900/75 to-primary-700/60"></div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
             Our Courses – Upskill, Certify, Get Hired
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-white/95 drop-shadow-md">
             Choose from our wide range of industry-relevant courses designed to transform your career
           </p>
         </div>
@@ -254,8 +261,9 @@ export default function Courses() {
                   </div>
 
                   {/* Enroll Button - Prominent */}
-                  <button className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold hover:bg-primary-700 transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02]">
-                    Enroll Now
+                  <button className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                    <span className="relative z-10">Enroll Now</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
               ))}

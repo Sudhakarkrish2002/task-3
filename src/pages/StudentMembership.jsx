@@ -88,7 +88,7 @@ export default function StudentMembership() {
       {/* Header */}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          <h1 className="text-3xl sm:text-4xl pt-15 font-bold text-gray-900">
             Become a Student Member
           </h1>
           <p className="mt-4 text-lg text-gray-600">
@@ -141,13 +141,16 @@ export default function StudentMembership() {
                 </ul>
                 <button
                   onClick={() => setFormData({ ...formData, membershipTier: tier.tier })}
-                  className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-colors ${
+                  className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                     tier.popular
-                      ? 'bg-primary-600 text-white hover:bg-primary-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)]'
+                      : 'bg-gray-100 text-gray-900 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/30'
                   }`}
                 >
-                  Select {tier.tier}
+                  {tier.popular && (
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                  )}
+                  <span className="relative z-10">Select {tier.tier}</span>
                 </button>
               </div>
             ))}
@@ -346,9 +349,10 @@ export default function StudentMembership() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold hover:bg-primary-700 transition-colors mt-6"
+                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6"
                 >
-                  {formData.membershipTier === 'Free' ? 'Register for Free Membership' : 'Proceed to Payment'}
+                  <span className="relative z-10">{formData.membershipTier === 'Free' ? 'Register for Free Membership' : 'Proceed to Payment'}</span>
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                 </button>
               </form>
             </div>

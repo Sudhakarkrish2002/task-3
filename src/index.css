@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary Brand Colors - Professional Indigo/Blue */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
-  --color-primary-950: #1e1b4b;
+  /* Primary Brand Colors - Light Purple/Lavender (Matching KiwisEdutech Logo) */
+  --color-primary-50: #faf5ff;
+  --color-primary-100: #f3e8ff;
+  --color-primary-200: #e9d5ff;
+  --color-primary-300: #d8b4fe;
+  --color-primary-400: #c084fc;
+  --color-primary-500: #a855f7;
+  --color-primary-600: #9333ea;
+  --color-primary-700: #7e22ce;
+  --color-primary-800: #6b21a8;
+  --color-primary-900: #581c87;
+  --color-primary-950: #3b0764;
 
   /* Font Family - Professional Sans-serif */
   --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -46,4 +46,94 @@ body {
   font-weight: var(--font-weight-normal);
   line-height: 1.6;
   color: #1f2937;
+}
+
+/* Partner Companies Scrolling Animation */
+@keyframes scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.scroll-left {
+  animation: scroll-left 90s linear infinite;
+}
+
+.scroll-right {
+  transform: translateX(-50%);
+  animation: scroll-right 90s linear infinite;
+}
+
+.partner-scroll-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  transform: translateZ(0);
+}
+
+.partner-scroll-content {
+  display: inline-flex;
+  gap: 1.5rem;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Partner Colleges Vertical Scrolling Animation */
+@keyframes scroll-down {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes scroll-up {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.college-scroll-down {
+  animation: scroll-down 30s linear infinite;
+  transform: translate3d(0, 0, 0);
+}
+
+.college-scroll-up {
+  transform: translate3d(0, -50%, 0);
+  animation: scroll-up 30s linear infinite;
+}
+
+.college-scroll-container {
+  overflow: hidden;
+  position: relative;
+  height: 400px;
+  perspective: 1000px;
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.college-scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: layout style paint;
 }

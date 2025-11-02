@@ -14,7 +14,7 @@ export default function TermsConditions() {
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-3">1. Acceptance of Terms</h2>
               <p className="mb-3 leading-relaxed">
-                By accessing and using Kiwistron Edutech's platform, you accept and agree to be bound by the terms 
+                By accessing and using KiwisEdutech's platform, you accept and agree to be bound by the terms 
                 and provisions of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
             </section>
@@ -51,7 +51,7 @@ export default function TermsConditions() {
               <h2 className="text-xl font-bold text-gray-900 mb-3">4. Intellectual Property Rights</h2>
               <p className="mb-3 leading-relaxed">
                 All content on our platform, including courses, materials, videos, text, graphics, logos, and software, 
-                is the property of Kiwistron Edutech or its content suppliers and is protected by copyright, trademark, 
+                is the property of KiwisEdutech or its content suppliers and is protected by copyright, trademark, 
                 and other intellectual property laws. You may not:
               </p>
               <ul className="list-disc pl-6 space-y-2 mb-3">
@@ -94,7 +94,7 @@ export default function TermsConditions() {
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-3">7. Limitation of Liability</h2>
               <p className="mb-3 leading-relaxed">
-                Kiwistron Edutech shall not be liable for any indirect, incidental, special, consequential, or punitive 
+                KiwisEdutech shall not be liable for any indirect, incidental, special, consequential, or punitive 
                 damages resulting from your use or inability to use the platform, including but not limited to loss of 
                 profits, data, or other intangible losses.
               </p>
@@ -131,7 +131,7 @@ export default function TermsConditions() {
                 If you have any questions about these Terms & Conditions, please contact us at:
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="mb-1"><strong>Email:</strong> legal@kiwistronedutech.com</p>
+                <p className="mb-1"><strong>Email:</strong> legal@kiwisedutech.com</p>
                 <p className="mb-1"><strong>Phone:</strong> +91 98765 43210</p>
                 <p><strong>Address:</strong> 123 Education Street, Tech Park Area, Bangalore - 560001, Karnataka, India</p>
               </div>

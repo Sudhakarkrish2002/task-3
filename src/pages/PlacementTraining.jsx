@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 
 const placementCourses = [
@@ -114,15 +114,104 @@ const successMetrics = [
 ]
 
 export default function PlacementTraining() {
+  const [animatedValues, setAnimatedValues] = useState({
+    'Placement Rate': 0,
+    'Average Salary': 0,
+    'Hiring Partners': 0,
+    'Students Placed': 0,
+  })
+  const [hasAnimated, setHasAnimated] = useState(false)
+  const metricsRef = useRef(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            setHasAnimated(true)
+            animateMetrics()
+          }
+        })
+      },
+      { threshold: 0.3 }
+    )
+
+    if (metricsRef.current) {
+      observer.observe(metricsRef.current)
+    }
+
+    return () => {
+      if (metricsRef.current) {
+        observer.unobserve(metricsRef.current)
+      }
+    }
+  }, [hasAnimated])
+
+  const parseValue = (value) => {
+    if (value.includes('%')) {
+      return { numericValue: parseFloat(value.replace('%', '')), format: 'percentage' }
+    } else if (value.includes('₹')) {
+      return { numericValue: parseFloat(value.replace(/[₹,LPA]/g, '')), format: 'currency' }
+    } else if (value.includes('+')) {
+      const numStr = value.replace(/[+,]/g, '')
+      return { numericValue: parseFloat(numStr), format: 'numberWithPlus' }
+    }
+    return { numericValue: parseFloat(value), format: 'number' }
+  }
+
+  const formatValue = (numericValue, format, originalValue) => {
+    if (format === 'percentage') {
+      return `${Math.round(numericValue)}%`
+    } else if (format === 'currency') {
+      return `₹${numericValue.toFixed(1)} LPA`
+    } else if (format === 'numberWithPlus') {
+      if (numericValue >= 1000) {
+        return `${Math.round(numericValue).toLocaleString('en-IN')}+`
+      }
+      return `${Math.round(numericValue)}+`
+    }
+    return Math.round(numericValue).toString()
+  }
+
+  const animateMetrics = () => {
+    successMetrics.forEach((metric) => {
+      const { numericValue, format } = parseValue(metric.value)
+      const duration = 2000 // 2 seconds
+      const steps = 60
+      const increment = numericValue / steps
+      let current = 0
+
+      const timer = setInterval(() => {
+        current += increment
+        if (current >= numericValue) {
+          current = numericValue
+          clearInterval(timer)
+        }
+
+        setAnimatedValues((prev) => ({
+          ...prev,
+          [metric.label]: current,
+        }))
+      }, duration / steps)
+    })
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+      <section className="relative pt-16 border-b border-primary-200 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/Assets/banner-placement-training.jpeg)'
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-linear-to-r from-primary-900/75 to-primary-700/60"></div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
             Placement-Guaranteed Training Programs
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-white/95 drop-shadow-md">
             Get job-ready with our comprehensive training and dedicated placement support
           </p>
         </div>
@@ -180,17 +269,22 @@ export default function PlacementTraining() {
       </section>
 
       {/* Success Metrics */}
-      <section className="py-12 bg-linear-to-br from-primary-600 to-primary-800 text-white">
+      <section ref={metricsRef} className="py-12 bg-linear-to-br from-primary-600 to-primary-800 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold mb-8 text-center">Our Success Metrics</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {successMetrics.map((metric, idx) => (
-              <div key={idx} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold mb-2">{metric.value}</div>
-                <div className="text-primary-100 font-medium mb-1">{metric.label}</div>
-                <div className="text-sm text-primary-200">{metric.description}</div>
-              </div>
-            ))}
+            {successMetrics.map((metric, idx) => {
+              const { format } = parseValue(metric.value)
+              const animatedValue = animatedValues[metric.label]
+              const displayValue = formatValue(animatedValue, format, metric.value)
+              return (
+                <div key={idx} className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold mb-2">{displayValue}</div>
+                  <div className="text-primary-100 font-medium mb-1">{metric.label}</div>
+                  <div className="text-sm text-primary-200">{metric.description}</div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -259,8 +353,9 @@ export default function PlacementTraining() {
                 </div>
 
                 {/* CTA Button - Prominent */}
-                <button className="w-full rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]">
-                  Enroll Now - Get Guaranteed Placement
+                <button className="w-full rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                  <span className="relative z-10">Enroll Now - Get Guaranteed Placement</span>
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                 </button>
               </div>
             ))}
@@ -305,42 +400,132 @@ export default function PlacementTraining() {
         </div>
       </section>
 
-      {/* Partner Companies - Placement Partners */}
+      {/* Our Placement Partners */}
       <section className="py-12 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Our Placement Partners</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Our Placement Partners</h2>
             <p className="text-gray-600">Top companies that hire from our placement-guaranteed programs</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {partnerCompanies.map((company) => (
-              <div
-                key={company.name}
-                className="flex h-28 items-center justify-center rounded-lg border-2 border-gray-200 bg-white hover:border-primary-400 hover:shadow-lg transition-all cursor-pointer group p-4"
-              >
-                <div className="text-center w-full">
+          {/* Row 1 - Scroll Left */}
+          <div className="partner-scroll-container mb-4">
+            <div className="partner-scroll-content scroll-left">
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
                   <img
-                    src={`https://logo.clearbit.com/${company.domain}`}
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
                     alt={company.name}
-                    className="h-12 w-auto mx-auto mb-2 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
                     onError={(e) => {
                       e.target.style.display = 'none'
-                      const fallback = e.target.nextElementSibling
-                      if (fallback) {
-                        fallback.style.display = 'block'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
                       }
                     }}
                   />
-                  <div className="text-xs font-bold text-gray-800 group-hover:text-primary-700 transition-colors hidden">
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
                     {company.name}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 - Scroll Right */}
+          <div className="partner-scroll-container">
+            <div className="partner-scroll-content scroll-right">
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
     </main>
   )
 }

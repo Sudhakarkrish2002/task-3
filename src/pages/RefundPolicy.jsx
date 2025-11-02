@@ -14,7 +14,7 @@ export default function RefundPolicy() {
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-3">1. Overview</h2>
               <p className="mb-3 leading-relaxed">
-                At Kiwistron Edutech, we strive to provide quality educational services. This Refund and Cancellation 
+                At KiwisEdutech, we strive to provide quality educational services. This Refund and Cancellation 
                 Policy outlines the terms and conditions under which refunds and cancellations may be processed for 
                 our paid courses and services.
               </p>
@@ -108,7 +108,7 @@ export default function RefundPolicy() {
                 To request a refund, please follow these steps:
               </p>
               <ol className="list-decimal pl-6 space-y-2 mb-3">
-                <li>Send an email to <strong>refunds@kiwistronedutech.com</strong> with:</li>
+                <li>Send an email to <strong>refunds@kiwisedutech.com</strong> with:</li>
                 <ul className="list-disc pl-6 mt-2 space-y-1">
                   <li>Your enrollment ID or transaction ID</li>
                   <li>Course/Service name</li>
@@ -216,7 +216,7 @@ export default function RefundPolicy() {
                 For refund requests and inquiries, please contact:
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="mb-1"><strong>Email:</strong> refunds@kiwistronedutech.com</p>
+                <p className="mb-1"><strong>Email:</strong> refunds@kiwisedutech.com</p>
                 <p className="mb-1"><strong>Phone:</strong> +91 98765 43210</p>
                 <p className="mb-1"><strong>Support Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM IST</p>
                 <p><strong>Address:</strong> 123 Education Street, Tech Park Area, Bangalore - 560001, Karnataka, India</p>

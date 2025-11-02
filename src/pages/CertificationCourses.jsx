@@ -78,12 +78,19 @@ export default function CertificationCourses() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+      <section className="relative pt-16 border-b border-primary-200 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/Assets/banner-certifications.jpeg)'
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-linear-to-r from-primary-900/75 to-primary-700/60"></div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
             Industry-Recognised Certification Programs
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-white/95 drop-shadow-md">
             Get certified, boost your resume, and stand out in the job market
           </p>
         </div>
@@ -179,7 +186,7 @@ export default function CertificationCourses() {
                   <ul className="space-y-2">
                     {course.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                        <svg className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                         <span>{feature}</span>
@@ -190,11 +197,13 @@ export default function CertificationCourses() {
 
                 {/* Call to Action Buttons */}
                 <div className="flex gap-3">
-                  <button className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold hover:bg-primary-50 transition-colors">
-                    View Syllabus
+                  <button className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden">
+                    <span className="relative z-10">View Syllabus</span>
+                    <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
-                  <button className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold hover:bg-primary-700 transition-all shadow-md hover:shadow-lg">
-                    Enroll Now
+                  <button className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                    <span className="relative z-10">Enroll Now</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
               </div>
@@ -203,42 +212,132 @@ export default function CertificationCourses() {
         </div>
       </section>
 
-      {/* Partner Companies - Hiring from Certifications */}
+      {/* Companies Hiring Certified Students */}
       <section className="py-12 bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Companies Hiring Certified Students</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Companies Hiring Certified Students</h2>
             <p className="text-gray-600">Get hired by top companies with industry-recognized certifications</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {partnerCompanies.slice(0, 10).map((company) => (
-              <div
-                key={company.name}
-                className="flex h-28 items-center justify-center rounded-lg border-2 border-gray-200 bg-white hover:border-primary-400 hover:shadow-lg transition-all cursor-pointer group p-4"
-              >
-                <div className="text-center w-full">
+          {/* Row 1 - Scroll Left */}
+          <div className="partner-scroll-container mb-4">
+            <div className="partner-scroll-content scroll-left">
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
                   <img
-                    src={`https://logo.clearbit.com/${company.domain}`}
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
                     alt={company.name}
-                    className="h-12 w-auto mx-auto mb-2 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
                     onError={(e) => {
                       e.target.style.display = 'none'
-                      const fallback = e.target.nextElementSibling
-                      if (fallback) {
-                        fallback.style.display = 'block'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
                       }
                     }}
                   />
-                  <div className="text-xs font-bold text-gray-800 group-hover:text-primary-700 transition-colors hidden">
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
                     {company.name}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 - Scroll Right */}
+          <div className="partner-scroll-container">
+            <div className="partner-scroll-content scroll-right">
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
     </main>
   )
 }

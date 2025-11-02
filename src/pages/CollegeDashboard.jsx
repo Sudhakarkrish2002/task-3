@@ -32,33 +32,42 @@ export default function CollegeDashboard() {
             <nav className="space-y-2">
               <button
                 onClick={() => setActiveTab('students')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'students'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                Registered Students
+                <span className="relative z-10">Registered Students</span>
+                {activeTab === 'students' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('courses')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'courses'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                Partner Courses
+                <span className="relative z-10">Partner Courses</span>
+                {activeTab === 'courses' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'reports'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
+                    : 'bg-white text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
                 }`}
               >
-                Reports
+                <span className="relative z-10">Reports</span>
+                {activeTab === 'reports' && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
             </nav>
           </div>
@@ -69,8 +78,9 @@ export default function CollegeDashboard() {
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900">Registered Students</h2>
-                  <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
-                    Export List
+                  <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                    <span className="relative z-10">Export List</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
                 <div className="space-y-4">
@@ -99,7 +109,7 @@ export default function CollegeDashboard() {
                           {student.status}
                         </span>
                       </div>
-                      <button className="text-sm text-primary-700 hover:text-primary-800 font-medium">
+                      <button className="text-sm text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block">
                         View Details →
                       </button>
                     </div>
@@ -174,8 +184,9 @@ export default function CollegeDashboard() {
                     <p className="text-sm text-gray-600 mb-4">
                       Download detailed enrollment and progress reports for your college.
                     </p>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
-                      Download Report
+                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                      <span className="relative z-10">Download Report</span>
+                      <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                   </div>
 
@@ -184,8 +195,9 @@ export default function CollegeDashboard() {
                     <p className="text-sm text-gray-600 mb-4">
                       View placement statistics and success rates of your students.
                     </p>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
-                      View Placement Stats
+                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                      <span className="relative z-10">View Placement Stats</span>
+                      <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                   </div>
 
@@ -194,8 +206,9 @@ export default function CollegeDashboard() {
                     <p className="text-sm text-gray-600 mb-4">
                       Analyze course completion rates and student performance metrics.
                     </p>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold hover:bg-primary-700">
-                      Generate Report
+                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                      <span className="relative z-10">Generate Report</span>
+                      <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                   </div>
                 </div>

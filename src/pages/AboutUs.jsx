@@ -32,7 +32,7 @@ const stats = [
 ]
 
 const mediaMentions = [
-  { source: 'TechCrunch', title: 'Kiwistron Edutech Revolutionizes Skill-Based Learning', year: '2023' },
+  { source: 'TechCrunch', title: 'KiwisEdutech Revolutionizes Skill-Based Learning', year: '2023' },
   { source: 'The Hindu', title: 'Bridging the Gap Between Education and Industry', year: '2023' },
   { source: 'Economic Times', title: 'How EdTech is Transforming Career Readiness', year: '2024' },
   { source: 'Forbes India', title: 'Top 10 EdTech Startups to Watch', year: '2024' },
@@ -49,7 +49,7 @@ export default function AboutUs() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
+      <section className="bg-linear-to-br from-primary-50 to-white border-b border-primary-200 pt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
             Our Mission & Vision
@@ -104,7 +104,7 @@ export default function AboutUs() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Our Story</h2>
             <div className="space-y-4 text-gray-700 leading-relaxed">
               <p>
-                Kiwistron Edutech was founded in 2020 with a simple yet powerful vision: to make 
+                KiwisEdutech was founded in 2020 with a simple yet powerful vision: to make 
                 quality education and career opportunities accessible to every student in India. 
                 Recognizing the critical gap between what students learn in college and what 
                 industries actually need, our founding team set out to create a platform that 
@@ -131,7 +131,7 @@ export default function AboutUs() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Founding Team</h2>
-            <p className="text-gray-600">The visionaries behind Kiwistron Edutech</p>
+            <p className="text-gray-600">The visionaries behind KiwisEdutech</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -189,45 +189,135 @@ export default function AboutUs() {
         </div>
       </section>
 
+
       {/* Partner Companies */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Our Partner Companies</h2>
-            <p className="text-gray-600">Leading organizations that trust us for talent acquisition</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Where Do Our Students Work?</h2>
+            <p className="text-gray-600">Our students are placed in top MNCs and leading companies</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {partnerCompanies.map((company) => (
-              <div
-                key={company.name}
-                className="flex h-28 items-center justify-center rounded-lg border-2 border-gray-200 bg-white hover:border-primary-400 hover:shadow-lg transition-all cursor-pointer group p-4"
-              >
-                <div className="text-center w-full">
+          {/* Row 1 - Scroll Left */}
+          <div className="partner-scroll-container mb-4">
+            <div className="partner-scroll-content scroll-left">
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
                   <img
-                    src={`https://logo.clearbit.com/${company.domain}`}
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
                     alt={company.name}
-                    className="h-12 w-auto mx-auto mb-2 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
                     onError={(e) => {
                       e.target.style.display = 'none'
-                      const fallback = e.target.nextElementSibling
-                      if (fallback) {
-                        fallback.style.display = 'block'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
                       }
                     }}
                   />
-                  <div className="text-xs font-bold text-gray-800 group-hover:text-primary-700 transition-colors hidden">
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
                     {company.name}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              {partnerCompanies.map((company) => (
+                <div
+                  key={`left-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 - Scroll Right */}
+          <div className="partner-scroll-container">
+            <div className="partner-scroll-content scroll-right">
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+              {[...partnerCompanies].reverse().map((company) => (
+                <div
+                  key={`right-duplicate-${company.name}`}
+                  className="flex flex-col items-center justify-center rounded-lg bg-white border border-gray-200 p-3 h-20 w-32 shrink-0 mx-2"
+                >
+                  <img
+                    src={company.name === 'Zoho' ? 'https://logo.clearbit.com/zohocorp.com?size=256' : 
+                      ['Tech Mahindra', 'Infosys', 'Wipro', 'IBM', 'HCL', 'Adobe', 'PwC', 'TCS', 'SAP'].includes(company.name) 
+                        ? `https://logo.clearbit.com/${company.domain}?size=256` 
+                        : `https://logo.clearbit.com/${company.domain}?size=128`}
+                    alt={company.name}
+                    className="h-10 w-auto max-w-full object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      const nameDiv = e.target.nextElementSibling
+                      if (nameDiv) {
+                        nameDiv.style.display = 'block'
+                      }
+                    }}
+                  />
+                  <div className="text-xs font-semibold text-gray-900 text-center hidden">
+                    {company.name}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Accreditations */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Accreditations & Partnerships</h2>

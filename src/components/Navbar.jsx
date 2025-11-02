@@ -25,16 +25,16 @@ const flatMenuItems = mainMenuItems.flatMap((item) =>
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-100">
+    <header className="fixed top-0 left-0 right-0 z-100 bg-white border-b border-primary-200 shadow-sm shadow-primary-100/20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <a href="#/" className="flex items-center gap-2">
             <img
-              src="/Asserts/Kiwistron-logo.jpeg"
-              alt="Kiwistron Edutech Logo"
+              src="/Assets/kiwisedutech_logo.jpeg"
+              alt="KiwisEdutech Logo"
               className="h-10 w-auto object-contain"
             />
-            <span className="text-lg font-semibold text-gray-900">Kiwistron Edutech</span>
+            <span className="text-lg font-semibold text-gray-900">KiwisEdutech</span>
           </a>
 
           <nav className="hidden lg:flex items-center gap-6">
@@ -53,14 +53,14 @@ export default function Navbar() {
                 <div key={item.hash} className="relative group">
                   <button
                     type="button"
-                    className="text-sm font-medium text-gray-700 hover:text-primary-700 transition-colors cursor-pointer"
+                    className="text-sm font-medium text-gray-700 hover:text-primary-700 transition-all duration-300 ease-in-out relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full cursor-pointer"
                   >
                     {item.label}
                   </button>
                   <div className="absolute top-full left-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <a
                       href={item.hash}
-                      className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium"
+                      className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
                     >
                       {item.label}
                     </a>
@@ -68,7 +68,7 @@ export default function Navbar() {
                       <a
                         key={subItem.hash}
                         href={subItem.hash}
-                        className="rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 pl-6"
+                        className="rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 pl-6 relative overflow-hidden after:absolute after:bottom-1 after:left-6 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
                       >
                         {subItem.label}
                       </a>
@@ -79,7 +79,7 @@ export default function Navbar() {
                 <a
                   key={item.hash}
                   href={item.hash}
-                  className="text-sm font-medium text-gray-700 hover:text-primary-700 transition-colors"
+                  className="text-sm font-medium text-gray-700 hover:text-primary-700 transition-all duration-300 ease-in-out relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full"
                 >
                   {item.label}
                 </a>

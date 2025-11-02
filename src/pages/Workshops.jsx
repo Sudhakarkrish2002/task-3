@@ -132,7 +132,7 @@ export default function Workshops() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-white border-b border-gray-200">
+      <section className="bg-linear-to-br from-primary-50 to-white border-b border-primary-200 pt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
             Hands-On Workshops for Skill Boost
@@ -225,15 +225,18 @@ export default function Workshops() {
                       <button
                         onClick={() => handleWorkshopSelect(workshop)}
                         disabled={isFull}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                           isFull
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             : selectedWorkshop?.id === workshop.id
-                            ? 'bg-primary-700 text-white'
-                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                            ? 'bg-primary-700 text-white shadow-xl shadow-primary-700/50'
+                            : 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)]'
                         }`}
                       >
-                        {isFull ? 'Full' : selectedWorkshop?.id === workshop.id ? 'Selected' : 'Register'}
+                        <span className="relative z-10">{isFull ? 'Full' : selectedWorkshop?.id === workshop.id ? 'Selected' : 'Register'}</span>
+                        {!isFull && selectedWorkshop?.id !== workshop.id && (
+                          <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -329,9 +332,10 @@ export default function Workshops() {
 
                     <button
                       type="submit"
-                      className="w-full rounded-lg bg-primary-600 px-4 py-3 text-white text-sm font-semibold hover:bg-primary-700 transition-colors"
+                      className="w-full rounded-lg bg-primary-600 px-4 py-3 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
                     >
-                      Confirm Registration
+                      <span className="relative z-10">Confirm Registration</span>
+                      <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                   </form>
                 </>

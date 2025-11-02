@@ -15,14 +15,24 @@ export const partnerCompanies = [
   { name: 'Capgemini', domain: 'capgemini.com', category: 'Consulting' },
   { name: 'Tech Mahindra', domain: 'techmahindra.com', category: 'IT Services' },
   { name: 'Intel', domain: 'intel.com', category: 'Tech' },
-]
-
-export const partnerColleges = [
-  { name: 'IIT Delhi', category: 'Engineering' },
-  { name: 'IIT Bombay', category: 'Engineering' },
-  { name: 'NIT Trichy', category: 'Engineering' },
-  { name: 'BITS Pilani', category: 'Engineering' },
-  { name: 'IIM Bangalore', category: 'Management' },
-  { name: 'DU', category: 'University' },
+  { name: 'Apple', domain: 'apple.com', category: 'Tech' },
+  { name: 'Meta', domain: 'meta.com', category: 'Tech' },
+  { name: 'Netflix', domain: 'netflix.com', category: 'Tech' },
+  { name: 'Adobe', domain: 'adobe.com', category: 'Tech' },
+  { name: 'Salesforce', domain: 'salesforce.com', category: 'Tech' },
+  { name: 'Cisco', domain: 'cisco.com', category: 'Tech' },
+  { name: 'HP', domain: 'hp.com', category: 'Tech' },
+  { name: 'NVIDIA', domain: 'nvidia.com', category: 'Tech' },
+  { name: 'SAP', domain: 'sap.com', category: 'Tech' },
+  { name: 'Deloitte', domain: 'deloitte.com', category: 'Consulting' },
+  { name: 'PwC', domain: 'pwc.com', category: 'Consulting' },
+  { name: 'EY', domain: 'ey.com', category: 'Consulting' },
+  { name: 'KPMG', domain: 'kpmg.com', category: 'Consulting' },
+  { name: 'Goldman Sachs', domain: 'goldmansachs.com', category: 'Finance' },
+  { name: 'JP Morgan', domain: 'jpmorgan.com', category: 'Finance' },
+  { name: 'Flipkart', domain: 'flipkart.com', category: 'E-commerce' },
+  { name: 'Zomato', domain: 'zomato.com', category: 'Tech' },
+  { name: 'Paytm', domain: 'paytm.com', category: 'FinTech' },
+  { name: 'Zoho', domain: 'zoho.com', category: 'Tech' },
 ]
 

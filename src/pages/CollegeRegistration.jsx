@@ -56,7 +56,7 @@ export default function CollegeRegistration() {
       {/* Header */}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          <h1 className="text-3xl sm:text-4xl font-bold pt-15 text-gray-900">
             Partner with Us – Register Your College
           </h1>
           <p className="mt-4 text-lg text-gray-600">
@@ -397,9 +397,10 @@ export default function CollegeRegistration() {
                 <button
                   type="submit"
                   disabled={formData.interestedServices.length === 0}
-                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-2xl disabled:hover:shadow-primary-600/50 disabled:opacity-60"
                 >
-                  Submit Registration Request
+                  <span className="relative z-10">Submit Registration Request</span>
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300 disabled:opacity-0"></span>
                 </button>
               </form>
             </div>

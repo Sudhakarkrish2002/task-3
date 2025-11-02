@@ -198,7 +198,7 @@ export default function SearchResults() {
                   setSearchQuery('')
                   setFilters({ type: 'All', category: 'All', location: 'All' })
                 }}
-                className="mt-4 text-primary-700 hover:text-primary-800 font-medium"
+                className="mt-4 text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block"
               >
                 Clear all filters
               </button>
@@ -292,8 +292,9 @@ export default function SearchResults() {
                   </div>
 
                   {/* Action Button - Prominent */}
-                  <button className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold hover:bg-primary-700 transition-all shadow-md hover:shadow-lg">
-                    {result.type === 'Course' ? 'Enroll Now' : 'Apply Now'}
+                  <button className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                    <span className="relative z-10">{result.type === 'Course' ? 'Enroll Now' : 'Apply Now'}</span>
+                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
               ))}
