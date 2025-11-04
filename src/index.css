@@ -35,6 +35,12 @@
   --font-weight-bold: 700;
 }
 
+html {
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 * {
   font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;

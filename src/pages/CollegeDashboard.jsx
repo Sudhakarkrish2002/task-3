@@ -1,23 +1,62 @@
-import React, { useState } from 'react'
-
-const registeredStudents = [
-  { id: 1, name: 'Ananya Sharma', course: 'Full-Stack Development', status: 'Active', enrollDate: '2024-01-10' },
-  { id: 2, name: 'Rahul Verma', course: 'Data Science', status: 'Active', enrollDate: '2024-01-08' },
-  { id: 3, name: 'Priya Patel', course: 'React Development', status: 'Completed', enrollDate: '2023-11-15' },
-]
-
-const partnerCourses = [
-  { id: 1, title: 'Full-Stack Web Development', students: 45, completionRate: 78 },
-  { id: 2, title: 'Data Science Foundations', students: 32, completionRate: 82 },
-  { id: 3, title: 'Cloud Computing', students: 28, completionRate: 71 },
-]
+import React, { useState, useEffect } from 'react'
 
 export default function CollegeDashboard() {
   const [activeTab, setActiveTab] = useState('students')
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+  }, [])
+
+  const handleExportList = () => {
+    alert('Exporting student list...')
+    // In production: Generate and download CSV/Excel file
+  }
+
+  const handleViewStudentDetails = (studentId) => {
+    alert(`Viewing details for student ID: ${studentId}`)
+  }
+
+  const handleViewCourseDetails = (courseId) => {
+    alert(`Viewing course details for course ID: ${courseId}`)
+  }
+
+  const handleDownloadReport = (reportType) => {
+    alert(`Downloading ${reportType} report...`)
+    // In production: Generate and download PDF report
+  }
+
+  const handleViewPlacementStats = () => {
+    alert('Viewing placement statistics...')
+  }
+
+  const getUserInitials = () => {
+    if (!user || !user.collegeDetails?.collegeName) return 'C'
+    return user.collegeDetails.collegeName
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const registeredStudents = [
+    { id: 1, name: 'Ananya Sharma', course: 'Full-Stack Development', status: 'Active', enrollDate: '2024-01-10' },
+    { id: 2, name: 'Rahul Verma', course: 'Data Science', status: 'Active', enrollDate: '2024-01-08' },
+    { id: 3, name: 'Priya Patel', course: 'React Development', status: 'Completed', enrollDate: '2023-11-15' },
+  ]
+
+  const partnerCourses = [
+    { id: 1, title: 'Full-Stack Web Development', students: 45, completionRate: 78 },
+    { id: 2, title: 'Data Science Foundations', students: 32, completionRate: 82 },
+    { id: 3, title: 'Cloud Computing', students: 28, completionRate: 71 },
+  ]
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-bold text-gray-900">College Dashboard</h1>
@@ -27,7 +66,6 @@ export default function CollegeDashboard() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
             <nav className="space-y-2">
               <button
@@ -72,13 +110,15 @@ export default function CollegeDashboard() {
             </nav>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             {activeTab === 'students' && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900">Registered Students</h2>
-                  <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                  <button 
+                    onClick={handleExportList}
+                    className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden"
+                  >
                     <span className="relative z-10">Export List</span>
                     <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
@@ -109,7 +149,10 @@ export default function CollegeDashboard() {
                           {student.status}
                         </span>
                       </div>
-                      <button className="text-sm text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block">
+                      <button 
+                        onClick={() => handleViewStudentDetails(student.id)}
+                        className="text-sm text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block"
+                      >
                         View Details →
                       </button>
                     </div>
@@ -151,7 +194,10 @@ export default function CollegeDashboard() {
                           />
                         </div>
                       </div>
-                      <button className="text-sm text-primary-700 hover:text-primary-800 font-medium">
+                      <button 
+                        onClick={() => handleViewCourseDetails(course.id)}
+                        className="text-sm text-primary-700 hover:text-primary-800 font-medium"
+                      >
                         View Course Details →
                       </button>
                     </div>
@@ -184,7 +230,10 @@ export default function CollegeDashboard() {
                     <p className="text-sm text-gray-600 mb-4">
                       Download detailed enrollment and progress reports for your college.
                     </p>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                    <button 
+                      onClick={() => handleDownloadReport('Monthly Enrollment')}
+                      className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden"
+                    >
                       <span className="relative z-10">Download Report</span>
                       <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
@@ -195,7 +244,10 @@ export default function CollegeDashboard() {
                     <p className="text-sm text-gray-600 mb-4">
                       View placement statistics and success rates of your students.
                     </p>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                    <button 
+                      onClick={handleViewPlacementStats}
+                      className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden"
+                    >
                       <span className="relative z-10">View Placement Stats</span>
                       <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
@@ -206,7 +258,10 @@ export default function CollegeDashboard() {
                     <p className="text-sm text-gray-600 mb-4">
                       Analyze course completion rates and student performance metrics.
                     </p>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden">
+                    <button 
+                      onClick={() => handleDownloadReport('Course Performance')}
+                      className="rounded-lg bg-primary-600 px-4 py-2 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] relative overflow-hidden"
+                    >
                       <span className="relative z-10">Generate Report</span>
                       <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
@@ -220,4 +275,3 @@ export default function CollegeDashboard() {
     </main>
   )
 }
-

@@ -1,0 +1,339 @@
+/**
+ * API Utility Module
+ * 
+ * This module provides organized API functions for all backend endpoints.
+ * 
+ * USAGE:
+ * - Use the organized API modules (authAPI, courseAPI, blogAPI, etc.) for standard operations
+ * - Use apiRequest (default export) only for custom endpoints not covered by modules
+ * 
+ * Example:
+ *   import { authAPI, courseAPI } from '../utils/api.js'
+ *   const response = await authAPI.login({ email, password })
+ *   const courses = await courseAPI.getAllCourses()
+ */
+
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+// Get auth token from localStorage
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Base API request function (used internally by all API modules)
+// Export as default for custom API calls that don't fit into modules
+const apiRequest = async (endpoint, options = {}) => {
+  const token = getAuthToken();
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const config = {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+  };
+
+  try {
+    const response = await fetch(url, config);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'An error occurred');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+// Auth API functions
+export const authAPI = {
+  // Register user
+  register: async (userData) => {
+    return apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  },
+
+  // Login user
+  login: async (credentials) => {
+    return apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  },
+
+  // Get current user
+  getMe: async () => {
+    return apiRequest('/auth/me');
+  },
+
+  // Get all roles
+  getRoles: async () => {
+    return apiRequest('/auth/roles');
+  },
+};
+
+// Course API functions
+export const courseAPI = {
+  // Get all courses
+  getAllCourses: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/courses${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Get course by ID
+  getCourseById: async (courseId) => {
+    return apiRequest(`/courses/${courseId}`);
+  },
+
+  // Get my courses (for students)
+  getMyCourses: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/courses/my-courses/list${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Create course (admin/content_writer)
+  createCourse: async (courseData) => {
+    return apiRequest('/courses', {
+      method: 'POST',
+      body: JSON.stringify(courseData),
+    });
+  },
+
+  // Update course (admin/content_writer)
+  updateCourse: async (courseId, courseData) => {
+    return apiRequest(`/courses/${courseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(courseData),
+    });
+  },
+
+  // Delete course (admin)
+  deleteCourse: async (courseId) => {
+    return apiRequest(`/courses/${courseId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Publish course (admin)
+  publishCourse: async (courseId) => {
+    return apiRequest(`/courses/${courseId}/publish`, {
+      method: 'PUT',
+    });
+  },
+};
+
+// Blog API functions
+export const blogAPI = {
+  // Get all blogs
+  getAllBlogs: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/blogs${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Get blog by ID
+  getBlogById: async (blogId) => {
+    return apiRequest(`/blogs/${blogId}`);
+  },
+
+  // Get my blogs (admin/content_writer)
+  getMyBlogs: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/blogs/my-posts/list${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Create blog (admin/content_writer)
+  createBlog: async (blogData) => {
+    return apiRequest('/blogs', {
+      method: 'POST',
+      body: JSON.stringify(blogData),
+    });
+  },
+
+  // Update blog (admin/content_writer)
+  updateBlog: async (blogId, blogData) => {
+    return apiRequest(`/blogs/${blogId}`, {
+      method: 'PUT',
+      body: JSON.stringify(blogData),
+    });
+  },
+
+  // Delete blog (admin/content_writer)
+  deleteBlog: async (blogId) => {
+    return apiRequest(`/blogs/${blogId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Submit blog for review
+  submitBlogForReview: async (blogId) => {
+    return apiRequest(`/blogs/${blogId}/submit`, {
+      method: 'PUT',
+    });
+  },
+};
+
+// Internship API functions
+export const internshipAPI = {
+  // Get all internships
+  getAllInternships: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/internships${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Get internship by ID
+  getInternshipById: async (internshipId) => {
+    return apiRequest(`/internships/${internshipId}`);
+  },
+
+  // Get my internships (employer)
+  getMyInternships: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/internships/my-internships/list${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Create internship (employer)
+  createInternship: async (internshipData) => {
+    return apiRequest('/internships', {
+      method: 'POST',
+      body: JSON.stringify(internshipData),
+    });
+  },
+
+  // Update internship (employer/admin)
+  updateInternship: async (internshipId, internshipData) => {
+    return apiRequest(`/internships/${internshipId}`, {
+      method: 'PUT',
+      body: JSON.stringify(internshipData),
+    });
+  },
+
+  // Delete internship (employer/admin)
+  deleteInternship: async (internshipId) => {
+    return apiRequest(`/internships/${internshipId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Workshop API functions
+export const workshopAPI = {
+  // Get all workshops
+  getAllWorkshops: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/workshops${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Get workshop by ID
+  getWorkshopById: async (workshopId) => {
+    return apiRequest(`/workshops/${workshopId}`);
+  },
+
+  // Create workshop (admin)
+  createWorkshop: async (workshopData) => {
+    return apiRequest('/workshops', {
+      method: 'POST',
+      body: JSON.stringify(workshopData),
+    });
+  },
+
+  // Update workshop (admin)
+  updateWorkshop: async (workshopId, workshopData) => {
+    return apiRequest(`/workshops/${workshopId}`, {
+      method: 'PUT',
+      body: JSON.stringify(workshopData),
+    });
+  },
+
+  // Delete workshop (admin)
+  deleteWorkshop: async (workshopId) => {
+    return apiRequest(`/workshops/${workshopId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Publish workshop (admin)
+  publishWorkshop: async (workshopId) => {
+    return apiRequest(`/workshops/${workshopId}/publish`, {
+      method: 'PUT',
+    });
+  },
+};
+
+// Payment API functions
+export const paymentAPI = {
+  // Create Razorpay order
+  createOrder: async (orderData) => {
+    return apiRequest('/payments/razorpay/create-order', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
+  },
+
+  // Verify Razorpay payment
+  verifyPayment: async (paymentData) => {
+    return apiRequest('/payments/razorpay/verify', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  },
+
+  // Get payment by ID
+  getPayment: async (paymentId) => {
+    return apiRequest(`/payments/${paymentId}`);
+  },
+
+  // Get user's payments
+  getMyPayments: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/payments/my-payments/list${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Get all payments (admin)
+  getAllPayments: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/payments/list${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Update payment status (admin)
+  updatePaymentStatus: async (paymentId, statusData) => {
+    return apiRequest(`/payments/${paymentId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify(statusData),
+    });
+  },
+
+  // Process refund (admin)
+  processRefund: async (paymentId, refundData) => {
+    return apiRequest(`/payments/${paymentId}/refund`, {
+      method: 'PUT',
+      body: JSON.stringify(refundData),
+    });
+  },
+};
+
+// Admin API functions (common admin endpoints)
+export const adminAPI = {
+  // Get dashboard stats
+  getDashboardStats: async () => {
+    return apiRequest('/admin/dashboard/stats');
+  },
+
+  // Get all users
+  getAllUsers: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/users${queryParams ? `?${queryParams}` : ''}`);
+  },
+};
+
+// Export apiRequest as default for custom API calls
+// Note: Prefer using the organized API modules (authAPI, courseAPI, etc.) when possible
+export default apiRequest;
+

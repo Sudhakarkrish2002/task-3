@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
+import { processRazorpayPayment } from '../utils/razorpay.js'
 
 const membershipTiers = [
   {
     tier: 'Free',
     price: '₹0',
+    priceValue: 0,
     period: 'Lifetime',
     features: [
       'Access to free courses',
@@ -17,6 +19,7 @@ const membershipTiers = [
   {
     tier: 'Basic',
     price: '₹999',
+    priceValue: 999,
     period: 'per year',
     features: [
       'All Free tier benefits',
@@ -31,6 +34,7 @@ const membershipTiers = [
   {
     tier: 'Premium',
     price: '₹2,999',
+    priceValue: 2999,
     period: 'per year',
     features: [
       'All Basic tier benefits',
@@ -58,29 +62,116 @@ export default function StudentMembership() {
     membershipTier: 'Free',
     paymentMethod: '',
   })
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const tierName = formData.membershipTier
-    if (tierName === 'Free') {
-      alert(`Congratulations! Your ${tierName} membership has been activated. Check your email for confirmation and access details.`)
-    } else {
-      alert(`Thank you for choosing ${tierName} membership! You will be redirected to the payment page to complete your registration.`)
+    
+    // Check if user is authenticated
+    const token = localStorage.getItem('token')
+    if (!token && tierName !== 'Free') {
+      alert('Please login to proceed with payment. Redirecting to login page...')
+      window.location.hash = '#/auth'
+      return
     }
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      college: '',
-      graduationYear: '',
-      membershipTier: 'Free',
-      paymentMethod: '',
-    })
+
+    if (tierName === 'Free') {
+      // Handle free membership (no payment required)
+      alert(`Congratulations! Your ${tierName} membership has been activated. Check your email for confirmation and access details.`)
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        college: '',
+        graduationYear: '',
+        membershipTier: 'Free',
+        paymentMethod: '',
+      })
+      return
+    }
+
+    // Get selected tier details
+    const selectedTier = membershipTiers.find(tier => tier.tier === tierName)
+    if (!selectedTier) {
+      alert('Invalid membership tier selected')
+      return
+    }
+
+    setIsProcessing(true)
+
+    try {
+      // Prepare payment data
+      const amount = selectedTier.priceValue
+      const items = [{
+        itemType: 'membership',
+        itemId: tierName, // Using tier name as ID
+        itemName: `${tierName} Membership - Student`,
+        quantity: 1,
+        price: amount
+      }]
+
+      const billingAddress = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+      }
+
+      const metadata = {
+        membershipTier: tierName,
+        college: formData.college,
+        graduationYear: formData.graduationYear,
+        paymentMethod: formData.paymentMethod,
+      }
+
+      const user = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+      }
+
+      // Process Razorpay payment
+      await processRazorpayPayment({
+        amount,
+        currency: 'INR',
+        items,
+        billingAddress,
+        metadata,
+        user,
+        onSuccess: (paymentData) => {
+          setIsProcessing(false)
+          alert(`🎉 Payment successful! Your ${tierName} membership has been activated. Transaction ID: ${paymentData.payment.transactionId}`)
+          
+          // Reset form
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            college: '',
+            graduationYear: '',
+            membershipTier: 'Free',
+            paymentMethod: '',
+          })
+          
+          // Optionally redirect to dashboard or success page
+          // window.location.hash = '#/dashboard'
+        },
+        onError: (error) => {
+          setIsProcessing(false)
+          console.error('Payment error:', error)
+          alert(`Payment failed: ${error.message || 'An error occurred. Please try again.'}`)
+        }
+      })
+    } catch (error) {
+      setIsProcessing(false)
+      console.error('Error processing payment:', error)
+      alert(`An error occurred: ${error.message || 'Please try again.'}`)
+    }
   }
 
   return (
@@ -349,9 +440,19 @@ export default function StudentMembership() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6"
+                  disabled={isProcessing}
+                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6 ${
+                    isProcessing ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
                 >
-                  <span className="relative z-10">{formData.membershipTier === 'Free' ? 'Register for Free Membership' : 'Proceed to Payment'}</span>
+                  <span className="relative z-10">
+                    {isProcessing 
+                      ? 'Processing...' 
+                      : formData.membershipTier === 'Free' 
+                        ? 'Register for Free Membership' 
+                        : 'Proceed to Payment'
+                    }
+                  </span>
                   <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                 </button>
               </form>

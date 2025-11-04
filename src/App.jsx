@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Home from './pages/Home.jsx'
 import Courses from './pages/Courses.jsx'
 import CertificationCourses from './pages/CertificationCourses.jsx'
@@ -46,9 +47,9 @@ const routes = {
   '#/blog': <Blog />,
   '#/contact': <Contact />,
   '#/search': <SearchResults />,
-  '#/dashboard/student': <StudentDashboard />,
-  '#/dashboard/employer': <EmployerDashboard />,
-  '#/dashboard/college': <CollegeDashboard />,
+  '#/dashboard/student': <ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>,
+  '#/dashboard/employer': <ProtectedRoute requiredRole="employer"><EmployerDashboard /></ProtectedRoute>,
+  '#/dashboard/college': <ProtectedRoute requiredRole="college"><CollegeDashboard /></ProtectedRoute>,
   '#/terms': <TermsConditions />,
   '#/privacy': <PrivacyPolicy />,
   '#/refund': <RefundPolicy />,
@@ -77,7 +78,9 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [hash])
 
-  const Content = routes[hash] || <Home />
+  // Get route without query parameters for matching
+  const routeHash = hash.split('?')[0]
+  const Content = routes[routeHash] || <Home />
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

@@ -13,6 +13,11 @@ const footerLinks = [
   { label: 'Careers', hash: '#/careers' },
 ]
 
+const loginLinks = [
+  { label: 'Employer Login', hash: '#/auth?tab=employer' },
+  { label: 'College Login', hash: '#/auth?tab=college' },
+]
+
 const socials = [
   { label: 'LinkedIn', url: 'https://www.linkedin.com/company/kiwisedutech' },
   { label: 'Twitter/X', url: 'https://x.com' },
@@ -45,12 +50,24 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="col-span-1 sm:col-span-1 lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {footerLinks.map((link) => (
-              <a key={link.hash} href={link.hash} className="text-sm text-white hover:text-primary-400 font-medium transition-colors">
-                {link.label}
-              </a>
-            ))}
+          <div className="col-span-1 sm:col-span-1 lg:col-span-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+              {footerLinks.map((link) => (
+                <a key={link.hash} href={link.hash} className="text-sm text-white hover:text-primary-400 font-medium transition-colors">
+                  {link.label}
+                </a>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-primary-700">
+              <p className="text-sm font-semibold text-white mb-2">Login</p>
+              <div className="flex flex-col gap-2">
+                {loginLinks.map((link) => (
+                  <a key={link.hash} href={link.hash} className="text-sm text-white hover:text-primary-400 font-medium transition-colors">
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
