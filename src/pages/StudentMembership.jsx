@@ -234,8 +234,8 @@ export default function StudentMembership() {
                   onClick={() => setFormData({ ...formData, membershipTier: tier.tier })}
                   className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                     tier.popular
-                      ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)]'
-                      : 'bg-gray-100 text-gray-900 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/30'
+                      ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)]'
+                      : 'bg-gray-100 text-gray-900 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60'
                   }`}
                 >
                   {tier.popular && (
@@ -441,7 +441,7 @@ export default function StudentMembership() {
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6 ${
+                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden mt-6 ${
                     isProcessing ? 'opacity-75 cursor-not-allowed' : ''
                   }`}
                 >

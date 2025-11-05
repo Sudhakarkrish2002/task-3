@@ -20,10 +20,10 @@ export default function Auth() {
       tab = urlParams.get('tab')
     }
     
-    return tab === 'employer' || tab === 'college' ? tab : 'student'
+    return tab === 'employer' || tab === 'college' || tab === 'admin' ? tab : 'student'
   }
 
-  const [activeTab, setActiveTab] = useState(getTabFromURL()) // student, employer, college
+  const [activeTab, setActiveTab] = useState(getTabFromURL()) // student, employer, college, admin
   const [isLogin, setIsLogin] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -82,15 +82,22 @@ export default function Auth() {
       const response = await authAPI.login({
         email: loginData.email,
         password: loginData.password,
+        role: activeTab, // Include the selected role tab
       })
 
       if (response.success) {
+        const role = response.user.role
+        
+        // Verify that the logged-in user's role matches the selected tab
+        if (role !== activeTab) {
+          setError(`You logged in as ${role}, but you selected ${activeTab}. Please select the correct role tab.`)
+          setIsLoading(false)
+          return
+        }
+        
         // Store token and user data
         localStorage.setItem('token', response.token)
         localStorage.setItem('user', JSON.stringify(response.user))
-        
-        // Redirect based on role
-        const role = response.user.role
         
         // Show success message
         alert(`Welcome back! ${role.charAt(0).toUpperCase() + role.slice(1)} login successful.`)
@@ -102,6 +109,8 @@ export default function Auth() {
           window.location.hash = '#/dashboard/employer'
         } else if (role === 'college') {
           window.location.hash = '#/dashboard/college'
+        } else if (role === 'admin') {
+          window.location.hash = '#/admin/courses'
         } else {
           window.location.hash = '#/'
         }
@@ -112,9 +121,14 @@ export default function Auth() {
       console.error('Login error:', error)
       const errorMessage = error.message || 'Login failed. Please try again.'
       
-      // Check if user doesn't exist
-      if (errorMessage.includes('Invalid credentials') || errorMessage.includes('not found')) {
-        setError('User not found. Please register first to create an account.')
+      // Check for specific error cases
+      if (errorMessage.includes('No') && errorMessage.includes('account found')) {
+        // Email exists but with different role
+        setError(errorMessage + ' Try logging in with a different role tab.')
+      } else if (errorMessage.includes('Invalid credentials')) {
+        setError('Invalid email or password. Please check your credentials.')
+      } else if (errorMessage.includes('not found')) {
+        setError(`No ${activeTab} account found. Please register first to create an account.`)
       } else {
         setError(errorMessage)
       }
@@ -148,7 +162,7 @@ export default function Auth() {
         email: registerData.email,
         phone: registerData.phone,
         password: registerData.password,
-        role: activeTab === 'student' ? 'student' : activeTab === 'employer' ? 'employer' : 'college',
+        role: activeTab === 'student' ? 'student' : activeTab === 'employer' ? 'employer' : activeTab === 'admin' ? 'admin' : 'college',
       }
 
       // Add role-specific data
@@ -177,6 +191,8 @@ export default function Auth() {
           window.location.hash = '#/dashboard/employer'
         } else if (role === 'college') {
           window.location.hash = '#/dashboard/college'
+        } else if (role === 'admin') {
+          window.location.hash = '#/admin/courses'
         } else {
           window.location.hash = '#/'
         }
@@ -195,9 +211,11 @@ export default function Auth() {
       console.error('Registration error:', error)
       const errorMessage = error.message || 'Registration failed. Please try again.'
       
-      // Check if user already exists
-      if (errorMessage.includes('already exists') || errorMessage.includes('User already')) {
-        setError('An account with this email already exists. Please login instead.')
+      // Check if user already exists with same role
+      if (errorMessage.includes('already exists') && errorMessage.includes(activeTab)) {
+        setError(`An account with this email already exists as ${activeTab}. Please login instead.`)
+      } else if (errorMessage.includes('already exists') || errorMessage.includes('User already')) {
+        setError(`An account with this email already exists as ${activeTab}. Please login instead.`)
       } else {
         setError(errorMessage)
       }
@@ -214,6 +232,8 @@ export default function Auth() {
         return 'Employer'
       case 'college':
         return 'College'
+      case 'admin':
+        return 'Admin'
       default:
         return ''
     }
@@ -221,7 +241,7 @@ export default function Auth() {
 
   // Check if we should show tabs (only show when not on student login)
   const showTabs = activeTab !== 'student'
-  // Show Student tab only when not on employer/college login
+  // Show Student tab only when not on employer/college/admin login
   const showStudentTab = activeTab === 'student'
 
   return (
@@ -252,8 +272,8 @@ export default function Auth() {
                 }}
                 className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                   activeTab === 'student'
-                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
-                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
+                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
                 }`}
               >
                 <span className="relative z-10">Student Login</span>
@@ -270,8 +290,8 @@ export default function Auth() {
               }}
               className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 activeTab === 'employer'
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
               }`}
             >
               <span className="relative z-10">Employer Login</span>
@@ -287,12 +307,29 @@ export default function Auth() {
               }}
               className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
                 activeTab === 'college'
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
               }`}
             >
               <span className="relative z-10">College Login</span>
               {activeTab === 'college' && (
+                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('admin')
+                setError('')
+                window.location.hash = '#/auth?tab=admin'
+              }}
+              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
+                activeTab === 'admin'
+                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
+                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
+              }`}
+            >
+              <span className="relative z-10">Admin Login</span>
+              {activeTab === 'admin' && (
                 <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
               )}
             </button>
@@ -301,39 +338,39 @@ export default function Auth() {
 
           {/* Login/Register Toggle */}
           <div className="flex gap-4 mb-8">
-            <button
-              onClick={() => {
-                setIsLogin(true)
-                setError('')
-              }}
-              className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                isLogin
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
-              }`}
-            >
-              <span className="relative z-10">Login</span>
-              {isLogin && (
-                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setIsLogin(false)
-                setError('')
-              }}
-              className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                !isLogin
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_20px_50px_rgba(147,51,234,0.6)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-xl hover:shadow-gray-400/40 hover:text-gray-900'
-              }`}
-            >
-              <span className="relative z-10">Register as {getTabLabel(activeTab)}</span>
-              {!isLogin && (
-                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-              )}
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  setIsLogin(true)
+                  setError('')
+                }}
+                className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
+                  isLogin
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
+                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
+                }`}
+              >
+                <span className="relative z-10">Login</span>
+                {isLogin && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setIsLogin(false)
+                  setError('')
+                }}
+                className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
+                  !isLogin
+                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
+                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
+                }`}
+              >
+                <span className="relative z-10">Register as {getTabLabel(activeTab)}</span>
+                {!isLogin && (
+                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                )}
+              </button>
+            </div>
 
           {/* Error Message */}
           {error && (
@@ -416,7 +453,7 @@ export default function Auth() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6 ${
+                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden mt-6 ${
                     isLoading ? 'opacity-75 cursor-not-allowed' : ''
                   }`}
                 >
@@ -436,7 +473,7 @@ export default function Auth() {
               <form onSubmit={handleRegisterSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="registerName" className="block text-sm font-medium text-gray-700 mb-1">
-                    {activeTab === 'student' ? 'Full Name' : activeTab === 'employer' ? 'Contact Person Name' : 'College/Contact Name'} *
+                    {activeTab === 'student' ? 'Full Name' : activeTab === 'employer' ? 'Contact Person Name' : activeTab === 'admin' ? 'Admin Name' : 'College/Contact Name'} *
                   </label>
                   <input
                     type="text"
@@ -573,7 +610,7 @@ export default function Auth() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden mt-6 ${
+                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden mt-6 ${
                     isLoading ? 'opacity-75 cursor-not-allowed' : ''
                   }`}
                 >

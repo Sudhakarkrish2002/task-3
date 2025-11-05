@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 
 const featuredCourses = [
@@ -16,6 +16,73 @@ const featuredCourses = [
     title: 'Placement Accelerator',
     tag: 'Placement-Guaranteed',
     description: 'Structured interview prep, mock interviews, and referral support.',
+  },
+]
+
+const trendingCourses = [
+  {
+    id: 1,
+    title: 'Full-Stack Web Development',
+    tag: 'Certification',
+    description: 'Master MERN stack with real-world projects',
+    students: '2.5K+',
+    rating: 4.8,
+  },
+  {
+    id: 2,
+    title: 'Data Science & Analytics',
+    tag: 'Certification',
+    description: 'Python, ML, and AI fundamentals',
+    students: '1.8K+',
+    rating: 4.9,
+  },
+  {
+    id: 3,
+    title: 'Cloud Computing & AWS',
+    tag: 'Certification',
+    description: 'Deploy scalable applications on cloud',
+    students: '1.2K+',
+    rating: 4.7,
+  },
+  {
+    id: 4,
+    title: 'DevOps & CI/CD',
+    tag: 'Certification',
+    description: 'Master deployment and automation',
+    students: '950+',
+    rating: 4.8,
+  },
+  {
+    id: 5,
+    title: 'UI/UX Design Mastery',
+    tag: 'Certification',
+    description: 'Design beautiful and functional interfaces',
+    students: '1.5K+',
+    rating: 4.6,
+  },
+  {
+    id: 6,
+    title: 'Mobile App Development',
+    tag: 'Certification',
+    description: 'Build iOS and Android applications',
+    students: '1.1K+',
+    rating: 4.7,
+  },
+  {
+    id: 7,
+    title: 'Cyber Security Fundamentals',
+    tag: 'Certification',
+    description: 'Protect systems from threats',
+    students: '800+',
+    rating: 4.9,
+  },
+  {
+    id: 8,
+    title: 'Machine Learning & AI',
+    tag: 'Certification',
+    description: 'Advanced ML algorithms and models',
+    students: '1.3K+',
+    rating: 4.8,
   },
 ]
 
@@ -63,7 +130,79 @@ const testimonials = [
   },
 ]
 
+const skillsAndTools = [
+  // Programming Languages
+  { name: 'JavaScript', category: 'Programming Language', logo: 'https://cdn.simpleicons.org/javascript/F7DF1E' },
+  { name: 'Python', category: 'Programming Language', logo: 'https://cdn.simpleicons.org/python/3776AB' },
+  { name: 'TypeScript', category: 'Programming Language', logo: 'https://cdn.simpleicons.org/typescript/3178C6' },
+  { name: 'Java', category: 'Programming Language', logo: 'https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg' },
+  
+  // Frontend Frameworks & Libraries
+  { name: 'React', category: 'Frontend Framework', logo: 'https://cdn.simpleicons.org/react/61DAFB' },
+  { name: 'Next.js', category: 'Frontend Framework', logo: 'https://cdn.simpleicons.org/nextdotjs/000000' },
+  { name: 'Vue.js', category: 'Frontend Framework', logo: 'https://cdn.simpleicons.org/vuedotjs/4FC08D' },
+  { name: 'Angular', category: 'Frontend Framework', logo: 'https://cdn.simpleicons.org/angular/DD0031' },
+  { name: 'Tailwind CSS', category: 'CSS Framework', logo: 'https://cdn.simpleicons.org/tailwindcss/06B6D4' },
+  
+  // Backend Technologies
+  { name: 'Node.js', category: 'Backend Runtime', logo: 'https://cdn.simpleicons.org/nodedotjs/339933' },
+  { name: 'Express.js', category: 'Backend Framework', logo: 'https://cdn.simpleicons.org/express/000000' },
+  { name: 'Django', category: 'Backend Framework', logo: 'https://cdn.simpleicons.org/django/092E20' },
+  { name: 'Flask', category: 'Backend Framework', logo: 'https://cdn.simpleicons.org/flask/000000' },
+  
+  // Databases
+  { name: 'MongoDB', category: 'Database', logo: 'https://cdn.simpleicons.org/mongodb/47A248' },
+  { name: 'PostgreSQL', category: 'Database', logo: 'https://cdn.simpleicons.org/postgresql/4169E1' },
+  { name: 'MySQL', category: 'Database', logo: 'https://cdn.simpleicons.org/mysql/4479A1' },
+  { name: 'Redis', category: 'Database', logo: 'https://cdn.simpleicons.org/redis/DC382D' },
+  
+  // Cloud & DevOps
+  { name: 'AWS', category: 'Cloud Platform', logo: 'https://cdn.simpleicons.org/amazonaws/232F3E' },
+  { name: 'Docker', category: 'DevOps Tool', logo: 'https://cdn.simpleicons.org/docker/2496ED' },
+  { name: 'Kubernetes', category: 'DevOps Tool', logo: 'https://cdn.simpleicons.org/kubernetes/326CE5' },
+  { name: 'Git & GitHub', category: 'Version Control', logo: 'https://cdn.simpleicons.org/git/F05032' },
+  { name: 'CI/CD', category: 'DevOps', logo: 'https://cdn.simpleicons.org/githubactions/2088FF' },
+  
+  // Data Science & ML
+  { name: 'TensorFlow', category: 'Machine Learning', logo: 'https://cdn.simpleicons.org/tensorflow/FF6F00' },
+  { name: 'Pandas', category: 'Data Science', logo: 'https://cdn.simpleicons.org/pandas/150458' },
+  { name: 'NumPy', category: 'Data Science', logo: 'https://cdn.simpleicons.org/numpy/013243' },
+  { name: 'Scikit-learn', category: 'Machine Learning', logo: 'https://cdn.simpleicons.org/scikitlearn/F7931E' },
+  
+  // Testing & Tools
+  { name: 'Jest', category: 'Testing', logo: 'https://cdn.simpleicons.org/jest/C21325' },
+  { name: 'Cypress', category: 'Testing', logo: 'https://cdn.simpleicons.org/cypress/17202C' },
+  { name: 'Postman', category: 'API Testing', logo: 'https://cdn.simpleicons.org/postman/FF6C37' },
+  { name: 'VS Code', category: 'Development Tool', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vscode/vscode-original.svg' },
+]
+
 export default function Home() {
+  const trendingSectionRef = useRef(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true)
+          }
+        })
+      },
+      { threshold: 0.1 }
+    )
+
+    if (trendingSectionRef.current) {
+      observer.observe(trendingSectionRef.current)
+    }
+
+    return () => {
+      if (trendingSectionRef.current) {
+        observer.unobserve(trendingSectionRef.current)
+      }
+    }
+  }, [])
+
   return (
     <main>
       {/* Hero */}
@@ -106,18 +245,18 @@ export default function Home() {
       </section>
 
       {/* Featured Courses */}
-      <section className="py-16">
+      <section className="py-16 bg-white border-t-2 border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-4">
             <h2 className="text-2xl font-semibold text-gray-900">Featured Certification Courses</h2>
-            <a href="#/courses" className="text-sm font-medium text-primary-700 transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-sm inline-block">
+            <a href="#/courses" className="text-sm font-medium text-primary-700 transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-block">
               View All
             </a>
           </div>
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredCourses.map((course) => (
-              <div key={course.title} className="rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-shadow bg-white">
+              <div key={course.title} className="rounded-xl border border-gray-200 p-5 hover:shadow-xl hover:shadow-gray-400/50 transition-shadow bg-white">
                 <div className="text-xs font-medium text-primary-700 inline-flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-primary-600" />
                   {course.tag}
@@ -125,7 +264,7 @@ export default function Home() {
                 <h3 className="mt-3 text-lg font-semibold text-gray-900">{course.title}</h3>
                 <p className="mt-2 text-sm text-gray-600">{course.description}</p>
                 <div className="mt-4 flex gap-2">
-                  <a href="#/courses/certifications" className="text-sm text-primary-700 font-medium transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-sm inline-flex items-center gap-1 hover:gap-2">
+                  <a href="#/courses/certifications" className="text-sm text-primary-700 font-medium transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-flex items-center gap-1 hover:gap-2">
                     Learn more →
                   </a>
                 </div>
@@ -135,13 +274,162 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trending Courses */}
+      <section ref={trendingSectionRef} className="py-16 bg-linear-to-b from-white to-primary-50 border-t-2 border-primary-200">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900">Trending Courses at KiwisEdutech</h2>
+              <p className="mt-2 text-sm text-gray-600">Most popular courses chosen by our students</p>
+            </div>
+            <a href="#/courses" className="text-sm font-medium text-primary-700 transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-block">
+              View All
+            </a>
+          </div>
+
+          <div className="trending-courses-scroll-container">
+            <div className={`trending-courses-scroll-content ${isVisible ? 'animate-scroll' : ''}`}>
+              {trendingCourses.map((course) => (
+                <div
+                  key={`trending-${course.id}`}
+                  className="shrink-0 w-80 mx-3 bg-white rounded-xl border border-gray-200 p-6 hover:shadow-2xl hover:shadow-gray-400/50 transition-all duration-300 ease-in-out hover:scale-110 hover:z-10 relative"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-primary-700 bg-primary-50 px-3 py-1 rounded-full">
+                      {course.tag}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                      <span className="text-sm font-semibold text-gray-700">{course.rating}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
+                  <p className="text-sm text-gray-600 mb-4">{course.description}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <span>{course.students} enrolled</span>
+                    </div>
+                    <a 
+                      href="#/courses" 
+                      className="text-sm font-medium text-primary-700 hover:text-primary-800 transition-colors"
+                    >
+                      Learn more →
+                    </a>
+                  </div>
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {trendingCourses.map((course) => (
+                <div
+                  key={`trending-duplicate-${course.id}`}
+                  className="shrink-0 w-80 mx-3 bg-white rounded-xl border border-gray-200 p-6 hover:shadow-2xl hover:shadow-gray-400/50 transition-all duration-300 ease-in-out hover:scale-110 hover:z-10 relative"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-primary-700 bg-primary-50 px-3 py-1 rounded-full">
+                      {course.tag}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                      </svg>
+                      <span className="text-sm font-semibold text-gray-700">{course.rating}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
+                  <p className="text-sm text-gray-600 mb-4">{course.description}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <span>{course.students} enrolled</span>
+                    </div>
+                    <a 
+                      href="#/courses" 
+                      className="text-sm font-medium text-primary-700 hover:text-primary-800 transition-colors"
+                    >
+                      Learn more →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Skills and Tools You Will Learn */}
+      <section className="py-16 bg-linear-to-b from-primary-50 via-white to-primary-50 border-t-2 border-primary-300">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Skills and Tools You Will Learn</h2>
+            <p className="text-gray-600 text-lg">Essential technologies and tools required for freshers in current industry standards</p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {skillsAndTools.map((skill, index) => {
+              // Color variations based on category
+              const colorClasses = [
+                'bg-gradient-to-br from-blue-500 to-blue-600 text-white',
+                'bg-gradient-to-br from-purple-500 to-purple-600 text-white',
+                'bg-gradient-to-br from-pink-500 to-pink-600 text-white',
+                'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white',
+                'bg-gradient-to-br from-green-500 to-green-600 text-white',
+                'bg-gradient-to-br from-orange-500 to-orange-600 text-white',
+                'bg-gradient-to-br from-cyan-500 to-cyan-600 text-white',
+                'bg-gradient-to-br from-red-500 to-red-600 text-white',
+              ]
+              const colorIndex = index % colorClasses.length
+              
+              return (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-2xl hover:shadow-gray-400/60 transition-all duration-300 ease-in-out hover:scale-110 hover:-translate-y-2 hover:bg-black flex flex-col items-center justify-center text-center group cursor-pointer relative overflow-hidden"
+                >
+                  {/* Animated background gradient on hover */}
+                  <div className={`absolute inset-0 ${colorClasses[colorIndex]} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`}></div>
+                  
+                  <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-2 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg group-hover:shadow-xl relative z-10 p-2 border-2 border-gray-100 group-hover:border-gray-200">
+                    <img 
+                      src={skill.logo} 
+                      alt={skill.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        const fallback = document.createElement('div')
+                        fallback.className = `w-full h-full rounded-lg ${colorClasses[colorIndex]} flex items-center justify-center`
+                        const text = document.createElement('span')
+                        text.className = 'text-xs font-bold text-white'
+                        text.textContent = skill.name.substring(0, 2).toUpperCase()
+                        fallback.appendChild(text)
+                        e.target.parentElement.appendChild(fallback)
+                      }}
+                    />
+                  </div>
+                  <h3 className="text-xs font-bold text-gray-900 mb-0.5 group-hover:text-white transition-colors relative z-10">{skill.name}</h3>
+                  <p className="text-[10px] text-gray-500 font-medium group-hover:text-white relative z-10">{skill.category}</p>
+                  
+                  {/* Decorative corner accent */}
+                  <div className={`absolute top-0 right-0 w-10 h-10 ${colorClasses[colorIndex]} opacity-0 group-hover:opacity-5 rounded-bl-full transition-opacity duration-300`}></div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Success Stories */}
-      <section className="py-16 bg-linear-to-b from-white to-primary-50">
+      <section className="py-16 bg-gray-50 border-t-2 border-gray-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-semibold text-gray-900">Placement Promise / Success Stories</h2>
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
             {testimonials.map((t) => (
-              <figure key={t.name} className="rounded-xl border border-gray-200 bg-white p-5">
+              <figure key={t.name} className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-xl hover:shadow-gray-400/50 transition-shadow">
                 <blockquote className="text-gray-700 text-sm">“{t.quote}”</blockquote>
                 <figcaption className="mt-4 text-sm font-medium text-gray-900">
                   {t.name}
@@ -154,7 +442,7 @@ export default function Home() {
       </section>
 
       {/* Where Do Our Students Work */}
-      <section className="py-16 bg-linear-to-b from-primary-50 to-white">
+      <section className="py-16 bg-linear-to-b from-primary-50 to-white border-t-2 border-primary-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Where Do Our Students Work?</h2>
@@ -280,7 +568,7 @@ export default function Home() {
       </section>
 
       {/* Partner Colleges */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50 border-t-2 border-gray-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-semibold text-gray-900">Partner Colleges</h2>

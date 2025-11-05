@@ -61,7 +61,7 @@ export const authAPI = {
     });
   },
 
-  // Login user
+  // Login user (credentials can include email, password, and optional role)
   login: async (credentials) => {
     return apiRequest('/auth/login', {
       method: 'POST',
@@ -126,6 +126,19 @@ export const courseAPI = {
   publishCourse: async (courseId) => {
     return apiRequest(`/courses/${courseId}/publish`, {
       method: 'PUT',
+    });
+  },
+
+  // Get course syllabus
+  getCourseSyllabus: async (courseId) => {
+    return apiRequest(`/courses/${courseId}/syllabus`);
+  },
+
+  // Update course syllabus (admin/content_writer)
+  updateCourseSyllabus: async (courseId, syllabusData) => {
+    return apiRequest(`/courses/${courseId}/syllabus`, {
+      method: 'PUT',
+      body: JSON.stringify(syllabusData),
     });
   },
 };
@@ -333,7 +346,8 @@ export const adminAPI = {
   },
 };
 
-// Export apiRequest as default for custom API calls
+// Export apiRequest as both default and named export for flexibility
 // Note: Prefer using the organized API modules (authAPI, courseAPI, etc.) when possible
+export { apiRequest };
 export default apiRequest;
 
