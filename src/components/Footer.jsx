@@ -15,7 +15,6 @@ const footerLinks = [
 
 const loginLinks = [
   { label: 'Employer Login', hash: '#/auth?tab=employer' },
-  { label: 'Admin Login', hash: '#/auth?tab=admin' },
   { label: 'College Login', hash: '#/auth?tab=college' },
 ]
 

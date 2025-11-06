@@ -122,10 +122,16 @@ export const courseAPI = {
     });
   },
 
-  // Publish course (admin)
-  publishCourse: async (courseId) => {
+  // Publish course (admin/content_writer)
+  // Can optionally include courseData and syllabusData for save and publish workflow
+  publishCourse: async (courseId, action = 'publish', courseData = null) => {
+    const body = { action }
+    if (courseData) {
+      Object.assign(body, courseData)
+    }
     return apiRequest(`/courses/${courseId}/publish`, {
       method: 'PUT',
+      body: JSON.stringify(body),
     });
   },
 

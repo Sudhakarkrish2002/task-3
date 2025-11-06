@@ -4,47 +4,82 @@ import { authAPI } from '../utils/api.js'
 export default function Auth() {
   // Get tab from URL parameter (supports both hash query params and regular query params)
   const getTabFromURL = () => {
-    const hash = window.location.hash
-    const search = window.location.search
-    
-    // Try to get from hash query params first (e.g., #/auth?tab=employer)
-    let tab = null
-    if (hash.includes('?')) {
-      const hashParams = new URLSearchParams(hash.split('?')[1])
-      tab = hashParams.get('tab')
+    try {
+      const hash = window.location.hash || ''
+      const search = window.location.search || ''
+      
+      // Try to get from hash query params first (e.g., #/auth?tab=employer)
+      let tab = null
+      if (hash && hash.includes('?')) {
+        try {
+          const hashParts = hash.split('?')
+          if (hashParts.length > 1) {
+            const hashParams = new URLSearchParams(hashParts[1])
+            tab = hashParams.get('tab')
+          }
+        } catch (e) {
+          console.error('Error parsing hash params:', e)
+        }
+      }
+      
+      // Fallback to regular query params
+      if (!tab && search) {
+        try {
+          const urlParams = new URLSearchParams(search)
+          tab = urlParams.get('tab')
+        } catch (e) {
+          console.error('Error parsing search params:', e)
+        }
+      }
+      
+      // Validate tab value
+      const validTabs = ['employer', 'college', 'admin', 'content', 'student']
+      return validTabs.includes(tab) ? tab : 'student'
+    } catch (error) {
+      console.error('Error in getTabFromURL:', error)
+      // Return default tab if anything goes wrong
+      return 'student'
     }
-    
-    // Fallback to regular query params
-    if (!tab && search) {
-      const urlParams = new URLSearchParams(search)
-      tab = urlParams.get('tab')
-    }
-    
-    return tab === 'employer' || tab === 'college' || tab === 'admin' ? tab : 'student'
   }
 
-  const [activeTab, setActiveTab] = useState(getTabFromURL()) // student, employer, college, admin
+  const [activeTab, setActiveTab] = useState(() => getTabFromURL()) // student, employer, college, admin, content
   const [isLogin, setIsLogin] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
   // Update tab when URL changes
   useEffect(() => {
-    const handleHashChange = () => {
-      const newTab = getTabFromURL()
-      if (newTab !== activeTab) {
-        setActiveTab(newTab)
-        setError('')
+    const updateTab = () => {
+      try {
+        const newTab = getTabFromURL()
+        console.log('Updating tab from URL:', newTab, 'Hash:', window.location.hash)
+        setActiveTab(prevTab => {
+          if (newTab !== prevTab) {
+            setError('')
+            return newTab
+          }
+          return prevTab
+        })
+      } catch (error) {
+        console.error('Error updating tab:', error)
+        // Ensure we have a valid tab even if there's an error
+        setActiveTab('student')
       }
     }
-    // Check on mount and when URL changes
-    const currentTab = getTabFromURL()
-    if (currentTab !== activeTab) {
-      setActiveTab(currentTab)
+    
+    // Check on mount - use setTimeout to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      updateTab()
+    }, 0)
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', updateTab)
+    
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener('hashchange', updateTab)
     }
-    window.addEventListener('hashchange', handleHashChange)
-    return () => window.removeEventListener('hashchange', handleHashChange)
-  }, [activeTab])
+  }, [])
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -59,6 +94,7 @@ export default function Auth() {
     confirmPassword: '',
     company: '', // for employer
     college: '', // for college
+    bio: '', // for content writer
   })
 
   const handleLoginChange = (e) => {
@@ -79,17 +115,22 @@ export default function Auth() {
     setIsLoading(true)
 
     try {
+      // Map 'content' to 'content_writer' for backend
+      const backendRole = activeTab === 'content' ? 'content_writer' : activeTab
+      
       const response = await authAPI.login({
         email: loginData.email,
         password: loginData.password,
-        role: activeTab, // Include the selected role tab
+        role: backendRole, // Include the selected role tab
       })
 
       if (response.success) {
         const role = response.user.role
         
         // Verify that the logged-in user's role matches the selected tab
-        if (role !== activeTab) {
+        // Map 'content' to 'content_writer' for comparison
+        const expectedRole = activeTab === 'content' ? 'content_writer' : activeTab
+        if (role !== expectedRole) {
           setError(`You logged in as ${role}, but you selected ${activeTab}. Please select the correct role tab.`)
           setIsLoading(false)
           return
@@ -111,6 +152,8 @@ export default function Auth() {
           window.location.hash = '#/dashboard/college'
         } else if (role === 'admin') {
           window.location.hash = '#/admin/courses'
+        } else if (role === 'content_writer') {
+          window.location.hash = '#/dashboard/content'
         } else {
           window.location.hash = '#/'
         }
@@ -157,12 +200,26 @@ export default function Auth() {
 
     try {
       // Prepare registration data based on role
+      // Map 'content' to 'content_writer' for backend
+      let backendRole = activeTab
+      if (activeTab === 'content') {
+        backendRole = 'content_writer'
+      } else if (activeTab === 'student') {
+        backendRole = 'student'
+      } else if (activeTab === 'employer') {
+        backendRole = 'employer'
+      } else if (activeTab === 'admin') {
+        backendRole = 'admin'
+      } else {
+        backendRole = 'college'
+      }
+      
       const registrationPayload = {
         name: registerData.name,
         email: registerData.email,
         phone: registerData.phone,
         password: registerData.password,
-        role: activeTab === 'student' ? 'student' : activeTab === 'employer' ? 'employer' : activeTab === 'admin' ? 'admin' : 'college',
+        role: backendRole,
       }
 
       // Add role-specific data
@@ -172,6 +229,8 @@ export default function Auth() {
         registrationPayload.collegeName = registerData.college
       } else if (activeTab === 'student') {
         registrationPayload.collegeName = registerData.college || ''
+      } else if (activeTab === 'content') {
+        registrationPayload.bio = registerData.bio || ''
       }
 
       const response = await authAPI.register(registrationPayload)
@@ -193,6 +252,8 @@ export default function Auth() {
           window.location.hash = '#/dashboard/college'
         } else if (role === 'admin') {
           window.location.hash = '#/admin/courses'
+        } else if (role === 'content_writer') {
+          window.location.hash = '#/dashboard/content'
         } else {
           window.location.hash = '#/'
         }
@@ -205,6 +266,7 @@ export default function Auth() {
           confirmPassword: '',
           company: '',
           college: '',
+          bio: '',
         })
       }
     } catch (error) {
@@ -234,420 +296,524 @@ export default function Auth() {
         return 'College'
       case 'admin':
         return 'Admin'
+      case 'content':
+        return 'Content'
       default:
         return ''
     }
   }
 
-  // Check if we should show tabs (only show when not on student login)
-  const showTabs = activeTab !== 'student'
-  // Show Student tab only when not on employer/college/admin login
+  // Check if we should show tabs (only show when not on student/login/admin/content login)
+  // Hide tabs for content and admin login (hidden logins)
+  const showTabs = activeTab !== 'student' && activeTab !== 'content' && activeTab !== 'admin'
+  // Show Student tab only when not on employer/college/admin/content login
   const showStudentTab = activeTab === 'student'
 
+  // Ensure activeTab is always valid
+  const validActiveTab = ['employer', 'college', 'admin', 'content', 'student'].includes(activeTab) 
+    ? activeTab 
+    : 'student'
+
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl pt-15 font-bold text-gray-900">
-            Login or Create Your Account
-          </h1>
-          <p className="mt-4 text-lg text-gray-600">
-            Access your account or create a new one to get started
-          </p>
-        </div>
-      </section>
+    <main className="min-h-screen bg-white relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-br from-primary-50 to-primary-100 transform skew-x-12 origin-top-right"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-200 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-primary-300 rounded-full blur-2xl opacity-10"></div>
+      </div>
 
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-          {/* Tab Buttons - Show only Employer and College when coming from footer, hide Student tab */}
-          {showTabs && (
-            <div className="flex flex-wrap gap-3 mb-8 border-b border-gray-200 pb-4">
-            {showStudentTab && (
-              <button
-                onClick={() => {
-                  setActiveTab('student')
-                  setError('')
-                  window.location.hash = '#/auth?tab=student'
-                }}
-                className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                  activeTab === 'student'
-                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
-                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
-                }`}
-              >
-                <span className="relative z-10">Student Login</span>
-                {activeTab === 'student' && (
-                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                )}
-              </button>
-            )}
-            <button
-              onClick={() => {
-                setActiveTab('employer')
-                setError('')
-                window.location.hash = '#/auth?tab=employer'
-              }}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                activeTab === 'employer'
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
-              }`}
-            >
-              <span className="relative z-10">Employer Login</span>
-              {activeTab === 'employer' && (
-                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('college')
-                setError('')
-                window.location.hash = '#/auth?tab=college'
-              }}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                activeTab === 'college'
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
-              }`}
-            >
-              <span className="relative z-10">College Login</span>
-              {activeTab === 'college' && (
-                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('admin')
-                setError('')
-                window.location.hash = '#/auth?tab=admin'
-              }}
-              className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                activeTab === 'admin'
-                  ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
-                  : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
-              }`}
-            >
-              <span className="relative z-10">Admin Login</span>
-              {activeTab === 'admin' && (
-                <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-              )}
-            </button>
-          </div>
-          )}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+        <div className="w-full max-w-5xl">
+          <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            {/* Left Side - Branding */}
+            <div className="hidden lg:flex flex-col justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 p-12 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl -mr-32 -mt-32"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-2xl -ml-32 -mb-32"></div>
+              
+              <div className="relative z-10">
+                <div className="mb-8">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h1 className="text-4xl font-bold mb-3 leading-tight">
+                    {isLogin ? 'Welcome Back!' : 'Join KiwisEdutech'}
+                  </h1>
+                  <p className="text-primary-100 text-lg">
+                    {isLogin ? 'Continue your learning journey' : 'Start your path to success today'}
+                  </p>
+                </div>
 
-          {/* Login/Register Toggle */}
-          <div className="flex gap-4 mb-8">
-              <button
-                onClick={() => {
-                  setIsLogin(true)
-                  setError('')
-                }}
-                className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                  isLogin
-                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
-                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
-                }`}
-              >
-                <span className="relative z-10">Login</span>
-                {isLogin && (
-                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsLogin(false)
-                  setError('')
-                }}
-                className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                  !isLogin
-                    ? 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)] hover:bg-primary-700'
-                    : 'bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 hover:scale-105 hover:shadow-2xl hover:shadow-gray-400/60 hover:text-gray-900'
-                }`}
-              >
-                <span className="relative z-10">Register as {getTabLabel(activeTab)}</span>
-                {!isLogin && (
-                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                )}
-              </button>
-            </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-red-600 mt-0.5 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <div className="flex-1">
-                  <p className="text-sm text-red-800 font-medium">{error}</p>
-                  {error.includes('not found') || error.includes('register') ? (
-                    <button
-                      onClick={() => setIsLogin(false)}
-                      className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
-                    >
-                      Click here to register
-                    </button>
-                  ) : error.includes('already exists') || error.includes('login') ? (
-                    <button
-                      onClick={() => setIsLogin(true)}
-                      className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
-                    >
-                      Click here to login
-                    </button>
-                  ) : null}
+                <div className="space-y-4 mt-10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-primary-50">Expert-led courses</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-primary-50">Industry certifications</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-primary-50">Career opportunities</span>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Login Form */}
-          {isLogin ? (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {getTabLabel(activeTab)} Login
-              </h2>
-              <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="loginEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="loginEmail"
-                    name="email"
-                    value={loginData.email}
-                    onChange={handleLoginChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder={`${activeTab}@example.com`}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="loginPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Password *
-                  </label>
-                  <input
-                    type="password"
-                    id="loginPassword"
-                    name="password"
-                    value={loginData.password}
-                    onChange={handleLoginChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="Enter your password"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-2 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" />
-                    <span className="text-sm text-gray-700">Remember me</span>
-                  </label>
-                  <a href="#/forgot-password" className="text-sm text-primary-700 hover:text-primary-800">
-                    Forgot password?
-                  </a>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden mt-6 ${
-                    isLoading ? 'opacity-75 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <span className="relative z-10">
-                    {isLoading ? 'Logging in...' : `Login as ${getTabLabel(activeTab)}`}
-                  </span>
-                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                </button>
-              </form>
-            </div>
-          ) : (
-            /* Register Form */
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Register as {getTabLabel(activeTab)}
-              </h2>
-              <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="registerName" className="block text-sm font-medium text-gray-700 mb-1">
-                    {activeTab === 'student' ? 'Full Name' : activeTab === 'employer' ? 'Contact Person Name' : activeTab === 'admin' ? 'Admin Name' : 'College/Contact Name'} *
-                  </label>
-                  <input
-                    type="text"
-                    id="registerName"
-                    name="name"
-                    value={registerData.name}
-                    onChange={handleRegisterChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="Enter your name"
-                  />
-                </div>
-
-                {activeTab === 'employer' && (
-                  <div>
-                    <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
-                      Company Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="company"
-                      name="company"
-                      value={registerData.company}
-                      onChange={handleRegisterChange}
-                      required
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                      placeholder="Your company name"
-                    />
+            {/* Right Side - Form */}
+            <div className="p-8 sm:p-12">
+              {/* Mobile Header */}
+              <div className="lg:hidden text-center mb-8">
+                {validActiveTab === 'content' && (
+                  <div className="mb-4 px-4 py-2 bg-primary-100 border border-primary-300 rounded-lg">
+                    <p className="text-sm font-semibold text-primary-800">📝 Content Writer Login</p>
                   </div>
                 )}
-
-                {activeTab === 'college' && (
-                  <div>
-                    <label htmlFor="college" className="block text-sm font-medium text-gray-700 mb-1">
-                      College Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="college"
-                      name="college"
-                      value={registerData.college}
-                      onChange={handleRegisterChange}
-                      required
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                      placeholder="Your college name"
-                    />
+                {validActiveTab === 'admin' && (
+                  <div className="mb-4 px-4 py-2 bg-red-100 border border-red-300 rounded-lg">
+                    <p className="text-sm font-semibold text-red-800">⚙️ Admin Login</p>
                   </div>
                 )}
-
-                <div>
-                  <label htmlFor="registerEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="registerEmail"
-                    name="email"
-                    value={registerData.email}
-                    onChange={handleRegisterChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="your.email@example.com"
-                  />
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-primary-600 rounded-xl mb-4">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
                 </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                  {isLogin ? 'Sign In' : 'Create Account'}
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  {isLogin ? 'Welcome back!' : 'Get started today'}
+                </p>
+              </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={registerData.phone}
-                    onChange={handleRegisterChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="+91 9876543210"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="registerPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Password *
-                  </label>
-                  <input
-                    type="password"
-                    id="registerPassword"
-                    name="password"
-                    value={registerData.password}
-                    onChange={handleRegisterChange}
-                    required
-                    minLength={8}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="Minimum 8 characters"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password *
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={registerData.confirmPassword}
-                    onChange={handleRegisterChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="Re-enter your password"
-                  />
-                </div>
-
-                <div className="flex items-start">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    required
-                    className="mt-1 mr-2 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <label htmlFor="terms" className="text-sm text-gray-700">
-                    I agree to the{' '}
-                    <a href="#/terms" className="text-primary-700 hover:text-primary-800">
-                      Terms & Conditions
-                    </a>{' '}
-                    and{' '}
-                    <a href="#/privacy" className="text-primary-700 hover:text-primary-800">
-                      Privacy Policy
-                    </a>
-                  </label>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden mt-6 ${
-                    isLoading ? 'opacity-75 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <span className="relative z-10">
-                    {isLoading ? 'Creating account...' : `Create ${getTabLabel(activeTab)} Account`}
-                  </span>
-                  <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Additional Links */}
-          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-600">
-              {isLogin ? (
-                <>
-                  Don't have an account?{' '}
+              {/* Desktop Header */}
+              <div className="hidden lg:block mb-8">
+                {validActiveTab === 'content' && (
+                  <div className="mb-4 px-4 py-2 bg-primary-100 border border-primary-300 rounded-lg">
+                    <p className="text-sm font-semibold text-primary-800">📝 Content Writer Login</p>
+                  </div>
+                )}
+                {validActiveTab === 'admin' && (
+                  <div className="mb-4 px-4 py-2 bg-red-100 border border-red-300 rounded-lg">
+                    <p className="text-sm font-semibold text-red-800">⚙️ Admin Login</p>
+                  </div>
+                )}
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  {isLogin ? 'Sign In' : 'Create Account'}
+                </h2>
+                <p className="text-gray-600">
+                  {isLogin ? 'Enter your credentials to continue' : 'Fill in your details to get started'}
+                </p>
+              </div>
+              {/* Tab Buttons */}
+              {showTabs && (
+                <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
+                  {showStudentTab && (
+                    <button
+                      onClick={() => {
+                        setActiveTab('student')
+                        setError('')
+                        window.location.hash = '#/auth?tab=student'
+                      }}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        activeTab === 'student'
+                          ? 'bg-primary-600 text-white shadow-md'
+                          : 'text-gray-600 hover:bg-white'
+                      }`}
+                    >
+                      Student
+                    </button>
+                  )}
                   <button
-                    onClick={() => setIsLogin(false)}
-                    className="text-primary-700 hover:text-primary-800 font-medium"
+                    onClick={() => {
+                      setActiveTab('employer')
+                      setError('')
+                      window.location.hash = '#/auth?tab=employer'
+                    }}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      activeTab === 'employer'
+                        ? 'bg-primary-600 text-white shadow-md'
+                        : 'text-gray-600 hover:bg-white'
+                    }`}
                   >
-                    Register as {getTabLabel(activeTab)}
+                    Employer
                   </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{' '}
                   <button
-                    onClick={() => setIsLogin(true)}
-                    className="text-primary-700 hover:text-primary-800 font-medium"
+                    onClick={() => {
+                      setActiveTab('college')
+                      setError('')
+                      window.location.hash = '#/auth?tab=college'
+                    }}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      activeTab === 'college'
+                        ? 'bg-primary-600 text-white shadow-md'
+                        : 'text-gray-600 hover:bg-white'
+                    }`}
                   >
-                    Login here
+                    College
                   </button>
-                </>
+                  <button
+                    onClick={() => {
+                      setActiveTab('admin')
+                      setError('')
+                      window.location.hash = '#/auth?tab=admin'
+                    }}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      activeTab === 'admin'
+                        ? 'bg-primary-600 text-white shadow-md'
+                        : 'text-gray-600 hover:bg-white'
+                    }`}
+                  >
+                    Admin
+                  </button>
+                </div>
               )}
-            </p>
+
+              {/* Login/Register Toggle */}
+              <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
+                <button
+                  onClick={() => {
+                    setIsLogin(true)
+                    setError('')
+                  }}
+                  className={`flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    isLogin
+                      ? 'bg-primary-600 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-white'
+                  }`}
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setIsLogin(false)
+                    setError('')
+                  }}
+                  className={`flex-1 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    !isLogin
+                      ? 'bg-primary-600 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-white'
+                  }`}
+                >
+                  Register
+                </button>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm text-red-800 font-medium">{error}</p>
+                      {error.includes('not found') || error.includes('register') ? (
+                        <button
+                          onClick={() => setIsLogin(false)}
+                          className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
+                        >
+                          Click here to register
+                        </button>
+                      ) : error.includes('already exists') || error.includes('login') ? (
+                        <button
+                          onClick={() => setIsLogin(true)}
+                          className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
+                        >
+                          Click here to login
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Login Form */}
+              {isLogin ? (
+                <form onSubmit={handleLoginSubmit} className="space-y-5">
+                  <div>
+                    <label htmlFor="loginEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="loginEmail"
+                      name="email"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder={`${activeTab}@example.com`}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="loginPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      id="loginPassword"
+                      name="password"
+                      value={loginData.password}
+                      onChange={handleLoginChange}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="Enter your password"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center cursor-pointer">
+                      <input type="checkbox" className="mr-2 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" />
+                      <span className="text-sm text-gray-600">Remember me</span>
+                    </label>
+                    <a href="#/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                      Forgot password?
+                    </a>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full rounded-xl bg-primary-600 px-6 py-3.5 text-white text-base font-semibold transition-all shadow-lg hover:bg-primary-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] mt-2 ${
+                      isLoading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Logging in...
+                      </span>
+                    ) : (
+                      `Sign in as ${getTabLabel(activeTab)}`
+                    )}
+                  </button>
+                </form>
+              ) : (
+                /* Register Form */
+                <form onSubmit={handleRegisterSubmit} className="space-y-5">
+                  <div>
+                    <label htmlFor="registerName" className="block text-sm font-semibold text-gray-700 mb-2">
+                      {activeTab === 'student' ? 'Full Name' : activeTab === 'employer' ? 'Contact Person Name' : activeTab === 'admin' ? 'Admin Name' : activeTab === 'content' ? 'Content Writer Name' : 'College/Contact Name'}
+                    </label>
+                    <input
+                      type="text"
+                      id="registerName"
+                      name="name"
+                      value={registerData.name}
+                      onChange={handleRegisterChange}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="Enter your name"
+                    />
+                  </div>
+
+                  {activeTab === 'employer' && (
+                    <div>
+                      <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Company Name
+                      </label>
+                      <input
+                        type="text"
+                        id="company"
+                        name="company"
+                        value={registerData.company}
+                        onChange={handleRegisterChange}
+                        required
+                        className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                        placeholder="Your company name"
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === 'college' && (
+                    <div>
+                      <label htmlFor="college" className="block text-sm font-semibold text-gray-700 mb-2">
+                        College Name
+                      </label>
+                      <input
+                        type="text"
+                        id="college"
+                        name="college"
+                        value={registerData.college}
+                        onChange={handleRegisterChange}
+                        required
+                        className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                        placeholder="Your college name"
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === 'content' && (
+                    <div>
+                      <label htmlFor="bio" className="block text-sm font-semibold text-gray-700 mb-2">
+                        Bio (Optional)
+                      </label>
+                      <textarea
+                        id="bio"
+                        name="bio"
+                        value={registerData.bio || ''}
+                        onChange={handleRegisterChange}
+                        rows="3"
+                        className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                        placeholder="Tell us about yourself..."
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="registerEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="registerEmail"
+                      name="email"
+                      value={registerData.email}
+                      onChange={handleRegisterChange}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={registerData.phone}
+                      onChange={handleRegisterChange}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="+91 9876543210"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="registerPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      id="registerPassword"
+                      name="password"
+                      value={registerData.password}
+                      onChange={handleRegisterChange}
+                      required
+                      minLength={8}
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="Minimum 8 characters"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={registerData.confirmPassword}
+                      onChange={handleRegisterChange}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="Re-enter your password"
+                    />
+                  </div>
+
+                  <div className="flex items-start">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      required
+                      className="mt-1 mr-3 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                    <label htmlFor="terms" className="text-sm text-gray-600">
+                      I agree to the{' '}
+                      <a href="#/terms" className="text-primary-600 hover:text-primary-700 font-medium">
+                        Terms & Conditions
+                      </a>{' '}
+                      and{' '}
+                      <a href="#/privacy" className="text-primary-600 hover:text-primary-700 font-medium">
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full rounded-xl bg-primary-600 px-6 py-3.5 text-white text-base font-semibold transition-all shadow-lg hover:bg-primary-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] mt-2 ${
+                      isLoading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Creating account...
+                      </span>
+                    ) : (
+                      `Create ${getTabLabel(activeTab)} Account`
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* Additional Links */}
+              <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+                <p className="text-sm text-gray-600">
+                  {isLogin ? (
+                    <>
+                      Don't have an account?{' '}
+                      <button
+                        onClick={() => setIsLogin(false)}
+                        className="text-primary-600 hover:text-primary-700 font-semibold"
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{' '}
+                      <button
+                        onClick={() => setIsLogin(true)}
+                        className="text-primary-600 hover:text-primary-700 font-semibold"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

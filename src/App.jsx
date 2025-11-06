@@ -21,6 +21,7 @@ import StudentDashboard from './pages/StudentDashboard.jsx'
 import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import CollegeDashboard from './pages/CollegeDashboard.jsx'
 import AdminCourseManagement from './pages/AdminCourseManagement.jsx'
+import ContentDashboard from './pages/ContentDashboard.jsx'
 import TermsConditions from './pages/TermsConditions.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import RefundPolicy from './pages/RefundPolicy.jsx'
@@ -53,6 +54,7 @@ const routes = {
   '#/dashboard/student': <ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>,
   '#/dashboard/employer': <ProtectedRoute requiredRole="employer"><EmployerDashboard /></ProtectedRoute>,
   '#/dashboard/college': <ProtectedRoute requiredRole="college"><CollegeDashboard /></ProtectedRoute>,
+  '#/dashboard/content': <ProtectedRoute requiredRole="content_writer"><ContentDashboard /></ProtectedRoute>,
   '#/admin/courses': <ProtectedRoute requiredRole="admin"><AdminCourseManagement /></ProtectedRoute>,
   '#/terms': <TermsConditions />,
   '#/privacy': <PrivacyPolicy />,
@@ -131,7 +133,7 @@ export default function App() {
       )}
       <Navbar bannerVisible={showBanner} />
       <div className="flex-1">
-        <PageTransition key={routeHash}>
+        <PageTransition routeKey={routeHash}>
           {Content}
         </PageTransition>
       </div>

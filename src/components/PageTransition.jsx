@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-export default function PageTransition({ children, key: routeKey }) {
+export default function PageTransition({ children, routeKey }) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {

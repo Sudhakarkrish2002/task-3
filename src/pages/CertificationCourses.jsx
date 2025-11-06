@@ -1,95 +1,64 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { courseAPI } from '../utils/api.js'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 
-const topCertificationCourses = [
-  {
-    id: 1,
-    title: 'Full-Stack Web Development Certification',
-    description: 'Comprehensive MERN stack training with industry-recognized certification.',
-    duration: '12 weeks',
-    learners: '15,000+',
-    rating: 4.8,
-    features: [
-      'Live interactive sessions',
-      'Industry projects',
-      'Career support',
-      'Certificate of completion',
-    ],
-  },
-  {
-    id: 2,
-    title: 'Data Science & ML Certification',
-    description: 'Master Python, statistics, ML algorithms with hands-on data science projects.',
-    duration: '16 weeks',
-    learners: '12,500+',
-    rating: 4.9,
-    features: [
-      'Real-world datasets',
-      'ML model deployment',
-      'Portfolio building',
-      'Placement assistance',
-    ],
-  },
-  {
-    id: 3,
-    title: 'Cloud Computing (AWS & Azure) Certification',
-    description: 'End-to-end cloud training with dual certifications from AWS and Azure.',
-    duration: '10 weeks',
-    learners: '8,200+',
-    rating: 4.7,
-    features: [
-      'AWS Certified Solutions Architect',
-      'Azure Fundamentals',
-      'Hands-on labs',
-      'Exam preparation',
-    ],
-  },
-  {
-    id: 4,
-    title: 'DevOps Engineering Certification',
-    description: 'Complete DevOps training with CI/CD, Docker, Kubernetes, and automation.',
-    duration: '12 weeks',
-    learners: '9,800+',
-    rating: 4.8,
-    features: [
-      'Docker & Kubernetes',
-      'CI/CD pipelines',
-      'Infrastructure as Code',
-      'Industry mentorship',
-    ],
-  },
-  {
-    id: 5,
-    title: 'React & Next.js Advanced Certification',
-    description: 'Advanced React patterns, Next.js framework, and modern frontend architecture.',
-    duration: '8 weeks',
-    learners: '18,000+',
-    rating: 4.9,
-    features: [
-      'Server-side rendering',
-      'Performance optimization',
-      'Testing strategies',
-      'Production deployment',
-    ],
-  },
-]
-
 export default function CertificationCourses() {
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadCertificationCourses()
+  }, [])
+
+  const loadCertificationCourses = async () => {
+    setLoading(true)
+    try {
+      const response = await courseAPI.getAllCourses({ category: 'certification', limit: 100 })
+      if (response.success) {
+        setCourses(response.data.courses || [])
+      }
+    } catch (error) {
+      console.error('Error loading certification courses:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatPrice = (price) => {
+    if (!price) return 'Free'
+    return `₹${price.toLocaleString('en-IN')}`
+  }
+
   const handleViewSyllabus = (course) => {
     // Navigate to syllabus page with course details as query params
     const params = new URLSearchParams({
       title: course.title,
-      description: course.description || '',
+      description: course.description || course.shortDescription || '',
       duration: course.duration || '',
+      fee: formatPrice(course.price),
       type: 'certification'
     })
     
     // If course has an ID, include it for API fetching
-    if (course._id || course.id) {
-      params.set('id', course._id || course.id)
+    if (course._id) {
+      params.set('id', course._id)
     }
     
     window.location.hash = `#/courses/syllabus?${params.toString()}`
+  }
+
+  // Extract features from syllabus or use defaults
+  const getCourseFeatures = (course) => {
+    if (course.syllabus && course.syllabus.learningOutcomes && course.syllabus.learningOutcomes.length > 0) {
+      return course.syllabus.learningOutcomes.slice(0, 4)
+    }
+    // Default features if no syllabus
+    return [
+      'Live interactive sessions',
+      'Industry projects',
+      'Career support',
+      'Certificate of completion',
+    ]
   }
 
   return (
@@ -167,73 +136,91 @@ export default function CertificationCourses() {
             <p className="text-gray-600">Choose from our most popular industry-recognized programs</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {topCertificationCourses.map((course) => (
-              <div key={course.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                {/* Course Header */}
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
-                  <p className="text-sm text-gray-600">{course.description}</p>
-                </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading certification courses...</p>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No certification courses available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {courses.map((course) => {
+                const features = getCourseFeatures(course)
+                return (
+                  <div key={course._id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                    {/* Course Header */}
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
+                      <p className="text-sm text-gray-600">{course.shortDescription || course.description}</p>
+                    </div>
 
-                {/* Course Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Duration</div>
-                    <div className="text-sm font-semibold text-gray-900">{course.duration}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Learners</div>
-                    <div className="text-sm font-semibold text-gray-900">{course.learners}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Rating</div>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                      </svg>
-                      <span className="text-sm font-semibold text-gray-900">{course.rating}</span>
+                    {/* Course Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Duration</div>
+                        <div className="text-sm font-semibold text-gray-900">{course.duration}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Learners</div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {course.enrolledCount ? `${course.enrolledCount.toLocaleString()}+` : '0+'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Rating</div>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                          </svg>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {course.rating ? course.rating.toFixed(1) : '4.5'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Course Features */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">Key Features:</h4>
+                      <ul className="space-y-2">
+                        {features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                            <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Call to Action Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleViewSyllabus(course)}
+                        className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          View Syllabus
+                        </span>
+                        <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                      </button>
+                      <button className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                        <span className="relative z-10">Enroll Now</span>
+                        <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                {/* Course Features */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Key Features:</h4>
-                  <ul className="space-y-2">
-                    {course.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                        <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Call to Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleViewSyllabus(course)}
-                    className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
-                  >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      View Syllabus
-                    </span>
-                    <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                  </button>
-                  <button className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
-                    <span className="relative z-10">Enroll Now</span>
-                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 

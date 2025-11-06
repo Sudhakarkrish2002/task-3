@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { courseSyllabus, certificationCourseSyllabus, placementCourseSyllabus } from '../utils/courseSyllabus.js'
 import { courseAPI } from '../utils/api.js'
+import SyllabusEditor from '../components/SyllabusEditor.jsx'
 
 export default function Syllabus() {
   const [course, setCourse] = useState(null)
@@ -12,6 +13,9 @@ export default function Syllabus() {
     batch: '',
     objective: ''
   })
+  const [user, setUser] = useState(null)
+  const [showSyllabusEditor, setShowSyllabusEditor] = useState(false)
+  const [isContentWriter, setIsContentWriter] = useState(false)
 
   // Store course view in localStorage
   const storeCourseView = (courseData) => {
@@ -39,6 +43,20 @@ export default function Syllabus() {
       console.error('Error storing course view:', error)
     }
   }
+
+  useEffect(() => {
+    // Check if user is content writer
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData)
+        setUser(parsedUser)
+        setIsContentWriter(parsedUser.role === 'content_writer' || parsedUser.role === 'admin')
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -214,7 +232,10 @@ export default function Syllabus() {
   }
 
   const stats = getCourseStats()
-  const navTabs = ['Certificate', 'Placement', 'Syllabus', 'Projects', 'Teachers']
+  const isPlacementGuaranteed = course?.type === 'placement'
+  const navTabs = isPlacementGuaranteed 
+    ? ['Overview', 'Syllabus', 'Placement', 'Career Support', 'Success Stories'] 
+    : ['Certificate', 'Placement', 'Syllabus', 'Projects', 'Teachers']
 
   // Format price for display
   const formatPrice = (price) => {
@@ -223,7 +244,17 @@ export default function Syllabus() {
     return `₹${price}`
   }
 
-  const originalPrice = course.originalPrice || (course.fee ? `₹${parseInt(course.fee.replace(/[₹,]/g, '')) * 3}` : '₹4499')
+  // Helper function to extract numeric value from price (handles both number and string)
+  const getNumericPrice = (price) => {
+    if (!price) return 0
+    if (typeof price === 'number') return price
+    if (typeof price === 'string') {
+      return parseInt(price.replace(/[₹,]/g, '')) || 0
+    }
+    return 0
+  }
+
+  const originalPrice = course.originalPrice || (course.fee ? `₹${getNumericPrice(course.fee) * 3}` : '₹4499')
   const discountedPrice = course.discountPrice || course.fee || '₹1349'
 
   // Generate upcoming batches
@@ -276,9 +307,23 @@ export default function Syllabus() {
                 </div>
                 <p className="text-xs text-gray-500 mt-1 whitespace-nowrap">Valid till 5th Nov</p>
               </div>
-              <button className="px-3 sm:px-6 py-2 bg-primary-600 text-white text-xs sm:text-base font-semibold rounded-lg hover:bg-primary-700 transition-colors whitespace-nowrap shrink-0">
-                Enroll Now
-              </button>
+              <div className="flex items-center gap-2">
+                {isContentWriter && course?.id && (
+                  <button
+                    onClick={() => setShowSyllabusEditor(true)}
+                    className="px-3 sm:px-4 py-2 bg-gray-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-gray-700 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1"
+                    title="Edit Syllabus"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                )}
+                <button className="px-3 sm:px-6 py-2 bg-primary-600 text-white text-xs sm:text-base font-semibold rounded-lg hover:bg-primary-700 transition-colors whitespace-nowrap shrink-0">
+                  Enroll Now
+                </button>
+              </div>
               </div>
           </div>
         </div>
@@ -523,7 +568,132 @@ export default function Syllabus() {
           </div>
         </section>
 
-        {/* Placement Assistance Section */}
+         {/* Placement Assistance Section - Enhanced for Placement Guaranteed Courses */}
+        {isPlacementGuaranteed ? (
+          <>
+            {/* Placement Guarantee Section */}
+            <section className="mb-12 sm:mb-16 bg-linear-to-br from-green-50 via-blue-50 to-purple-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-green-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                  100% Placement Guarantee
+                </h2>
+              </div>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Guaranteed Job Placement
+                    </h3>
+                    <p className="text-gray-700 text-base mb-4">
+                      We guarantee job placement within 6 months of course completion. If you don't get placed, we'll refund 100% of your course fee.
+                    </p>
+                    <ul className="space-y-2 text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>Minimum 3 job interviews guaranteed</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>Salary range: ₹3-8 LPA for freshers</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>Direct company referrals from our network</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Placement Process Timeline
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold shrink-0">1</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Week 1-2: Profile Building</h4>
+                          <p className="text-gray-600 text-sm">Resume optimization, LinkedIn profile enhancement, GitHub portfolio setup</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold shrink-0">2</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Week 3-4: Interview Preparation</h4>
+                          <p className="text-gray-600 text-sm">Mock interviews, technical rounds preparation, coding practice sessions</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold shrink-0">3</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Week 5-6: Job Applications</h4>
+                          <p className="text-gray-600 text-sm">Apply to 50+ curated job openings, company referrals, direct interview calls</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold shrink-0">✓</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Placement Achieved</h4>
+                          <p className="text-gray-600 text-sm">Get placed in your dream company with competitive salary package</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">Company Connections</h3>
+                    <p className="text-gray-700 text-base mb-4">We have direct partnerships with 200+ leading tech companies:</p>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+                        <p className="font-semibold text-gray-900">Tech Startups</p>
+                        <p className="text-sm text-gray-600">50+ companies</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+                        <p className="font-semibold text-gray-900">MNCs & IT Giants</p>
+                        <p className="text-sm text-gray-600">100+ companies</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+                        <p className="font-semibold text-gray-900">Product Companies</p>
+                        <p className="text-sm text-gray-600">30+ companies</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+                        <p className="font-semibold text-gray-900">Service Companies</p>
+                        <p className="text-sm text-gray-600">20+ companies</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">Success Metrics</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <span className="text-gray-700 font-medium">Placement Rate</span>
+                        <span className="text-2xl font-bold text-green-600">95%+</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <span className="text-gray-700 font-medium">Average Salary</span>
+                        <span className="text-2xl font-bold text-blue-600">₹5.5 LPA</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                        <span className="text-gray-700 font-medium">Students Placed</span>
+                        <span className="text-2xl font-bold text-purple-600">2000+</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        ) : (
         <section className="mb-12 sm:mb-16 bg-gray-50 rounded-2xl p-6 sm:p-8 lg:p-10">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
             What placement assistance will you receive?
@@ -561,6 +731,7 @@ export default function Syllabus() {
             </div>
           </div>
         </section>
+        )}
 
         {/* How Training Works Section */}
         <section className="mb-12 sm:mb-16">
@@ -829,6 +1000,330 @@ export default function Syllabus() {
             </div>
           </div>
         </section>
+
+        {/* Additional Sections for Placement Guaranteed Courses */}
+        {isPlacementGuaranteed && (
+          <>
+            {/* Comprehensive Career Support Section */}
+            <section className="mb-12 sm:mb-16 bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 lg:p-10">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
+                Comprehensive Career Support Services
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Resume Building</h3>
+                  <ul className="space-y-2 text-gray-600 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 mt-1">•</span>
+                      <span>ATS-optimized resume templates</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 mt-1">•</span>
+                      <span>Professional formatting & design</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 mt-1">•</span>
+                      <span>1-on-1 resume review sessions</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-600 mt-1">•</span>
+                      <span>Industry-specific resume customization</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Interview Preparation</h3>
+                  <ul className="space-y-2 text-gray-600 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600 mt-1">•</span>
+                      <span>Mock interviews with industry experts</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600 mt-1">•</span>
+                      <span>Technical & HR round practice</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600 mt-1">•</span>
+                      <span>Behavioral interview training</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-600 mt-1">•</span>
+                      <span>Real-time feedback & improvement tips</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">LinkedIn Optimization</h3>
+                  <ul className="space-y-2 text-gray-600 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 mt-1">•</span>
+                      <span>Profile headline & summary optimization</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 mt-1">•</span>
+                      <span>Skills endorsement strategies</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 mt-1">•</span>
+                      <span>Network building techniques</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-600 mt-1">•</span>
+                      <span>Recruiter visibility enhancement</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Portfolio Development</h3>
+                  <ul className="space-y-2 text-gray-600 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 mt-1">•</span>
+                      <span>GitHub portfolio optimization</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 mt-1">•</span>
+                      <span>Project showcase website creation</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 mt-1">•</span>
+                      <span>Live project demonstrations</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 mt-1">•</span>
+                      <span>Code review & best practices</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Job Application Support</h3>
+                  <ul className="space-y-2 text-gray-600 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-600 mt-1">•</span>
+                      <span>Curated job opportunities daily</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-600 mt-1">•</span>
+                      <span>Application tracking & follow-ups</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-600 mt-1">•</span>
+                      <span>Cover letter writing assistance</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-600 mt-1">•</span>
+                      <span>Salary negotiation guidance</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Coding Practice</h3>
+                  <ul className="space-y-2 text-gray-600 text-sm">
+                    <li className="flex items-start gap-2">
+                      <span className="text-teal-600 mt-1">•</span>
+                      <span>Daily coding challenges & solutions</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-teal-600 mt-1">•</span>
+                      <span>Data structures & algorithms practice</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-teal-600 mt-1">•</span>
+                      <span>System design interview prep</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-teal-600 mt-1">•</span>
+                      <span>Problem-solving strategies</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            {/* Motivation & Success Stories Section */}
+            <section className="mb-12 sm:mb-16 bg-linear-to-br from-yellow-50 via-orange-50 to-red-50 rounded-2xl p-6 sm:p-8 lg:p-10">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
+                Your Success is Our Mission
+              </h2>
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    Why Choose Placement Guaranteed?
+                  </h3>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-start gap-3">
+                      <span className="text-yellow-600 font-bold text-lg mt-1">✓</span>
+                      <div>
+                        <strong>No Placement? 100% Refund</strong>
+                        <p className="text-sm text-gray-600">Complete guarantee - if you don't get placed within 6 months, we refund your entire course fee</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-yellow-600 font-bold text-lg mt-1">✓</span>
+                      <div>
+                        <strong>Dedicated Career Mentor</strong>
+                        <p className="text-sm text-gray-600">1-on-1 mentorship from industry professionals throughout your job search</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-yellow-600 font-bold text-lg mt-1">✓</span>
+                      <div>
+                        <strong>Continuous Support</strong>
+                        <p className="text-sm text-gray-600">6 months of placement support even after course completion</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-yellow-600 font-bold text-lg mt-1">✓</span>
+                      <div>
+                        <strong>Industry Connections</strong>
+                        <p className="text-sm text-gray-600">Direct referrals to 200+ top tech companies</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Success Stories
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-blue-600 pl-4">
+                      <p className="text-gray-700 mb-2">"Got placed at Infosys with ₹6 LPA package just 2 months after completing the course!"</p>
+                      <p className="text-sm font-semibold text-gray-900">- Rahul Sharma, Full-Stack Developer</p>
+                    </div>
+                    <div className="border-l-4 border-green-600 pl-4">
+                      <p className="text-gray-700 mb-2">"The placement support team helped me crack 3 interviews. Now working at TCS with ₹5.5 LPA!"</p>
+                      <p className="text-sm font-semibold text-gray-900">- Priya Patel, Software Engineer</p>
+                    </div>
+                    <div className="border-l-4 border-purple-600 pl-4">
+                      <p className="text-gray-700 mb-2">"From zero coding knowledge to landing a job at Wipro in 4 months. Best investment ever!"</p>
+                      <p className="text-sm font-semibold text-gray-900">- Amit Kumar, Junior Developer</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-linear-to-r from-yellow-400 to-orange-500 rounded-xl p-6 text-white text-center">
+                <h3 className="text-2xl font-bold mb-2">Join 2000+ Successfully Placed Students</h3>
+                <p className="text-lg mb-4">Start your journey to a successful tech career today!</p>
+                <div className="flex flex-wrap justify-center gap-6 text-sm">
+                  <div>
+                    <p className="text-3xl font-bold">95%+</p>
+                    <p className="text-yellow-100">Placement Rate</p>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold">₹5.5L</p>
+                    <p className="text-yellow-100">Avg. Salary</p>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold">2000+</p>
+                    <p className="text-yellow-100">Students Placed</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Comprehensive Course Syllabus Section */}
+            <section className="mb-12 sm:mb-16 bg-white rounded-2xl border-2 border-primary-200 p-6 sm:p-8 lg:p-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                  Comprehensive Course Syllabus
+                </h2>
+              </div>
+              <p className="text-gray-700 text-lg mb-6">
+                Our placement guaranteed course includes industry-relevant curriculum designed by experts from top tech companies. 
+                Every module includes hands-on projects that you can showcase in your portfolio.
+              </p>
+              <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Course Highlights</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-gray-900">100+ Hours Live Coding</p>
+                      <p className="text-sm text-gray-600">Interactive sessions with real-time coding practice</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-gray-900">5+ Real-World Projects</p>
+                      <p className="text-sm text-gray-600">Build production-ready applications for your portfolio</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-gray-900">1-on-1 Mentoring</p>
+                      <p className="text-sm text-gray-600">Personalized guidance from industry experts</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-gray-900">Industry Best Practices</p>
+                      <p className="text-sm text-gray-600">Learn coding standards used in top companies</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
 
         {/* Course Title */}
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 wrap-break-words">
@@ -1126,6 +1621,29 @@ export default function Syllabus() {
           </div>
         </div>
       </div>
+
+      {/* Syllabus Editor Modal for Content Writers */}
+      {showSyllabusEditor && course?.id && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <SyllabusEditor
+              courseId={course.id}
+              courseTitle={course.title}
+              courseCategory={course.category || course.type}
+              onClose={() => {
+                setShowSyllabusEditor(false)
+                // Reload course data after editing
+                window.location.reload()
+              }}
+              onSave={() => {
+                setShowSyllabusEditor(false)
+                // Reload course data after saving
+                window.location.reload()
+              }}
+            />
+          </div>
+        </div>
+      )}
     </main>
   )
 }

@@ -75,6 +75,7 @@ export default function AdminCourseManagement() {
             <SyllabusEditor
               courseId={selectedCourse._id}
               courseTitle={selectedCourse.title}
+              courseCategory={selectedCourse.category}
               onClose={() => {
                 setShowSyllabusEditor(false)
                 setSelectedCourse(null)

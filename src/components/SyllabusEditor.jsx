@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { courseAPI } from '../utils/api.js'
 
-export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave }) {
+export default function SyllabusEditor({ courseId, courseTitle, courseCategory, onClose, onSave, onSaveAndPublish }) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [syllabus, setSyllabus] = useState({
@@ -12,6 +13,43 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
     projects: [],
     certification: ''
   })
+
+  // Get course type label
+  const getCourseTypeLabel = () => {
+    switch (courseCategory) {
+      case 'certification':
+        return 'Certification Course'
+      case 'placement_training':
+        return 'Placement Training Course'
+      case 'workshop':
+        return 'Workshop'
+      default:
+        return 'Regular Course'
+    }
+  }
+
+  // Get template hints based on course type
+  const getTemplateHints = () => {
+    switch (courseCategory) {
+      case 'certification':
+        return {
+          overview: 'Focus on certification benefits, industry recognition, and exam preparation.',
+          certification: 'Detail the certification process, exam requirements, and industry value.'
+        }
+      case 'placement_training':
+        return {
+          overview: 'Emphasize placement guarantee, interview preparation, and career support.',
+          certification: 'Highlight placement assistance, job guarantee terms, and career support duration.'
+        }
+      default:
+        return {
+          overview: 'Provide a comprehensive overview of what students will learn.',
+          certification: 'Describe the certificate students will receive upon completion.'
+        }
+    }
+  }
+
+  const hints = getTemplateHints()
 
   useEffect(() => {
     if (courseId) {
@@ -24,9 +62,17 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
     try {
       const response = await courseAPI.getCourseSyllabus(courseId)
       if (response.success && response.data.syllabus) {
+        // Transform old module structure to new structure if needed
+        const modules = (response.data.syllabus.modules || []).map(module => ({
+          title: module.title || '',
+          description: module.description || '',
+          duration: module.duration || '',
+          learningOutcomes: module.learningOutcomes || []
+        }))
+        
         setSyllabus({
           overview: response.data.syllabus.overview || '',
-          modules: response.data.syllabus.modules || [],
+          modules: modules,
           learningOutcomes: response.data.syllabus.learningOutcomes || [],
           prerequisites: response.data.syllabus.prerequisites || [],
           projects: response.data.syllabus.projects || [],
@@ -40,17 +86,29 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
     }
   }
 
-  const handleSave = async () => {
+  const handleSave = async (shouldPublish = false) => {
     setSaving(true)
     try {
       const response = await courseAPI.updateCourseSyllabus(courseId, syllabus)
       if (response.success) {
-        alert('Syllabus saved successfully!')
-        if (onSave) onSave(response.data)
+        if (shouldPublish) {
+          // Save and publish in one call - include syllabus in courseData
+          const publishResponse = await courseAPI.publishCourse(courseId, 'publish', { syllabus })
+          if (publishResponse.success) {
+            toast.success('Syllabus saved and course published successfully!')
+            if (onSaveAndPublish) onSaveAndPublish(publishResponse.data)
+          } else {
+            toast.success('Syllabus saved successfully!')
+            if (onSave) onSave(response.data)
+          }
+        } else {
+          toast.success('Syllabus saved successfully!')
+          if (onSave) onSave(response.data)
+        }
         if (onClose) onClose()
       }
     } catch (error) {
-      alert('Error saving syllabus: ' + (error.message || 'Unknown error'))
+      toast.error('Error saving syllabus: ' + (error.message || 'Unknown error'))
     } finally {
       setSaving(false)
     }
@@ -59,7 +117,12 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
   const addModule = () => {
     setSyllabus({
       ...syllabus,
-      modules: [...syllabus.modules, { title: '', duration: '', topics: [] }]
+      modules: [...syllabus.modules, { 
+        title: '', 
+        description: '', 
+        duration: '', 
+        learningOutcomes: [] 
+      }]
     })
   }
 
@@ -76,21 +139,21 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
     })
   }
 
-  const addTopic = (moduleIndex) => {
+  const addLearningOutcome = (moduleIndex) => {
     const updated = [...syllabus.modules]
-    updated[moduleIndex].topics = [...(updated[moduleIndex].topics || []), '']
+    updated[moduleIndex].learningOutcomes = [...(updated[moduleIndex].learningOutcomes || []), '']
     setSyllabus({ ...syllabus, modules: updated })
   }
 
-  const updateTopic = (moduleIndex, topicIndex, value) => {
+  const updateLearningOutcome = (moduleIndex, outcomeIndex, value) => {
     const updated = [...syllabus.modules]
-    updated[moduleIndex].topics[topicIndex] = value
+    updated[moduleIndex].learningOutcomes[outcomeIndex] = value
     setSyllabus({ ...syllabus, modules: updated })
   }
 
-  const removeTopic = (moduleIndex, topicIndex) => {
+  const removeLearningOutcome = (moduleIndex, outcomeIndex) => {
     const updated = [...syllabus.modules]
-    updated[moduleIndex].topics = updated[moduleIndex].topics.filter((_, i) => i !== topicIndex)
+    updated[moduleIndex].learningOutcomes = updated[moduleIndex].learningOutcomes.filter((_, i) => i !== outcomeIndex)
     setSyllabus({ ...syllabus, modules: updated })
   }
 
@@ -145,8 +208,17 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 max-h-[90vh] overflow-y-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Edit Syllabus: {courseTitle}</h2>
-        <p className="text-sm text-gray-600">Customize the course syllabus template</p>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Edit Syllabus: {courseTitle}</h2>
+            {courseCategory && (
+              <span className="inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full bg-primary-100 text-primary-800">
+                {getCourseTypeLabel()}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="text-sm text-gray-600">Customize the course syllabus template based on course type</p>
       </div>
 
       {/* Overview */}
@@ -154,6 +226,9 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           Course Overview
         </label>
+        {hints.overview && (
+          <p className="text-xs text-gray-500 mb-2 italic">{hints.overview}</p>
+        )}
         <textarea
           value={syllabus.overview}
           onChange={(e) => setSyllabus({ ...syllabus, overview: e.target.value })}
@@ -176,56 +251,78 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
         </div>
         <div className="space-y-4">
           {syllabus.modules.map((module, moduleIndex) => (
-            <div key={moduleIndex} className="border border-gray-200 rounded-lg p-4">
+            <div key={moduleIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
               <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={module.title}
-                    onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
-                    placeholder="Module Title"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold mb-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                  />
-                  <input
-                    type="text"
-                    value={module.duration || ''}
-                    onChange={(e) => updateModule(moduleIndex, 'duration', e.target.value)}
-                    placeholder="Duration (e.g., 2 weeks)"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm mb-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                  />
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Module Name *</label>
+                    <input
+                      type="text"
+                      value={module.title || ''}
+                      onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
+                      placeholder="Enter module name"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Module Description *</label>
+                    <textarea
+                      value={module.description || ''}
+                      onChange={(e) => updateModule(moduleIndex, 'description', e.target.value)}
+                      placeholder="Enter module description"
+                      rows="3"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Duration (hours/days) *</label>
+                    <input
+                      type="text"
+                      value={module.duration || ''}
+                      onChange={(e) => updateModule(moduleIndex, 'duration', e.target.value)}
+                      placeholder="e.g., 10 hours or 2 days"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    />
+                  </div>
                 </div>
                 <button
-                  onClick={() => removeModule(moduleIndex)}
-                  className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this module? This action cannot be undone.')) {
+                      removeModule(moduleIndex)
+                    }
+                  }}
+                  className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete module"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
-              <div>
+              <div className="mt-4 pt-4 border-t border-gray-300">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-600">Topics</span>
+                  <label className="block text-xs font-semibold text-gray-600">Learning Outcomes</label>
                   <button
-                    onClick={() => addTopic(moduleIndex)}
-                    className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                    onClick={() => addLearningOutcome(moduleIndex)}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded hover:bg-primary-50"
                   >
-                    + Add Topic
+                    + Add Learning Outcome
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {(module.topics || []).map((topic, topicIndex) => (
-                    <div key={topicIndex} className="flex items-center gap-2">
+                  {(module.learningOutcomes || []).map((outcome, outcomeIndex) => (
+                    <div key={outcomeIndex} className="flex items-center gap-2">
                       <input
                         type="text"
-                        value={topic}
-                        onChange={(e) => updateTopic(moduleIndex, topicIndex, e.target.value)}
-                        placeholder="Topic name"
+                        value={outcome}
+                        onChange={(e) => updateLearningOutcome(moduleIndex, outcomeIndex, e.target.value)}
+                        placeholder="Enter learning outcome"
                         className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                       />
                       <button
-                        onClick={() => removeTopic(moduleIndex, topicIndex)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        onClick={() => removeLearningOutcome(moduleIndex, outcomeIndex)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Remove learning outcome"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -233,10 +330,18 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
                       </button>
                     </div>
                   ))}
+                  {(!module.learningOutcomes || module.learningOutcomes.length === 0) && (
+                    <p className="text-xs text-gray-400 italic">No learning outcomes added yet</p>
+                  )}
                 </div>
               </div>
             </div>
           ))}
+          {syllabus.modules.length === 0 && (
+            <div className="text-center py-8 text-gray-400">
+              <p className="text-sm">No modules added yet. Click "Add Module" to get started.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -356,14 +461,19 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
       {/* Certification */}
       <div className="mb-6">
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Certification Information
+          {courseCategory === 'placement_training' ? 'Placement & Certification Information' : 'Certification Information'}
         </label>
+        {hints.certification && (
+          <p className="text-xs text-gray-500 mb-2 italic">{hints.certification}</p>
+        )}
         <textarea
           value={syllabus.certification}
           onChange={(e) => setSyllabus({ ...syllabus, certification: e.target.value })}
           className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
           rows="3"
-          placeholder="Enter certification details..."
+          placeholder={courseCategory === 'placement_training' 
+            ? "Enter placement guarantee details and certification information..." 
+            : "Enter certification details..."}
         />
       </div>
 
@@ -376,11 +486,18 @@ export default function SyllabusEditor({ courseId, courseTitle, onClose, onSave 
           Cancel
         </button>
         <button
-          onClick={handleSave}
+          onClick={() => handleSave(false)}
+          disabled={saving}
+          className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? 'Saving...' : 'Save Draft'}
+        </button>
+        <button
+          onClick={() => handleSave(true)}
           disabled={saving}
           className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? 'Saving...' : 'Save Syllabus'}
+          {saving ? 'Saving & Publishing...' : 'Save & Publish'}
         </button>
       </div>
     </div>
