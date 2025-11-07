@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { courseSyllabus, certificationCourseSyllabus, placementCourseSyllabus } from '../utils/courseSyllabus.js'
 import { courseAPI } from '../utils/api.js'
-import SyllabusEditor from '../components/SyllabusEditor.jsx'
 
 export default function Syllabus() {
   const [course, setCourse] = useState(null)
@@ -14,8 +13,6 @@ export default function Syllabus() {
     objective: ''
   })
   const [user, setUser] = useState(null)
-  const [showSyllabusEditor, setShowSyllabusEditor] = useState(false)
-  const [isContentWriter, setIsContentWriter] = useState(false)
 
   // Store course view in localStorage
   const storeCourseView = (courseData) => {
@@ -43,20 +40,6 @@ export default function Syllabus() {
       console.error('Error storing course view:', error)
     }
   }
-
-  useEffect(() => {
-    // Check if user is content writer
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData)
-        setUser(parsedUser)
-        setIsContentWriter(parsedUser.role === 'content_writer' || parsedUser.role === 'admin')
-      } catch (error) {
-        console.error('Error parsing user data:', error)
-      }
-    }
-  }, [])
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -237,10 +220,44 @@ export default function Syllabus() {
     ? ['Overview', 'Syllabus', 'Placement', 'Career Support', 'Success Stories'] 
     : ['Certificate', 'Placement', 'Syllabus', 'Projects', 'Teachers']
 
+  // Function to handle tab click and smooth scroll to section
+  const handleTabClick = (tab) => {
+    setActiveTab(tab)
+    
+    // Map tab names to section IDs
+    const sectionMap = {
+      'Certificate': 'certificate-section',
+      'Placement': 'placement-section',
+      'Syllabus': 'syllabus-section',
+      'Projects': 'projects-section',
+      'Teachers': 'teachers-section',
+      'Overview': 'overview-section',
+      'Career Support': 'career-support-section',
+      'Success Stories': 'success-stories-section'
+    }
+    
+    const sectionId = sectionMap[tab]
+    if (sectionId) {
+      const element = document.getElementById(sectionId)
+      if (element) {
+        // Get the sticky header height to offset the scroll
+        const headerOffset = 90 // Adjust based on your sticky header height
+        const elementPosition = element.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }
+
   // Format price for display
   const formatPrice = (price) => {
-    if (!price) return ''
+    if (!price || price === null || price === undefined) return ''
     if (typeof price === 'string' && price.includes('₹')) return price
+    if (typeof price === 'number') return `₹${price.toLocaleString('en-IN')}`
     return `₹${price}`
   }
 
@@ -254,8 +271,9 @@ export default function Syllabus() {
     return 0
   }
 
-  const originalPrice = course.originalPrice || (course.fee ? `₹${getNumericPrice(course.fee) * 3}` : '₹4499')
-  const discountedPrice = course.discountPrice || course.fee || '₹1349'
+  // Use the actual prices from the course data
+  const originalPrice = course.originalPrice || null
+  const discountedPrice = course.fee || course.price || null
 
   // Generate upcoming batches
   const upcomingBatches = [
@@ -284,7 +302,7 @@ export default function Syllabus() {
               {navTabs.map((tab) => (
           <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabClick(tab)}
                   className={`pb-2 px-1 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
                     activeTab === tab
                       ? 'text-primary-600 border-b-2 border-primary-600'
@@ -298,28 +316,18 @@ export default function Syllabus() {
 
             {/* Pricing & Enroll Button */}
             <div className="flex items-center gap-2 sm:gap-4 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="text-right min-w-0">
-                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                  <span className="text-lg sm:text-2xl font-bold text-orange-600 whitespace-nowrap">{formatPrice(discountedPrice)}</span>
-                  {originalPrice && (
-                    <span className="text-xs sm:text-lg text-gray-500 line-through whitespace-nowrap">{formatPrice(originalPrice)}</span>
-                  )}
+              {discountedPrice && (
+                <div className="text-right min-w-0">
+                  <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                    <span className="text-lg sm:text-2xl font-bold text-orange-600 whitespace-nowrap">{formatPrice(discountedPrice)}</span>
+                    {originalPrice && (
+                      <span className="text-xs sm:text-lg text-gray-500 line-through whitespace-nowrap">{formatPrice(originalPrice)}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 whitespace-nowrap">Valid till 5th Nov</p>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 whitespace-nowrap">Valid till 5th Nov</p>
-              </div>
+              )}
               <div className="flex items-center gap-2">
-                {isContentWriter && course?.id && (
-                  <button
-                    onClick={() => setShowSyllabusEditor(true)}
-                    className="px-3 sm:px-4 py-2 bg-gray-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-gray-700 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1"
-                    title="Edit Syllabus"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit
-                  </button>
-                )}
                 <button className="px-3 sm:px-6 py-2 bg-primary-600 text-white text-xs sm:text-base font-semibold rounded-lg hover:bg-primary-700 transition-colors whitespace-nowrap shrink-0">
                   Enroll Now
                 </button>
@@ -330,7 +338,7 @@ export default function Syllabus() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-linear-to-br from-primary-900 via-primary-800 to-primary-700 min-h-[500px] sm:min-h-[600px]" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
+      <section id="overview-section" className="relative overflow-hidden bg-linear-to-br from-primary-900 via-primary-800 to-primary-700 min-h-[500px] sm:min-h-[600px]" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         {/* Animated Background Patterns */}
         <div className="absolute inset-0">
           {/* Gradient Mesh */}
@@ -530,7 +538,7 @@ export default function Syllabus() {
           {/* Left Content Area */}
           <div className="flex-1 min-w-0">
         {/* Why Learn Section */}
-        <section className="mb-12 sm:mb-16">
+        <section id="certificate-section" className="mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
             Why learn {course.title}?
           </h2>
@@ -570,9 +578,7 @@ export default function Syllabus() {
 
          {/* Placement Assistance Section - Enhanced for Placement Guaranteed Courses */}
         {isPlacementGuaranteed ? (
-          <>
-            {/* Placement Guarantee Section */}
-            <section className="mb-12 sm:mb-16 bg-linear-to-br from-green-50 via-blue-50 to-purple-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-green-200">
+            <section id="placement-section" className="mb-12 sm:mb-16 bg-linear-to-br from-green-50 via-blue-50 to-purple-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-green-200">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -692,7 +698,6 @@ export default function Syllabus() {
                 </div>
               </div>
             </section>
-          </>
         ) : (
         <section className="mb-12 sm:mb-16 bg-gray-50 rounded-2xl p-6 sm:p-8 lg:p-10">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
@@ -731,6 +736,56 @@ export default function Syllabus() {
             </div>
           </div>
         </section>
+        )}
+
+        {!isPlacementGuaranteed && (
+          <section id="placement-section" className="mb-12 sm:mb-16 bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-blue-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                Placement Assistance
+              </h2>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Career Support
+                </h3>
+                <p className="text-gray-700 text-base">
+                  Get personalized career guidance and job placement support to help you land your dream job after course completion.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Resume Building & Interview Prep
+                </h3>
+                <p className="text-gray-700 text-base">
+                  Learn how to create an impressive resume and prepare for technical interviews with mock sessions and expert feedback.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Industry Connections
+                </h3>
+                <p className="text-gray-700 text-base">
+                  Connect with our network of partner companies and get access to exclusive job opportunities in your field.
+                </p>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* How Training Works Section */}
@@ -1005,7 +1060,7 @@ export default function Syllabus() {
         {isPlacementGuaranteed && (
           <>
             {/* Comprehensive Career Support Section */}
-            <section className="mb-12 sm:mb-16 bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 lg:p-10">
+            <section id="career-support-section" className="mb-12 sm:mb-16 bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 lg:p-10">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
                 Comprehensive Career Support Services
               </h2>
@@ -1176,7 +1231,7 @@ export default function Syllabus() {
             </section>
 
             {/* Motivation & Success Stories Section */}
-            <section className="mb-12 sm:mb-16 bg-linear-to-br from-yellow-50 via-orange-50 to-red-50 rounded-2xl p-6 sm:p-8 lg:p-10">
+            <section id="success-stories-section" className="mb-12 sm:mb-16 bg-linear-to-br from-yellow-50 via-orange-50 to-red-50 rounded-2xl p-6 sm:p-8 lg:p-10">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
                 Your Success is Our Mission
               </h2>
@@ -1325,7 +1380,8 @@ export default function Syllabus() {
           </>
         )}
 
-        {/* Course Title */}
+        {/* Course Syllabus Section */}
+        <div id="syllabus-section">
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 wrap-break-words">
           Course Syllabus
         </h2>
@@ -1366,6 +1422,51 @@ export default function Syllabus() {
           After completing the training, you can also download videos for future reference
         </p>
 
+        {/* Course Overview Information */}
+        {course.syllabus && (course.syllabus.learningOutcomes?.length > 0 || course.syllabus.prerequisites?.length > 0) && (
+          <div className="mb-6 sm:mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* Learning Outcomes */}
+            {course.syllabus.learningOutcomes && course.syllabus.learningOutcomes.length > 0 && (
+              <div className="bg-linear-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Learning Outcomes
+                </h3>
+                <ul className="space-y-2">
+                  {course.syllabus.learningOutcomes.map((outcome, idx) => (
+                    <li key={idx} className="flex gap-2 text-xs sm:text-sm text-gray-700">
+                      <span className="text-green-600 shrink-0 flex items-center h-5">✓</span>
+                      <span className="flex-1 leading-5">{outcome}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Prerequisites */}
+            {course.syllabus.prerequisites && course.syllabus.prerequisites.length > 0 && (
+              <div className="bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Prerequisites
+                </h3>
+                <ul className="space-y-2">
+                  {course.syllabus.prerequisites.map((prereq, idx) => (
+                    <li key={idx} className="flex gap-2 text-xs sm:text-sm text-gray-700">
+                      <span className="text-blue-600 shrink-0 flex items-center h-5">•</span>
+                      <span className="flex-1 leading-5">{prereq}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Syllabus Modules - Accordion Style */}
         {course.syllabus && course.syllabus.modules && course.syllabus.modules.length > 0 ? (
           <div className="space-y-3">
@@ -1396,6 +1497,14 @@ export default function Syllabus() {
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base wrap-break-words">{module.title}</h3>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1">
                           <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">{topicCount} Topics</span>
+                          {module.duration && (
+                            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap flex items-center gap-1">
+                              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {module.duration}
+                            </span>
+                          )}
                           {hasDemoVideo && (
                             <a
                               href="#"
@@ -1429,9 +1538,9 @@ export default function Syllabus() {
                     <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-gray-100 w-full">
                       <ul className="mt-3 space-y-2 w-full">
                         {module.topics.map((topic, topicIdx) => (
-                          <li key={topicIdx} className="flex items-start gap-2 text-xs sm:text-sm text-gray-700 wrap-break-words w-full">
-                            <span className="text-primary-600 mt-1 shrink-0">•</span>
-                            <span className="flex-1 wrap-break-words">{topic}</span>
+                          <li key={topicIdx} className="flex gap-2 text-xs sm:text-sm text-gray-700 wrap-break-words w-full">
+                            <span className="text-primary-600 shrink-0 flex items-center h-5">•</span>
+                            <span className="flex-1 wrap-break-words leading-5">{topic}</span>
                           </li>
                         ))}
                       </ul>
@@ -1456,17 +1565,19 @@ export default function Syllabus() {
             </button>
           </div>
         )}
+        </div>
+        {/* End Syllabus Section */}
 
         {/* Projects Section */}
-        {course.syllabus && course.syllabus.projects && course.syllabus.projects.length > 0 && (
-          <div className="mt-8 sm:mt-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-              <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Required Projects
-            </h2>
+        <div id="projects-section" className="mt-8 sm:mt-10">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
+            <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Required Projects
+          </h2>
+          {course.syllabus && course.syllabus.projects && course.syllabus.projects.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {course.syllabus.projects.map((project, idx) => (
                 <div
@@ -1485,44 +1596,90 @@ export default function Syllabus() {
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Projects Coming Soon</h3>
+              <p className="text-gray-600">
+                Hands-on projects will be added to this course to help you apply what you've learned.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Certification Information Section */}
+        {course.syllabus && course.syllabus.certification && (
+          <div id="certificate-info-section" className="mt-8 sm:mt-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
+              <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+              Certification Information
+            </h2>
+            <div className="bg-linear-to-br from-yellow-50 via-amber-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 sm:p-8 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-linear-to-br from-yellow-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm sm:text-base text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {course.syllabus.certification}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* AI Tools Section */}
-        {course.syllabus && course.syllabus.aiTools && course.syllabus.aiTools.length > 0 && (
-          <div className="mt-8 sm:mt-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-              <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              AI Tools Covered
-            </h2>
+        {/* Course Instructors Section */}
+        <div id="teachers-section" className="mt-8 sm:mt-10">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
+            <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Course Instructors
+          </h2>
+          {course.syllabus && course.syllabus.instructors && course.syllabus.instructors.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {course.syllabus.aiTools.map((tool, idx) => (
+              {course.syllabus.instructors.map((instructor, idx) => (
                 <div
                   key={idx}
                   className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base wrap-break-words">
-                        {typeof tool === 'string' ? tool : tool.name || tool}
+                      <h3 className="font-semibold text-gray-900 text-base sm:text-lg wrap-break-words mb-1">
+                        {instructor.name}
                       </h3>
-                      {typeof tool === 'object' && tool.description && (
-                        <p className="text-xs sm:text-sm text-gray-600 mt-1 wrap-break-words">{tool.description}</p>
+                      {instructor.description && (
+                        <p className="text-xs sm:text-sm text-gray-600 wrap-break-words">{instructor.description}</p>
                       )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Expert Instructors</h3>
+              <p className="text-gray-600">
+                Learn from experienced industry professionals who bring real-world expertise to the course.
+              </p>
+            </div>
+          )}
+        </div>
           </div>
 
           {/* Right Sidebar - Enrollment Form */}
@@ -1592,13 +1749,17 @@ export default function Syllabus() {
 
                 {/* Pricing */}
                 <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-2xl font-bold text-orange-600">{formatPrice(discountedPrice)}</span>
-                    {originalPrice && (
-                      <span className="text-lg text-gray-500 line-through">{formatPrice(originalPrice)}</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mb-4">Valid till 5th Nov</p>
+                  {discountedPrice && (
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl font-bold text-orange-600">{formatPrice(discountedPrice)}</span>
+                        {originalPrice && (
+                          <span className="text-lg text-gray-500 line-through">{formatPrice(originalPrice)}</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mb-4">Valid till 5th Nov</p>
+                    </>
+                  )}
                   
                   <button
                     type="submit"
@@ -1622,28 +1783,6 @@ export default function Syllabus() {
         </div>
       </div>
 
-      {/* Syllabus Editor Modal for Content Writers */}
-      {showSyllabusEditor && course?.id && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <SyllabusEditor
-              courseId={course.id}
-              courseTitle={course.title}
-              courseCategory={course.category || course.type}
-              onClose={() => {
-                setShowSyllabusEditor(false)
-                // Reload course data after editing
-                window.location.reload()
-              }}
-              onSave={() => {
-                setShowSyllabusEditor(false)
-                // Reload course data after saving
-                window.location.reload()
-              }}
-            />
-          </div>
-        </div>
-      )}
     </main>
   )
 }

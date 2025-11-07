@@ -11,6 +11,7 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
     learningOutcomes: [],
     prerequisites: [],
     projects: [],
+    instructors: [],
     certification: ''
   })
 
@@ -67,7 +68,8 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
           title: module.title || '',
           description: module.description || '',
           duration: module.duration || '',
-          learningOutcomes: module.learningOutcomes || []
+          learningOutcomes: module.learningOutcomes || [],
+          topics: module.topics || []
         }))
         
         setSyllabus({
@@ -76,6 +78,7 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
           learningOutcomes: response.data.syllabus.learningOutcomes || [],
           prerequisites: response.data.syllabus.prerequisites || [],
           projects: response.data.syllabus.projects || [],
+          instructors: response.data.syllabus.instructors || [],
           certification: response.data.syllabus.certification || ''
         })
       }
@@ -121,7 +124,8 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
         title: '', 
         description: '', 
         duration: '', 
-        learningOutcomes: [] 
+        learningOutcomes: [],
+        topics: []
       }]
     })
   }
@@ -197,6 +201,46 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
     })
   }
 
+  // Topic management functions for modules
+  const addTopic = (moduleIndex) => {
+    const updated = [...syllabus.modules]
+    updated[moduleIndex].topics = [...(updated[moduleIndex].topics || []), '']
+    setSyllabus({ ...syllabus, modules: updated })
+  }
+
+  const updateTopic = (moduleIndex, topicIndex, value) => {
+    const updated = [...syllabus.modules]
+    updated[moduleIndex].topics[topicIndex] = value
+    setSyllabus({ ...syllabus, modules: updated })
+  }
+
+  const removeTopic = (moduleIndex, topicIndex) => {
+    const updated = [...syllabus.modules]
+    updated[moduleIndex].topics = updated[moduleIndex].topics.filter((_, i) => i !== topicIndex)
+    setSyllabus({ ...syllabus, modules: updated })
+  }
+
+  // Instructor management functions
+  const addInstructor = () => {
+    setSyllabus({
+      ...syllabus,
+      instructors: [...syllabus.instructors, { name: '', description: '' }]
+    })
+  }
+
+  const updateInstructor = (index, field, value) => {
+    const updated = [...syllabus.instructors]
+    updated[index] = { ...updated[index], [field]: value }
+    setSyllabus({ ...syllabus, instructors: updated })
+  }
+
+  const removeInstructor = (index) => {
+    setSyllabus({
+      ...syllabus,
+      instructors: syllabus.instructors.filter((_, i) => i !== index)
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -265,16 +309,6 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Module Description *</label>
-                    <textarea
-                      value={module.description || ''}
-                      onChange={(e) => updateModule(moduleIndex, 'description', e.target.value)}
-                      placeholder="Enter module description"
-                      rows="3"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Duration (hours/days) *</label>
                     <input
                       type="text"
@@ -298,6 +332,42 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-300">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-gray-600">Topics</label>
+                  <button
+                    onClick={() => addTopic(moduleIndex)}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded hover:bg-primary-50"
+                  >
+                    + Add Topic
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {(module.topics || []).map((topic, topicIndex) => (
+                    <div key={topicIndex} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={topic}
+                        onChange={(e) => updateTopic(moduleIndex, topicIndex, e.target.value)}
+                        placeholder="Enter topic"
+                        className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                      />
+                      <button
+                        onClick={() => removeTopic(moduleIndex, topicIndex)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Remove topic"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  {(!module.topics || module.topics.length === 0) && (
+                    <p className="text-xs text-gray-400 italic">No topics added yet</p>
+                  )}
+                </div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-300">
                 <div className="flex items-center justify-between mb-2">
@@ -455,6 +525,56 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Course Instructors */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-sm font-semibold text-gray-700">Course Instructors</label>
+          <button
+            onClick={addInstructor}
+            className="px-3 py-1 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
+          >
+            + Add Instructor
+          </button>
+        </div>
+        <div className="space-y-4">
+          {syllabus.instructors.map((instructor, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 space-y-2">
+                  <input
+                    type="text"
+                    value={instructor.name}
+                    onChange={(e) => updateInstructor(index, 'name', e.target.value)}
+                    placeholder="Instructor Name"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  />
+                  <textarea
+                    value={instructor.description || ''}
+                    onChange={(e) => updateInstructor(index, 'description', e.target.value)}
+                    placeholder="Instructor bio/description (e.g., 10+ years experience in AI/ML, worked at Google, etc.)"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    rows="2"
+                  />
+                </div>
+                <button
+                  onClick={() => removeInstructor(index)}
+                  className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+          {syllabus.instructors.length === 0 && (
+            <div className="text-center py-6 text-gray-400">
+              <p className="text-sm">No instructors added yet. Click "Add Instructor" to get started.</p>
+            </div>
+          )}
         </div>
       </div>
 

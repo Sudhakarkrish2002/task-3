@@ -218,13 +218,6 @@ export default function ContentDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    toast.success('Logged out successfully!')
-    window.location.hash = '#/'
-  }
-
   const handlePublishCourse = async (course, action = 'publish', courseData = null, syllabusData = null) => {
     if (action === 'publish' && !confirm(`Are you sure you want to publish "${course.title}"? It will be visible to all users.`)) {
       return
@@ -337,15 +330,6 @@ export default function ContentDashboard() {
               </svg>
               Create Course
             </button>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
-            </button>
           </div>
         </div>
 
@@ -429,7 +413,7 @@ export default function ContentDashboard() {
                 {/* Desktop Table View */}
                 <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-full divide-y divide-gray-200 table-auto">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -450,7 +434,7 @@ export default function ContentDashboard() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Syllabus
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[240px]">
                             Actions
                           </th>
                         </tr>
@@ -499,26 +483,28 @@ export default function ContentDashboard() {
                                 <span className="text-gray-400">No syllabus</span>
                               )}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex items-center gap-2 flex-wrap">
+                            <td className="px-6 py-4 text-sm font-medium">
+                              <div className="flex items-center gap-3">
                                 <button
                                   onClick={() => handleEditCourse(course)}
-                                  className="text-blue-600 hover:text-blue-900 font-semibold"
+                                  className="text-blue-600 hover:text-blue-900 font-semibold whitespace-nowrap"
                                   title="Edit course"
                                 >
                                   Edit
                                 </button>
+                                <span className="text-gray-300">|</span>
                                 <button
                                   onClick={() => handleEditSyllabus(course)}
-                                  className="text-primary-600 hover:text-primary-900 font-semibold"
+                                  className="text-primary-600 hover:text-primary-900 font-semibold whitespace-nowrap"
                                   title="Edit syllabus"
                                 >
-                                  Syllabus
+                                  Edit Syllabus
                                 </button>
+                                <span className="text-gray-300">|</span>
                                 {course.isPublished ? (
                                   <button
                                     onClick={() => handlePublishCourse(course, 'unpublish')}
-                                    className="text-orange-600 hover:text-orange-900 font-semibold"
+                                    className="text-orange-600 hover:text-orange-900 font-semibold whitespace-nowrap disabled:opacity-50"
                                     title="Unpublish course"
                                     disabled={saving}
                                   >
@@ -527,16 +513,17 @@ export default function ContentDashboard() {
                                 ) : (
                                   <button
                                     onClick={() => handlePublishCourse(course, 'publish')}
-                                    className="text-green-600 hover:text-green-900 font-semibold"
+                                    className="text-green-600 hover:text-green-900 font-semibold whitespace-nowrap disabled:opacity-50"
                                     title="Publish course"
                                     disabled={saving}
                                   >
                                     Publish
                                   </button>
                                 )}
+                                <span className="text-gray-300">|</span>
                                 <button
                                   onClick={() => handleDeleteCourse(course)}
-                                  className="text-red-600 hover:text-red-900 font-semibold"
+                                  className="text-red-600 hover:text-red-900 font-semibold whitespace-nowrap"
                                   title="Delete course"
                                 >
                                   Delete

@@ -83,7 +83,7 @@ export default function Courses() {
             backgroundImage: 'url(/Assets/banner-courses.jpeg)'
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-900/75 to-primary-700/60"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-primary-900/75 to-primary-700/60"></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
             Our Courses – Upskill, Certify, Get Hired
@@ -194,11 +194,16 @@ export default function Courses() {
                         <span>{course.duration}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                        <div className="flex items-center gap-2 text-sm">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          <span>{formatPrice(course.price)}</span>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900">{formatPrice(course.price)}</span>
+                            {course.originalPrice && (
+                              <span className="text-xs text-gray-500 line-through">{formatPrice(course.originalPrice)}</span>
+                            )}
+                          </div>
                         </div>
                         {course.price && course.price > 0 ? (
                           <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">

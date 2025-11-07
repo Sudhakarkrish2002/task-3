@@ -104,15 +104,15 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Discount Banner - Only shows on home page */}
       {showBanner && (
-        <div className="fixed top-0 left-0 right-0 z-200 bg-black text-white py-2 sm:py-3 px-2 sm:px-4 flex items-center justify-center w-full overflow-x-hidden">
+        <div className="fixed top-0 left-0 right-0 z-100 bg-black text-white py-2 sm:py-3 px-2 sm:px-4 flex items-center justify-center w-full overflow-x-hidden">
           <div className="flex items-center justify-center gap-2 sm:gap-4 flex-1 text-center min-w-0 max-w-full">
-            <span className="text-xs sm:text-sm md:text-base font-semibold break-words px-2">
+            <span className="text-xs sm:text-sm md:text-base font-semibold wrap-break-words px-2">
               🎉 <span className="font-bold">Special Offer!</span> Get up to <span className="font-bold text-yellow-300">50% OFF</span> on all Certification Courses. Limited time only - Enroll now!
             </span>
           </div>
           <button
             onClick={handleBannerClose}
-            className="ml-2 sm:ml-4 p-1 hover:bg-gray-800 rounded-full transition-colors shrink-0 flex-shrink-0"
+            className="ml-2 sm:ml-4 p-1 hover:bg-gray-800 rounded-full transition-colors  shrink-0"
             aria-label="Close banner"
           >
             <svg
@@ -132,7 +132,7 @@ export default function App() {
         </div>
       )}
       <Navbar bannerVisible={showBanner} />
-      <div className="flex-1">
+      <div className="flex-1" style={{ paddingTop: showBanner ? '128px' : '80px' }}>
         <PageTransition routeKey={routeHash}>
           {Content}
         </PageTransition>

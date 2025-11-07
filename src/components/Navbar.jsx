@@ -64,6 +64,23 @@ export default function Navbar({ bannerVisible = false }) {
   }
 
   const isAdmin = user && user.role === 'admin'
+  
+  // Check if we should show Dashboard/Logout buttons
+  // Only show on public pages for students, or on dashboard pages for any role
+  const shouldShowAuthButtons = () => {
+    if (!isLoggedIn || !user) return false
+    
+    const currentHash = window.location.hash || '#/'
+    const isOnDashboardPage = currentHash.includes('/dashboard/') || currentHash.includes('/admin/')
+    
+    // If on dashboard page, show buttons for that role
+    if (isOnDashboardPage) {
+      return true
+    }
+    
+    // On public pages, only show for students
+    return user.role === 'student'
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -75,7 +92,7 @@ export default function Navbar({ bannerVisible = false }) {
 
   return (
     <header 
-      className="fixed left-0 right-0 z-100 bg-white border-b border-primary-200 shadow-sm shadow-primary-100/20"
+      className="fixed left-0 right-0 z-50 bg-white border-b border-primary-200 shadow-sm shadow-primary-100/20"
       style={{ top: bannerVisible ? '48px' : '0' }}
     >
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
@@ -100,7 +117,15 @@ export default function Navbar({ bannerVisible = false }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </a>
-            {mainMenuItems.map((item) =>
+            {mainMenuItems
+              .filter(item => {
+                // Hide "Student Login" link only when Dashboard/Logout buttons are showing
+                if (shouldShowAuthButtons() && item.label === 'Student Login') {
+                  return false
+                }
+                return true
+              })
+              .map((item) =>
               item.submenu ? (
                 <div key={item.hash} className="relative group">
                   <button
@@ -109,7 +134,7 @@ export default function Navbar({ bannerVisible = false }) {
                   >
                     {item.label}
                   </button>
-                  <div className="absolute top-full left-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="absolute top-full left-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-60">
                     <a
                       href={item.hash}
                       className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
@@ -138,8 +163,8 @@ export default function Navbar({ bannerVisible = false }) {
               )
             )}
             
-            {/* Admin Menu (only show when admin is logged in) */}
-            {isAdmin && (
+            {/* Admin Menu (only show when admin is logged in and on dashboard pages) */}
+            {isAdmin && shouldShowAuthButtons() && (
               <div className="relative group">
                 <button
                   type="button"
@@ -151,7 +176,7 @@ export default function Navbar({ bannerVisible = false }) {
                   </svg>
                   Admin
                 </button>
-                <div className="absolute top-full right-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute top-full right-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-60">
                   <a
                     href="#/admin/courses"
                     className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
@@ -167,8 +192,8 @@ export default function Navbar({ bannerVisible = false }) {
               </div>
             )}
             
-            {/* Dashboard link (only show when logged in and not admin) */}
-            {isLoggedIn && !isAdmin && (
+            {/* Dashboard link (only show for students on public pages, or any role on their dashboard) */}
+            {!isAdmin && shouldShowAuthButtons() && (
               <a
                 href={getDashboardLink()}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-2xl hover:shadow-primary-600/60"
@@ -180,8 +205,8 @@ export default function Navbar({ bannerVisible = false }) {
               </a>
             )}
             
-            {/* Logout button (only show when logged in) */}
-            {isLoggedIn && (
+            {/* Logout button (only show for students on public pages, or any role on their dashboard) */}
+            {shouldShowAuthButtons() && (
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-300 transition-all duration-300 ease-in-out"
@@ -217,7 +242,7 @@ export default function Navbar({ bannerVisible = false }) {
             {/* Overlay Backdrop - closes menu when clicked */}
             {isMobileMenuOpen && (
               <div
-                className="fixed inset-0 bg-transparent z-40"
+                className="fixed inset-0 bg-transparent z-55"
                 onClick={() => setIsMobileMenuOpen(false)}
               />
             )}
@@ -225,7 +250,7 @@ export default function Navbar({ bannerVisible = false }) {
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
               <div
-                className={`fixed right-4 w-72 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col z-50`}
+                className={`fixed right-4 w-72 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col z-60`}
                 style={{ top: bannerVisible ? '128px' : '80px' }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -236,17 +261,25 @@ export default function Navbar({ bannerVisible = false }) {
                 >
                   🔍 Search
                 </a>
-                {flatMenuItems.map((item) => (
-                  <a
-                    key={item.hash}
-                    href={item.hash}
-                    className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-                {isLoggedIn && (
+                {flatMenuItems
+                  .filter(item => {
+                    // Hide "Student Login" link only when Dashboard/Logout buttons are showing
+                    if (shouldShowAuthButtons() && item.label === 'Student Login') {
+                      return false
+                    }
+                    return true
+                  })
+                  .map((item) => (
+                    <a
+                      key={item.hash}
+                      href={item.hash}
+                      className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                {shouldShowAuthButtons() && (
                   <>
                     <div className="border-t border-gray-200 my-2"></div>
                     {isAdmin && (
