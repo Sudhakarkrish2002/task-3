@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 import { processRazorpayPayment } from '../utils/razorpay.js'
 
 const membershipTiers = [
@@ -76,14 +77,14 @@ export default function StudentMembership() {
     // Check if user is authenticated
     const token = localStorage.getItem('token')
     if (!token && tierName !== 'Free') {
-      alert('Please login to proceed with payment. Redirecting to login page...')
+      toast.info('Please login to proceed with payment. Redirecting to login page...')
       window.location.hash = '#/auth'
       return
     }
 
     if (tierName === 'Free') {
       // Handle free membership (no payment required)
-      alert(`Congratulations! Your ${tierName} membership has been activated. Check your email for confirmation and access details.`)
+      toast.success(`Congratulations! Your ${tierName} membership has been activated. Check your email for confirmation and access details.`)
       setFormData({
         name: '',
         email: '',
@@ -99,7 +100,7 @@ export default function StudentMembership() {
     // Get selected tier details
     const selectedTier = membershipTiers.find(tier => tier.tier === tierName)
     if (!selectedTier) {
-      alert('Invalid membership tier selected')
+      toast.error('Invalid membership tier selected')
       return
     }
 
@@ -145,7 +146,7 @@ export default function StudentMembership() {
         user,
         onSuccess: (paymentData) => {
           setIsProcessing(false)
-          alert(`🎉 Payment successful! Your ${tierName} membership has been activated. Transaction ID: ${paymentData.payment.transactionId}`)
+          toast.success(`🎉 Payment successful! Your ${tierName} membership has been activated. Transaction ID: ${paymentData.payment.transactionId}`)
           
           // Reset form
           setFormData({
@@ -164,13 +165,13 @@ export default function StudentMembership() {
         onError: (error) => {
           setIsProcessing(false)
           console.error('Payment error:', error)
-          alert(`Payment failed: ${error.message || 'An error occurred. Please try again.'}`)
+          toast.error(`Payment failed: ${error.message || 'An error occurred. Please try again.'}`)
         }
       })
     } catch (error) {
       setIsProcessing(false)
       console.error('Error processing payment:', error)
-      alert(`An error occurred: ${error.message || 'Please try again.'}`)
+      toast.error(`An error occurred: ${error.message || 'Please try again.'}`)
     }
   }
 

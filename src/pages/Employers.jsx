@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 
 export default function Employers() {
@@ -25,7 +26,7 @@ export default function Employers() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert(`Thank you! Your ${formData.postType === 'job' ? 'job posting' : 'internship posting'} has been submitted. We'll review and get back to you within 24 hours.`)
+    toast.success(`Thank you! Your ${formData.postType === 'job' ? 'job posting' : 'internship posting'} has been submitted. We'll review and get back to you within 24 hours.`)
     setFormData({
       companyName: '',
       contactPerson: '',

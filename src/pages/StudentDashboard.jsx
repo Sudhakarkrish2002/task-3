@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { authAPI } from '../utils/api.js'
 
 export default function StudentDashboard() {
@@ -41,17 +42,17 @@ export default function StudentDashboard() {
   ]
 
   const handleContinueLearning = (courseId) => {
-    alert(`Redirecting to course content for course ID: ${courseId}`)
+    toast.info(`Redirecting to course content for course ID: ${courseId}`)
     // In production: window.location.hash = `#/courses/${courseId}`
   }
 
   const handleDownloadCertificate = (certificateId) => {
-    alert(`Downloading certificate: ${certificateId}`)
+    toast.info(`Downloading certificate: ${certificateId}`)
     // In production: trigger actual PDF download
   }
 
   const handleViewInternshipDetails = (internshipId) => {
-    alert(`Viewing details for internship ID: ${internshipId}`)
+    toast.info(`Viewing details for internship ID: ${internshipId}`)
     // In production: window.location.hash = `#/internships/${internshipId}`
   }
 

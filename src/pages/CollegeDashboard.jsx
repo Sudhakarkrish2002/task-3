@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 
 export default function CollegeDashboard() {
   const [activeTab, setActiveTab] = useState('students')
@@ -12,25 +13,25 @@ export default function CollegeDashboard() {
   }, [])
 
   const handleExportList = () => {
-    alert('Exporting student list...')
+    toast.info('Exporting student list...')
     // In production: Generate and download CSV/Excel file
   }
 
   const handleViewStudentDetails = (studentId) => {
-    alert(`Viewing details for student ID: ${studentId}`)
+    toast.info(`Viewing details for student ID: ${studentId}`)
   }
 
   const handleViewCourseDetails = (courseId) => {
-    alert(`Viewing course details for course ID: ${courseId}`)
+    toast.info(`Viewing course details for course ID: ${courseId}`)
   }
 
   const handleDownloadReport = (reportType) => {
-    alert(`Downloading ${reportType} report...`)
+    toast.info(`Downloading ${reportType} report...`)
     // In production: Generate and download PDF report
   }
 
   const handleViewPlacementStats = () => {
-    alert('Viewing placement statistics...')
+    toast.info('Viewing placement statistics...')
   }
 
   const getUserInitials = () => {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -14,7 +15,7 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert('Thank you for contacting us! We have received your message and will get back to you within 24-48 hours.')
+    toast.success('Thank you for contacting us! We have received your message and will get back to you within 24-48 hours.')
     setFormData({ name: '', email: '', message: '' })
   }
 

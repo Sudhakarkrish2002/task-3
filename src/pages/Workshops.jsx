@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 
 const workshops = [
   {
@@ -121,7 +122,7 @@ export default function Workshops() {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (selectedWorkshop) {
-      alert(`Registration successful! You've registered for "${selectedWorkshop.title}". Check your email for confirmation.`)
+      toast.success(`Registration successful! You've registered for "${selectedWorkshop.title}". Check your email for confirmation.`)
       setFormData({ name: '', email: '', phone: '', company: '' })
       setSelectedWorkshop(null)
     }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { internshipAPI } from '../utils/api.js'
 
 export default function EmployerDashboard() {
@@ -32,7 +33,7 @@ export default function EmployerDashboard() {
     try {
       // This would call the actual API in production
       await new Promise(resolve => setTimeout(resolve, 1000))
-      alert('Job posted successfully! (Demo mode)')
+      toast.success('Job posted successfully! (Demo mode)')
       setFormData({
         title: '',
         location: '',
@@ -42,23 +43,23 @@ export default function EmployerDashboard() {
         description: ''
       })
     } catch (error) {
-      alert('Error posting job: ' + error.message)
+      toast.error('Error posting job: ' + error.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleViewResume = (applicantId) => {
-    alert(`Viewing resume for applicant ID: ${applicantId}`)
+    toast.info(`Viewing resume for applicant ID: ${applicantId}`)
   }
 
   const handleScheduleInterview = (applicantId) => {
-    alert(`Schedule interview for applicant ID: ${applicantId}`)
+    toast.info(`Schedule interview for applicant ID: ${applicantId}`)
   }
 
   const handleUpdateProfile = (e) => {
     e.preventDefault()
-    alert('Profile updated successfully!')
+    toast.success('Profile updated successfully!')
   }
 
   const getUserInitials = () => {

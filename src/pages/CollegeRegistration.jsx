@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 
 export default function CollegeRegistration() {
   const [formData, setFormData] = useState({
@@ -32,7 +33,7 @@ export default function CollegeRegistration() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert('Thank you for your interest! We have received your college registration request. Our team will contact you within 24-48 hours to discuss partnership opportunities.')
+    toast.success('Thank you for your interest! We have received your college registration request. Our team will contact you within 24-48 hours to discuss partnership opportunities.')
     setFormData({
       collegeName: '',
       contactPerson: '',

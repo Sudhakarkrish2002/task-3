@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 import { courseSyllabus, certificationCourseSyllabus, placementCourseSyllabus } from '../utils/courseSyllabus.js'
 import { courseAPI } from '../utils/api.js'
 
@@ -141,7 +142,7 @@ export default function Syllabus() {
       localStorage.setItem('enrollmentInterests', JSON.stringify(enrollmentHistory))
       
       // Show success message or redirect
-      alert('Your interest has been recorded! We will contact you soon.')
+      toast.success('Your interest has been recorded! We will contact you soon.')
       setEnrollmentData({ mobile: '', batch: '', objective: '' })
     } catch (error) {
       console.error('Error storing enrollment interest:', error)
@@ -153,7 +154,7 @@ export default function Syllabus() {
     if (enrollmentData.mobile && enrollmentData.batch && enrollmentData.objective) {
       handleEnrollmentInterest(enrollmentData)
     } else {
-      alert('Please fill in all fields')
+      toast.error('Please fill in all fields')
     }
   }
 

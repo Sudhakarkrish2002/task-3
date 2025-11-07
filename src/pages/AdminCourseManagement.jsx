@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { courseAPI, apiRequest } from '../utils/api.js'
 import SyllabusEditor from '../components/SyllabusEditor.jsx'
 
@@ -33,7 +34,7 @@ export default function AdminCourseManagement() {
       }
     } catch (error) {
       console.error('Error loading courses:', error)
-      alert('Error loading courses: ' + (error.message || 'Unknown error'))
+      toast.error('Error loading courses: ' + (error.message || 'Unknown error'))
     } finally {
       setLoading(false)
     }

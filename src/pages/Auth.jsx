@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { authAPI } from '../utils/api.js'
 
 export default function Auth() {
@@ -131,7 +132,9 @@ export default function Auth() {
         // Map 'content' to 'content_writer' for comparison
         const expectedRole = activeTab === 'content' ? 'content_writer' : activeTab
         if (role !== expectedRole) {
-          setError(`You logged in as ${role}, but you selected ${activeTab}. Please select the correct role tab.`)
+          const mismatchMessage = `You logged in as ${role}, but you selected ${activeTab}. Please select the correct role tab.`
+          setError(mismatchMessage)
+          toast.warning(mismatchMessage)
           setIsLoading(false)
           return
         }
@@ -141,22 +144,26 @@ export default function Auth() {
         localStorage.setItem('user', JSON.stringify(response.user))
         
         // Show success message
-        alert(`Welcome back! ${role.charAt(0).toUpperCase() + role.slice(1)} login successful.`)
-        
-        // Redirect based on role
-        if (role === 'student') {
-          window.location.hash = '#/dashboard/student'
-        } else if (role === 'employer') {
-          window.location.hash = '#/dashboard/employer'
-        } else if (role === 'college') {
-          window.location.hash = '#/dashboard/college'
-        } else if (role === 'admin') {
-          window.location.hash = '#/admin/courses'
-        } else if (role === 'content_writer') {
-          window.location.hash = '#/dashboard/content'
-        } else {
-          window.location.hash = '#/'
+        toast.success(`Welcome back! ${role.charAt(0).toUpperCase() + role.slice(1)} login successful.`)
+
+        const redirectAfterLogin = () => {
+          if (role === 'student') {
+            window.location.hash = '#/dashboard/student'
+          } else if (role === 'employer') {
+            window.location.hash = '#/dashboard/employer'
+          } else if (role === 'college') {
+            window.location.hash = '#/dashboard/college'
+          } else if (role === 'admin') {
+            window.location.hash = '#/admin/courses'
+          } else if (role === 'content_writer') {
+            window.location.hash = '#/dashboard/content'
+          } else {
+            window.location.hash = '#/'
+          }
         }
+
+        // Give toast a moment to display before navigating
+        setTimeout(redirectAfterLogin, 600)
         
         setLoginData({ email: '', password: '' })
       }
@@ -167,13 +174,20 @@ export default function Auth() {
       // Check for specific error cases
       if (errorMessage.includes('No') && errorMessage.includes('account found')) {
         // Email exists but with different role
-        setError(errorMessage + ' Try logging in with a different role tab.')
+        const detailedMessage = errorMessage + ' Try logging in with a different role tab.'
+        setError(detailedMessage)
+        toast.error(detailedMessage)
       } else if (errorMessage.includes('Invalid credentials')) {
-        setError('Invalid email or password. Please check your credentials.')
+        const invalidMessage = 'Invalid email or password. Please check your credentials.'
+        setError(invalidMessage)
+        toast.error(invalidMessage)
       } else if (errorMessage.includes('not found')) {
-        setError(`No ${activeTab} account found. Please register first to create an account.`)
+        const notFoundMessage = `No ${activeTab} account found. Please register first to create an account.`
+        setError(notFoundMessage)
+        toast.error(notFoundMessage)
       } else {
         setError(errorMessage)
+        toast.error(errorMessage)
       }
     } finally {
       setIsLoading(false)
@@ -240,23 +254,26 @@ export default function Auth() {
         localStorage.setItem('token', response.token)
         localStorage.setItem('user', JSON.stringify(response.user))
         
-        alert(`Congratulations! Your ${activeTab} account has been created successfully.`)
-        
-        // Redirect based on role
+        toast.success(`Congratulations! Your ${activeTab} account has been created successfully.`)
+
         const role = response.user.role
-        if (role === 'student') {
-          window.location.hash = '#/dashboard/student'
-        } else if (role === 'employer') {
-          window.location.hash = '#/dashboard/employer'
-        } else if (role === 'college') {
-          window.location.hash = '#/dashboard/college'
-        } else if (role === 'admin') {
-          window.location.hash = '#/admin/courses'
-        } else if (role === 'content_writer') {
-          window.location.hash = '#/dashboard/content'
-        } else {
-          window.location.hash = '#/'
+        const redirectAfterRegister = () => {
+          if (role === 'student') {
+            window.location.hash = '#/dashboard/student'
+          } else if (role === 'employer') {
+            window.location.hash = '#/dashboard/employer'
+          } else if (role === 'college') {
+            window.location.hash = '#/dashboard/college'
+          } else if (role === 'admin') {
+            window.location.hash = '#/admin/courses'
+          } else if (role === 'content_writer') {
+            window.location.hash = '#/dashboard/content'
+          } else {
+            window.location.hash = '#/'
+          }
         }
+
+        setTimeout(redirectAfterRegister, 600)
         
         setRegisterData({
           name: '',
@@ -275,11 +292,16 @@ export default function Auth() {
       
       // Check if user already exists with same role
       if (errorMessage.includes('already exists') && errorMessage.includes(activeTab)) {
-        setError(`An account with this email already exists as ${activeTab}. Please login instead.`)
+        const existsMessage = `An account with this email already exists as ${activeTab}. Please login instead.`
+        setError(existsMessage)
+        toast.error(existsMessage)
       } else if (errorMessage.includes('already exists') || errorMessage.includes('User already')) {
-        setError(`An account with this email already exists as ${activeTab}. Please login instead.`)
+        const existsMessage = `An account with this email already exists as ${activeTab}. Please login instead.`
+        setError(existsMessage)
+        toast.error(existsMessage)
       } else {
         setError(errorMessage)
+        toast.error(errorMessage)
       }
     } finally {
       setIsLoading(false)
@@ -318,7 +340,7 @@ export default function Auth() {
     <main className="min-h-screen bg-white relative overflow-hidden">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-br from-primary-50 to-primary-100 transform skew-x-12 origin-top-right"></div>
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-br from-primary-50 to-primary-100 transform skew-x-12 origin-top-right"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-200 rounded-full blur-3xl opacity-20"></div>
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-primary-300 rounded-full blur-2xl opacity-10"></div>
       </div>
@@ -327,7 +349,7 @@ export default function Auth() {
         <div className="w-full max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
             {/* Left Side - Branding */}
-            <div className="hidden lg:flex flex-col justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 p-12 text-white relative overflow-hidden">
+            <div className="hidden lg:flex flex-col justify-center bg-linear-to-br from-primary-600 via-primary-700 to-primary-800 p-12 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl -mr-32 -mt-32"></div>
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-2xl -ml-32 -mb-32"></div>
               

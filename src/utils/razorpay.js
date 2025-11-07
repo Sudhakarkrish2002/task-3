@@ -1,4 +1,5 @@
 // Razorpay payment utility
+import { toast } from 'react-toastify';
 import { paymentAPI } from './api.js';
 
 /**
@@ -81,7 +82,7 @@ export const processRazorpayPayment = async ({
           if (onError) {
             onError(error);
           } else {
-            alert(`Payment verification failed: ${error.message}`);
+            toast.error(`Payment verification failed: ${error.message}`);
           }
         }
       },
@@ -102,7 +103,7 @@ export const processRazorpayPayment = async ({
     if (onError) {
       onError(error);
     } else {
-      alert(`Payment error: ${error.message}`);
+      toast.error(`Payment error: ${error.message}`);
     }
   }
 };
