@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 
 const featuredCourses = [
@@ -177,30 +177,59 @@ const skillsAndTools = [
 ]
 
 export default function Home() {
+  const trendingScrollRef = useRef(null)
+  const trendingContentRef = useRef(null)
+  const cardWidthRef = useRef(0)
   const trendingSectionRef = useRef(null)
-  const [isVisible, setIsVisible] = useState(false)
+  const [currentCourseIndex, setCurrentCourseIndex] = useState(0)
+
+  const scrollToIndex = useCallback((index, behavior = 'smooth') => {
+    const container = trendingScrollRef.current
+    const cardWidth = cardWidthRef.current
+    if (!container || cardWidth === 0) return
+    const clampedIndex = Math.max(0, Math.min(trendingCourses.length - 1, index))
+    container.scrollTo({
+      left: clampedIndex * cardWidth,
+      behavior,
+    })
+  }, [])
+
+  const measureCardWidth = useCallback(() => {
+    const contentEl = trendingContentRef.current
+    if (!contentEl || !contentEl.children.length) return
+    const firstCard = contentEl.children[0]
+    if (!(firstCard instanceof HTMLElement)) return
+    const styles = window.getComputedStyle(firstCard)
+    const marginLeft = parseFloat(styles.marginLeft) || 0
+    const marginRight = parseFloat(styles.marginRight) || 0
+    const width = firstCard.getBoundingClientRect().width + marginLeft + marginRight
+    cardWidthRef.current = width
+    scrollToIndex(currentCourseIndex, 'auto')
+  }, [currentCourseIndex, scrollToIndex])
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true)
-          }
-        })
-      },
-      { threshold: 0.1 }
-    )
+    measureCardWidth()
+    window.addEventListener('resize', measureCardWidth)
+    return () => window.removeEventListener('resize', measureCardWidth)
+  }, [measureCardWidth])
 
-    if (trendingSectionRef.current) {
-      observer.observe(trendingSectionRef.current)
-    }
+  useEffect(() => {
+    scrollToIndex(currentCourseIndex)
+  }, [currentCourseIndex, scrollToIndex])
 
-    return () => {
-      if (trendingSectionRef.current) {
-        observer.unobserve(trendingSectionRef.current)
-      }
-    }
+  const totalCourses = trendingCourses.length
+  const hasMultipleCourses = totalCourses > 1
+
+  const handleDotClick = (index) => {
+    setCurrentCourseIndex(index)
+  }
+
+  const handleScroll = useCallback(() => {
+    const container = trendingScrollRef.current
+    const cardWidth = cardWidthRef.current
+    if (!container || cardWidth === 0) return
+    const newIndex = Math.round(container.scrollLeft / cardWidth)
+    setCurrentCourseIndex((prev) => (prev === newIndex ? prev : newIndex))
   }, [])
 
   return (
@@ -287,79 +316,84 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="trending-courses-scroll-container">
-            <div className={`trending-courses-scroll-content ${isVisible ? 'animate-scroll' : ''}`}>
-              {trendingCourses.map((course) => (
-                <div
-                  key={`trending-${course.id}`}
-                  className="shrink-0 w-80 mx-3 bg-white rounded-xl border border-gray-200 p-6 hover:shadow-2xl hover:shadow-gray-400/50 transition-all duration-300 ease-in-out hover:scale-110 hover:z-10 relative"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold text-primary-700 bg-primary-50 px-3 py-1 rounded-full">
-                      {course.tag}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                      </svg>
-                      <span className="text-sm font-semibold text-gray-700">{course.rating}</span>
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{course.description}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                      <span>{course.students} enrolled</span>
-                    </div>
-                    <a 
-                      href="#/courses" 
-                      className="text-sm font-medium text-primary-700 hover:text-primary-800 transition-colors"
+          <div className="relative">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 mx-4 rounded-3xl bg-linear-to-r from-primary-100/60 via-white to-primary-100/60 blur-3xl opacity-70"
+            ></div>
+
+            <div
+              ref={trendingScrollRef}
+              onScroll={handleScroll}
+              className="trending-courses-scroll-container rounded-3xl bg-white/90 px-5 py-6 shadow-2xl shadow-primary-200/40 backdrop-blur-sm"
+              style={{
+                maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+              }}
+            >
+              <div ref={trendingContentRef} className="trending-courses-scroll-content">
+                {trendingCourses.map((course, index) => {
+                  const isActive = currentCourseIndex === index
+                  return (
+                    <div
+                      key={`trending-${course.id}`}
+                      className={`group shrink-0 w-80 sm:w-96 mx-3 rounded-2xl border bg-white/95 p-6 transition-all duration-300 ease-in-out shadow-lg hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-primary-500/70 ${isActive ? 'border-primary-200/80 shadow-primary-200/80 scale-[1.02]' : 'border-gray-100 hover:border-transparent'}`}
                     >
-                      Learn more →
-                    </a>
-                  </div>
-                </div>
-              ))}
-              {/* Duplicate for seamless loop */}
-              {trendingCourses.map((course) => (
-                <div
-                  key={`trending-duplicate-${course.id}`}
-                  className="shrink-0 w-80 mx-3 bg-white rounded-xl border border-gray-200 p-6 hover:shadow-2xl hover:shadow-gray-400/50 transition-all duration-300 ease-in-out hover:scale-110 hover:z-10 relative"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold text-primary-700 bg-primary-50 px-3 py-1 rounded-full">
-                      {course.tag}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                      </svg>
-                      <span className="text-sm font-semibold text-gray-700">{course.rating}</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-semibold text-primary-700 bg-primary-50/80 px-3 py-1 rounded-full uppercase tracking-wide">
+                          {course.tag}
+                        </span>
+                        <div className="flex items-center gap-1 text-primary-600">
+                          <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                          </svg>
+                          <span className="text-sm font-semibold text-gray-800">{course.rating}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{course.title}</h3>
+                        <p className="text-sm text-gray-600 leading-relaxed">{course.description}</p>
+                      </div>
+                      <div className="flex items-center justify-between pt-5 mt-5 border-t border-gray-100">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                          <span>{course.students} enrolled</span>
+                        </div>
+                        <a 
+                          href="#/courses" 
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors group-hover:text-primary-700"
+                        >
+                          Learn more
+                          <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                          </svg>
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{course.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{course.description}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                      <span>{course.students} enrolled</span>
-                    </div>
-                    <a 
-                      href="#/courses" 
-                      className="text-sm font-medium text-primary-700 hover:text-primary-800 transition-colors"
-                    >
-                      Learn more →
-                    </a>
-                  </div>
-                </div>
-              ))}
+                  )
+                })}
+              </div>
             </div>
           </div>
+
+          {hasMultipleCourses && (
+            <div className="mt-7 flex items-center justify-center gap-3">
+              {trendingCourses.map((course, index) => {
+                const isActive = currentCourseIndex === index
+                return (
+                  <button
+                    key={`trending-dot-${course.id}`}
+                    type="button"
+                    onClick={() => handleDotClick(index)}
+                    aria-label={`View slide ${index + 1}`}
+                    className={`h-2.5 w-6 rounded-full transition-all duration-200 ${isActive ? 'bg-primary-600 shadow-md shadow-primary-300/70' : 'bg-primary-200 hover:bg-primary-300'}`}
+                  />
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 

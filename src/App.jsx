@@ -67,6 +67,11 @@ const routes = {
 export default function App() {
   const [hash, setHash] = useState(window.location.hash || '#/')
   const [showBanner, setShowBanner] = useState(false)
+  const [bannerHeight, setBannerHeight] = useState(0)
+  const [navHeight, setNavHeight] = useState(() => {
+    if (typeof window === 'undefined') return 80
+    return window.innerWidth >= 640 ? 80 : 64
+  })
 
   useEffect(() => {
     const onHashChange = () => {
@@ -92,6 +97,33 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [hash])
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return
+      setNavHeight(window.innerWidth >= 640 ? 80 : 64)
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (!showBanner) {
+      setBannerHeight(0)
+      return
+    }
+
+    const measure = () => {
+      const el = document.getElementById('promo-banner')
+      setBannerHeight(el ? el.offsetHeight : 0)
+    }
+
+    measure()
+    window.addEventListener('resize', measure)
+
+    return () => window.removeEventListener('resize', measure)
+  }, [showBanner])
+
   const handleBannerClose = () => {
     setShowBanner(false)
   }
@@ -104,7 +136,10 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Discount Banner - Only shows on home page */}
       {showBanner && (
-        <div className="fixed top-0 left-0 right-0 z-100 bg-black text-white py-2 sm:py-3 px-2 sm:px-4 flex items-center justify-center w-full overflow-x-hidden">
+        <div
+          id="promo-banner"
+          className="fixed top-0 left-0 right-0 z-100 bg-black text-white py-2 sm:py-3 px-2 sm:px-4 flex items-center justify-center w-full overflow-x-hidden"
+        >
           <div className="flex items-center justify-center gap-2 sm:gap-4 flex-1 text-center min-w-0 max-w-full">
             <span className="text-xs sm:text-sm md:text-base font-semibold wrap-break-words px-2">
               🎉 <span className="font-bold">Special Offer!</span> Get up to <span className="font-bold text-yellow-300">50% OFF</span> on all Certification Courses. Limited time only - Enroll now!
@@ -131,8 +166,8 @@ export default function App() {
           </button>
         </div>
       )}
-      <Navbar bannerVisible={showBanner} />
-      <div className="flex-1" style={{ paddingTop: showBanner ? '128px' : '80px' }}>
+      <Navbar bannerVisible={showBanner} bannerHeight={bannerHeight} navHeight={navHeight} />
+      <div className="flex-1" style={{ paddingTop: `${bannerHeight + navHeight}px` }}>
         <PageTransition routeKey={routeHash}>
           {Content}
         </PageTransition>
