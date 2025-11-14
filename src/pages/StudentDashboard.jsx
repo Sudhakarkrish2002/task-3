@@ -17,6 +17,7 @@ export default function StudentDashboard() {
         }
       } catch (error) {
         console.error('Error fetching user data:', error)
+        toast.error('Unable to load your profile. Please re-login.')
       } finally {
         setLoading(false)
       }
@@ -294,7 +295,7 @@ export default function StudentDashboard() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                       <input
                         type="tel"
-                        defaultValue={user?.phone || ''}
+                        defaultValue={user?.phone || '+91'}
                         className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
                       />
                     </div>

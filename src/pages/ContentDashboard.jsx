@@ -8,6 +8,7 @@ export default function ContentDashboard() {
   const [loading, setLoading] = useState(true)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showSyllabusEditor, setShowSyllabusEditor] = useState(false)
+  const [editorKey, setEditorKey] = useState(0)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -73,6 +74,7 @@ export default function ContentDashboard() {
   const handleEditSyllabus = (course) => {
     setSelectedCourse(course)
     setShowSyllabusEditor(true)
+    setEditorKey(prev => prev + 1) // Force remount to reload data
   }
 
   const handleSyllabusSaved = () => {
@@ -294,6 +296,12 @@ export default function ContentDashboard() {
     ? courses 
     : courses.filter(course => course.category === filter)
 
+  const getSyllabusStats = (course) => {
+    const modules = course?.syllabus?.modules?.length || 0
+    const projects = course?.syllabus?.projects?.length || 0
+    return { modules, projects }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 p-8">
@@ -336,6 +344,7 @@ export default function ContentDashboard() {
         {showSyllabusEditor && selectedCourse ? (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <SyllabusEditor
+              key={`syllabus-editor-${selectedCourse._id}-${editorKey}`}
               courseId={selectedCourse._id}
               courseTitle={selectedCourse.title}
               courseCategory={selectedCourse.category}
@@ -475,13 +484,22 @@ export default function ContentDashboard() {
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {course.syllabus && course.syllabus.modules && course.syllabus.modules.length > 0 ? (
-                                <span className="text-green-600 font-medium">
-                                  {course.syllabus.modules.length} modules
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">No syllabus</span>
-                              )}
+                              {(() => {
+                                const { modules, projects } = getSyllabusStats(course)
+                                if (!modules && !projects) {
+                                  return <span className="text-gray-400">No syllabus</span>
+                                }
+                                return (
+                                  <div className="flex flex-col">
+                                    {modules > 0 && (
+                                      <span className="text-green-600 font-semibold">{modules} modules</span>
+                                    )}
+                                    {projects > 0 && (
+                                      <span className="text-purple-600 font-semibold">{projects} projects</span>
+                                    )}
+                                  </div>
+                                )
+                              })()}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium">
                               <div className="flex items-center gap-3">
@@ -568,13 +586,24 @@ export default function ContentDashboard() {
                           {course.isPublished ? 'Published' : 'Draft'}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-600 mb-3">
-                        <span className="font-medium">Duration:</span> {course.duration}
-                        {course.syllabus && course.syllabus.modules && course.syllabus.modules.length > 0 && (
-                          <span className="ml-4">
-                            <span className="font-medium">Syllabus:</span> {course.syllabus.modules.length} modules
-                          </span>
-                        )}
+                      <div className="text-sm text-gray-600 mb-3 space-y-1">
+                        <div>
+                          <span className="font-medium">Duration:</span> {course.duration}
+                        </div>
+                        {(() => {
+                          const { modules, projects } = getSyllabusStats(course)
+                          if (!modules && !projects) return null
+                          return (
+                            <div className="flex flex-wrap gap-3 text-xs font-semibold">
+                              {modules > 0 && (
+                                <span className="text-green-600">{modules} modules</span>
+                              )}
+                              {projects > 0 && (
+                                <span className="text-purple-600">{projects} projects</span>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </div>
                       <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
                         <button

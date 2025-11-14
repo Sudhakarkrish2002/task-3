@@ -8,12 +8,16 @@ export default function Syllabus() {
   const [loading, setLoading] = useState(true)
   const [expandedModules, setExpandedModules] = useState({})
   const [activeTab, setActiveTab] = useState('Syllabus')
+  const [openProjectIndex, setOpenProjectIndex] = useState(null)
   const [enrollmentData, setEnrollmentData] = useState({
     mobile: '',
     batch: '',
     objective: ''
   })
   const [user, setUser] = useState(null)
+  const projectsList = course?.syllabus?.projects || []
+  const instructors = course?.syllabus?.instructors || []
+  const hasMultipleInstructors = instructors.length > 1
 
   // Store course view in localStorage
   const storeCourseView = (courseData) => {
@@ -39,30 +43,54 @@ export default function Syllabus() {
       localStorage.setItem('currentCourseView', JSON.stringify(courseData))
     } catch (error) {
       console.error('Error storing course view:', error)
+      toast.error('Unable to save your course view history.')
     }
   }
 
-  useEffect(() => {
+  const resolveCourseIdByTitle = async (courseTitle) => {
+    if (!courseTitle) return null
+    try {
+      const response = await courseAPI.getAllCourses({ search: courseTitle, limit: 5 })
+      if (response.success && response.data?.courses?.length) {
+        const normalizedTitle = courseTitle.trim().toLowerCase()
+        const exactMatch = response.data.courses.find(
+          (courseItem) => courseItem.title?.trim().toLowerCase() === normalizedTitle
+        )
+        return (exactMatch || response.data.courses[0])?._id || null
+      }
+    } catch (error) {
+      console.warn('Unable to resolve course ID by title:', error)
+      toast.error('Unable to find that course right now. Please retry.')
+    }
+    return null
+  }
+ useEffect(() => {
     const loadCourse = async () => {
       try {
         // Get course info from URL hash/query params
         const hash = window.location.hash
         const params = new URLSearchParams(hash.split('?')[1] || '')
-        const courseId = params.get('id')
+        let courseId = params.get('id')
         const courseTitle = params.get('title')
         const courseType = params.get('type') || 'course' // 'course' or 'certification'
+
+        if (!courseId && courseTitle) {
+          courseId = await resolveCourseIdByTitle(courseTitle)
+        }
 
         if (courseId) {
           // Try to fetch from API
           try {
             const response = await courseAPI.getCourseSyllabus(courseId)
             if (response.success && response.data) {
+              console.log('Syllabus API data:', response.data)
               const courseData = {
                 ...response.data,
                 syllabus: response.data.syllabus,
                 id: courseId,
                 type: courseType
               }
+              console.log('Normalized course data for syllabus page:', courseData)
               setCourse(courseData)
               storeCourseView(courseData)
               setLoading(false)
@@ -102,10 +130,12 @@ export default function Syllabus() {
         } else {
           // If no course data found, show error
           setCourse(null)
+          toast.error('No course information found. Please try again.')
         }
       } catch (error) {
         console.error('Error loading course:', error)
         setCourse(null)
+        toast.error('Unable to load course details. Please try again.')
       } finally {
         setLoading(false)
       }
@@ -113,6 +143,24 @@ export default function Syllabus() {
 
     loadCourse()
   }, [])
+
+  useEffect(() => {
+    if (!projectsList.length) {
+      if (openProjectIndex !== null) {
+        setOpenProjectIndex(null)
+      }
+      return
+    }
+
+    if (openProjectIndex === null) {
+      setOpenProjectIndex(0)
+      return
+    }
+
+    if (openProjectIndex > projectsList.length - 1) {
+      setOpenProjectIndex(0)
+    }
+  }, [projectsList.length, openProjectIndex])
 
   const handleBack = () => {
     window.history.back()
@@ -146,6 +194,7 @@ export default function Syllabus() {
       setEnrollmentData({ mobile: '', batch: '', objective: '' })
     } catch (error) {
       console.error('Error storing enrollment interest:', error)
+      toast.error('Unable to save your interest right now. Please retry.')
     }
   }
 
@@ -180,6 +229,37 @@ export default function Syllabus() {
       aiTools: aiTools.length,
       hasVideos: true
     }
+  }
+
+  const getProjectPoints = (project) => {
+    if (!project) return []
+
+    if (Array.isArray(project.points)) {
+      const sanitizedPoints = project.points
+        .map(point => (typeof point === 'string' ? point.trim() : ''))
+        .filter(point => point.length > 0)
+
+      if (sanitizedPoints.length > 0) {
+        return sanitizedPoints
+      }
+    }
+
+    if (project.description) {
+      const fallbackPoints = project.description
+        .split(/\n|\.(?=\s|$)/)
+        .map(point => point.trim())
+        .filter(point => point.length > 0)
+
+      if (fallbackPoints.length > 0) {
+        return fallbackPoints
+      }
+    }
+
+    return []
+  }
+
+  const toggleProjectAccordion = (idx) => {
+    setOpenProjectIndex((prev) => (prev === idx ? null : idx))
   }
 
   if (loading) {
@@ -1578,24 +1658,60 @@ export default function Syllabus() {
             </svg>
             Required Projects
           </h2>
-          {course.syllabus && course.syllabus.projects && course.syllabus.projects.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {course.syllabus.projects.map((project, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <span className="text-primary-600 font-bold text-sm sm:text-base">{idx + 1}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-2 wrap-break-words">{project.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 wrap-break-words">{project.description}</p>
-                    </div>
+          {projectsList.length > 0 ? (
+            <div className="space-y-3">
+              {projectsList.map((project, idx) => {
+                const points = getProjectPoints(project)
+                const isOpen = openProjectIndex === idx
+                return (
+                  <div key={idx} className="border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => toggleProjectAccordion(idx)}
+                      className="w-full flex items-center justify-between p-4 text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-100 text-primary-600 font-semibold flex items-center justify-center">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-gray-400">Project brief</p>
+                          <h3 className="text-sm sm:text-base font-semibold text-gray-900 wrap-break-words">
+                            {project.name || `Project ${idx + 1}`}
+                          </h3>
+                        </div>
+                      </div>
+                      <svg
+                        className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 pb-4">
+                        {points.length > 0 ? (
+                          <ul className="space-y-2">
+                            {points.map((point, pointIdx) => (
+                              <li key={pointIdx} className="flex items-start gap-2 text-sm text-gray-700">
+                                <span className="text-primary-600 shrink-0 mt-1">•</span>
+                                <span className="flex-1 wrap-break-words">{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-400 italic">No project details available</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
+              {openProjectIndex === null && projectsList.length > 0 && (
+                <p className="text-xs text-gray-500 text-center pt-2">Select a project to see its details.</p>
+              )}
             </div>
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
@@ -1644,27 +1760,42 @@ export default function Syllabus() {
             </svg>
             Course Instructors
           </h2>
-          {course.syllabus && course.syllabus.instructors && course.syllabus.instructors.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {course.syllabus.instructors.map((instructor, idx) => (
+          {instructors.length > 0 ? (
+            <div
+              className={`gap-4 sm:gap-6 ${
+                hasMultipleInstructors ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'max-w-2xl mx-auto'
+              }`}
+            >
+              {instructors.map((instructor, idx) => (
                 <div
-                  key={idx}
-                  className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow"
+                  key={`${instructor.name || 'instructor'}-${idx}`}
+                  className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                  <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary-500 via-amber-400 to-primary-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-linear-to-br from-primary-50 to-primary-100 text-primary-600 font-semibold flex items-center justify-center shrink-0">
+                      {(instructor.name || 'Instructor').charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-base sm:text-lg wrap-break-words mb-1">
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        {hasMultipleInstructors ? 'Instructor' : 'Lead Instructor'}
+                      </p>
+                      <h3 className="text-lg font-semibold text-gray-900 leading-tight wrap-break-words">
                         {instructor.name}
                       </h3>
-                      {instructor.description && (
-                        <p className="text-xs sm:text-sm text-gray-600 wrap-break-words">{instructor.description}</p>
-                      )}
                     </div>
+                  </div>
+                  {instructor.description && (
+                    <p className="mt-4 text-sm text-gray-600 leading-relaxed wrap-break-words">
+                      {instructor.description}
+                    </p>
+                  )}
+                  <div className="mt-auto pt-4 border-t border-gray-100 text-xs text-gray-500 flex items-center justify-between">
+                    <span className="flex items-center gap-2 font-medium text-primary-600">
+                      <span className="inline-block h-2 w-2 rounded-full bg-primary-500" />
+                      {hasMultipleInstructors ? 'Specialization mentor' : 'Program director'}
+                    </span>
+                    <span>Available for mentoring</span>
                   </div>
                 </div>
               ))}

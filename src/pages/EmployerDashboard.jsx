@@ -16,9 +16,14 @@ export default function EmployerDashboard() {
   })
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      setUser(JSON.parse(userData))
+    try {
+      const userData = localStorage.getItem('user')
+      if (userData) {
+        setUser(JSON.parse(userData))
+      }
+    } catch (error) {
+      console.error('Error loading employer profile:', error)
+      toast.error('Unable to load employer profile. Please refresh.')
     }
   }, [])
 

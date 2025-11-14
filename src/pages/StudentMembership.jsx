@@ -57,7 +57,7 @@ export default function StudentMembership() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    phone: '+91',
     college: '',
     graduationYear: '',
     membershipTier: 'Free',
@@ -88,7 +88,7 @@ export default function StudentMembership() {
       setFormData({
         name: '',
         email: '',
-        phone: '',
+        phone: '+91',
         college: '',
         graduationYear: '',
         membershipTier: 'Free',
@@ -152,7 +152,7 @@ export default function StudentMembership() {
           setFormData({
             name: '',
             email: '',
-            phone: '',
+            phone: '+91',
             college: '',
             graduationYear: '',
             membershipTier: 'Free',

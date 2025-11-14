@@ -8,6 +8,7 @@ export default function AdminCourseManagement() {
   const [loading, setLoading] = useState(true)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showSyllabusEditor, setShowSyllabusEditor] = useState(false)
+  const [editorKey, setEditorKey] = useState(0)
 
   useEffect(() => {
     loadCourses()
@@ -43,6 +44,7 @@ export default function AdminCourseManagement() {
   const handleEditSyllabus = (course) => {
     setSelectedCourse(course)
     setShowSyllabusEditor(true)
+    setEditorKey(prev => prev + 1) // Force remount to reload data
   }
 
   const handleSyllabusSaved = () => {
@@ -74,6 +76,7 @@ export default function AdminCourseManagement() {
         {showSyllabusEditor && selectedCourse ? (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <SyllabusEditor
+              key={`syllabus-editor-${selectedCourse._id}-${editorKey}`}
               courseId={selectedCourse._id}
               courseTitle={selectedCourse.title}
               courseCategory={selectedCourse.category}

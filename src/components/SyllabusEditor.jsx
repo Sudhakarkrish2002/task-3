@@ -2,6 +2,38 @@ import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { courseAPI } from '../utils/api.js'
 
+const buildPointsFromDescription = (description = '') => {
+  return description
+    .split(/\n|\.(?=\s|$)/)
+    .map(point => point.trim())
+    .filter(Boolean)
+}
+
+const ensureProjectPoints = (project) => {
+  const hasTypedPoints = Array.isArray(project?.points) && project.points.some(point => point && point.trim().length > 0)
+  const derivedPoints = buildPointsFromDescription(project?.description || '')
+
+  return {
+    ...project,
+    points: hasTypedPoints ? project.points.map(point => point.trim()).filter(Boolean) : derivedPoints
+  }
+}
+
+const normalizeSyllabusForSave = (syllabus) => {
+  const projects = (syllabus.projects || []).map(project => {
+    const normalized = ensureProjectPoints(project)
+    return {
+      ...normalized,
+      description: project.description || ''
+    }
+  })
+
+  return {
+    ...syllabus,
+    projects
+  }
+}
+
 export default function SyllabusEditor({ courseId, courseTitle, courseCategory, onClose, onSave, onSaveAndPublish }) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -68,22 +100,31 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
           title: module.title || '',
           description: module.description || '',
           duration: module.duration || '',
-          learningOutcomes: module.learningOutcomes || [],
           topics: module.topics || []
         }))
         
+        // Transform projects to new format (points array instead of description)
+        const projects = (response.data.syllabus.projects || []).map(project => ({
+          name: project.name || '',
+          description: project.description || '',
+          points: Array.isArray(project.points) ? project.points : []
+        }))
+
+        console.log('Loaded projects:', projects) // Debug log
+
         setSyllabus({
           overview: response.data.syllabus.overview || '',
           modules: modules,
           learningOutcomes: response.data.syllabus.learningOutcomes || [],
           prerequisites: response.data.syllabus.prerequisites || [],
-          projects: response.data.syllabus.projects || [],
+          projects: projects,
           instructors: response.data.syllabus.instructors || [],
           certification: response.data.syllabus.certification || ''
         })
       }
     } catch (error) {
       console.error('Error loading syllabus:', error)
+      toast.error('Error loading syllabus: ' + (error.message || 'Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -92,11 +133,13 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
   const handleSave = async (shouldPublish = false) => {
     setSaving(true)
     try {
-      const response = await courseAPI.updateCourseSyllabus(courseId, syllabus)
+      const normalizedSyllabus = normalizeSyllabusForSave(syllabus)
+      console.log('Saving syllabus with projects:', normalizedSyllabus.projects) // Debug log
+      const response = await courseAPI.updateCourseSyllabus(courseId, normalizedSyllabus)
       if (response.success) {
         if (shouldPublish) {
           // Save and publish in one call - include syllabus in courseData
-          const publishResponse = await courseAPI.publishCourse(courseId, 'publish', { syllabus })
+          const publishResponse = await courseAPI.publishCourse(courseId, 'publish', { syllabus: normalizedSyllabus })
           if (publishResponse.success) {
             toast.success('Syllabus saved and course published successfully!')
             if (onSaveAndPublish) onSaveAndPublish(publishResponse.data)
@@ -120,11 +163,10 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
   const addModule = () => {
     setSyllabus({
       ...syllabus,
-      modules: [...syllabus.modules, { 
-        title: '', 
-        description: '', 
-        duration: '', 
-        learningOutcomes: [],
+      modules: [...syllabus.modules, {
+        title: '',
+        description: '',
+        duration: '',
         topics: []
       }]
     })
@@ -143,23 +185,6 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
     })
   }
 
-  const addLearningOutcome = (moduleIndex) => {
-    const updated = [...syllabus.modules]
-    updated[moduleIndex].learningOutcomes = [...(updated[moduleIndex].learningOutcomes || []), '']
-    setSyllabus({ ...syllabus, modules: updated })
-  }
-
-  const updateLearningOutcome = (moduleIndex, outcomeIndex, value) => {
-    const updated = [...syllabus.modules]
-    updated[moduleIndex].learningOutcomes[outcomeIndex] = value
-    setSyllabus({ ...syllabus, modules: updated })
-  }
-
-  const removeLearningOutcome = (moduleIndex, outcomeIndex) => {
-    const updated = [...syllabus.modules]
-    updated[moduleIndex].learningOutcomes = updated[moduleIndex].learningOutcomes.filter((_, i) => i !== outcomeIndex)
-    setSyllabus({ ...syllabus, modules: updated })
-  }
 
   const addArrayItem = (field) => {
     setSyllabus({
@@ -184,7 +209,7 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
   const addProject = () => {
     setSyllabus({
       ...syllabus,
-      projects: [...syllabus.projects, { name: '', description: '' }]
+      projects: [...syllabus.projects, { name: '', description: '', points: [] }]
     })
   }
 
@@ -199,6 +224,24 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
       ...syllabus,
       projects: syllabus.projects.filter((_, i) => i !== index)
     })
+  }
+
+  const addProjectPoint = (projectIndex) => {
+    const updated = [...syllabus.projects]
+    updated[projectIndex].points = [...(updated[projectIndex].points || []), '']
+    setSyllabus({ ...syllabus, projects: updated })
+  }
+
+  const updateProjectPoint = (projectIndex, pointIndex, value) => {
+    const updated = [...syllabus.projects]
+    updated[projectIndex].points[pointIndex] = value
+    setSyllabus({ ...syllabus, projects: updated })
+  }
+
+  const removeProjectPoint = (projectIndex, pointIndex) => {
+    const updated = [...syllabus.projects]
+    updated[projectIndex].points = updated[projectIndex].points.filter((_, i) => i !== pointIndex)
+    setSyllabus({ ...syllabus, projects: updated })
   }
 
   // Topic management functions for modules
@@ -369,42 +412,6 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
                   )}
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-300">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-gray-600">Learning Outcomes</label>
-                  <button
-                    onClick={() => addLearningOutcome(moduleIndex)}
-                    className="text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded hover:bg-primary-50"
-                  >
-                    + Add Learning Outcome
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {(module.learningOutcomes || []).map((outcome, outcomeIndex) => (
-                    <div key={outcomeIndex} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={outcome}
-                        onChange={(e) => updateLearningOutcome(moduleIndex, outcomeIndex, e.target.value)}
-                        placeholder="Enter learning outcome"
-                        className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                      />
-                      <button
-                        onClick={() => removeLearningOutcome(moduleIndex, outcomeIndex)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Remove learning outcome"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                  {(!module.learningOutcomes || module.learningOutcomes.length === 0) && (
-                    <p className="text-xs text-gray-400 italic">No learning outcomes added yet</p>
-                  )}
-                </div>
-              </div>
             </div>
           ))}
           {syllabus.modules.length === 0 && (
@@ -496,32 +503,78 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
         </div>
         <div className="space-y-4">
           {syllabus.projects.map((project, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 space-y-2">
+            <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
                   <input
                     type="text"
-                    value={project.name}
+                    value={project.name || ''}
                     onChange={(e) => updateProject(index, 'name', e.target.value)}
                     placeholder="Project Name"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                   />
-                  <textarea
-                    value={project.description || ''}
-                    onChange={(e) => updateProject(index, 'description', e.target.value)}
-                    placeholder="Project Description"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    rows="2"
-                  />
                 </div>
                 <button
-                  onClick={() => removeProject(index)}
-                  className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+                      removeProject(index)
+                    }
+                  }}
+                  className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete project"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-300 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Project Overview / Description</label>
+                  <p className="text-xs text-gray-500 mb-2">Type a paragraph (or one sentence per line). We’ll convert it into bullet points automatically on the syllabus page.</p>
+                  <textarea
+                    value={project.description || ''}
+                    onChange={(e) => updateProject(index, 'description', e.target.value)}
+                    placeholder="Describe the project outcomes, tech stack, deliverables, etc."
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    rows="3"
+                  />
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-gray-600">Project Details (Bullet Points)</label>
+                  <button
+                    onClick={() => addProjectPoint(index)}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1 rounded hover:bg-primary-50"
+                  >
+                    + Add Point
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {(project.points || []).map((point, pointIndex) => (
+                    <div key={pointIndex} className="flex items-center gap-2">
+                      <span className="text-primary-600 shrink-0 flex items-center h-5">•</span>
+                      <input
+                        type="text"
+                        value={point}
+                        onChange={(e) => updateProjectPoint(index, pointIndex, e.target.value)}
+                        placeholder="Enter project detail point"
+                        className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                      />
+                      <button
+                        onClick={() => removeProjectPoint(index, pointIndex)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Remove point"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  {(!project.points || project.points.length === 0) && (
+                    <p className="text-xs text-gray-400 italic">No project details added yet. Click "+ Add Point" to add bullet points.</p>
+                  )}
+                </div>
               </div>
             </div>
           ))}

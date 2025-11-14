@@ -6,9 +6,14 @@ export default function CollegeDashboard() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      setUser(JSON.parse(userData))
+    try {
+      const userData = localStorage.getItem('user')
+      if (userData) {
+        setUser(JSON.parse(userData))
+      }
+    } catch (error) {
+      console.error('Error loading college profile:', error)
+      toast.error('Unable to load college profile. Please refresh.')
     }
   }, [])
 

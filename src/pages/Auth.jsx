@@ -90,7 +90,7 @@ export default function Auth() {
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
-    phone: '',
+    phone: '+91',
     password: '',
     confirmPassword: '',
     company: '', // for employer
@@ -200,13 +200,17 @@ export default function Auth() {
 
     // Validate password match
     if (registerData.password !== registerData.confirmPassword) {
-      setError('Passwords do not match!')
+      const mismatch = 'Passwords do not match!'
+      setError(mismatch)
+      toast.error(mismatch)
       return
     }
 
     // Validate password length
     if (registerData.password.length < 8) {
-      setError('Password must be at least 8 characters long')
+      const shortPassword = 'Password must be at least 8 characters long'
+      setError(shortPassword)
+      toast.error(shortPassword)
       return
     }
 
@@ -278,7 +282,7 @@ export default function Auth() {
         setRegisterData({
           name: '',
           email: '',
-          phone: '',
+          phone: '+91',
           password: '',
           confirmPassword: '',
           company: '',

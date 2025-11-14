@@ -106,13 +106,13 @@ export default function Workshops() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    phone: '+91',
     company: '',
   })
 
   const handleWorkshopSelect = (workshop) => {
     setSelectedWorkshop(workshop)
-    setFormData({ name: '', email: '', phone: '', company: '' })
+    setFormData({ name: '', email: '', phone: '+91', company: '' })
   }
 
   const handleInputChange = (e) => {
@@ -123,7 +123,7 @@ export default function Workshops() {
     e.preventDefault()
     if (selectedWorkshop) {
       toast.success(`Registration successful! You've registered for "${selectedWorkshop.title}". Check your email for confirmation.`)
-      setFormData({ name: '', email: '', phone: '', company: '' })
+      setFormData({ name: '', email: '', phone: '+91', company: '' })
       setSelectedWorkshop(null)
     }
   }
