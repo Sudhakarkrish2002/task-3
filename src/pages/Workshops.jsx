@@ -1,94 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-
-const workshops = [
-  {
-    id: 1,
-    title: 'React Hooks Mastery',
-    topic: 'Web Development',
-    date: '2024-02-15',
-    time: '6:00 PM - 8:00 PM',
-    format: 'Online',
-    duration: '2 hours',
-    instructor: 'John Doe',
-    description: 'Learn advanced React Hooks patterns, custom hooks, and performance optimization techniques.',
-    seats: 50,
-    registered: 32,
-    fee: 'Free',
-  },
-  {
-    id: 2,
-    title: 'Data Visualization with Python',
-    topic: 'Data Science',
-    date: '2024-02-20',
-    time: '3:00 PM - 5:00 PM',
-    format: 'Offline',
-    duration: '2 hours',
-    instructor: 'Jane Smith',
-    description: 'Create stunning visualizations using Matplotlib, Seaborn, and Plotly for data analysis.',
-    seats: 30,
-    registered: 18,
-    fee: '₹500',
-    location: 'Bangalore Tech Park',
-  },
-  {
-    id: 3,
-    title: 'Docker & Kubernetes Basics',
-    topic: 'DevOps',
-    date: '2024-02-25',
-    time: '10:00 AM - 1:00 PM',
-    format: 'Online',
-    duration: '3 hours',
-    instructor: 'Mike Johnson',
-    description: 'Hands-on workshop on containerization and orchestration with Docker and Kubernetes.',
-    seats: 40,
-    registered: 25,
-    fee: 'Free',
-  },
-  {
-    id: 4,
-    title: 'UI/UX Design Principles',
-    topic: 'Design',
-    date: '2024-03-01',
-    time: '2:00 PM - 5:00 PM',
-    format: 'Hybrid',
-    duration: '3 hours',
-    instructor: 'Sarah Williams',
-    description: 'Learn fundamental design principles and create user-friendly interfaces with Figma.',
-    seats: 35,
-    registered: 28,
-    fee: '₹750',
-    location: 'Mumbai Design Hub',
-  },
-  {
-    id: 5,
-    title: 'AWS Cloud Basics',
-    topic: 'Cloud Computing',
-    date: '2024-03-05',
-    time: '11:00 AM - 2:00 PM',
-    format: 'Online',
-    duration: '3 hours',
-    instructor: 'David Brown',
-    description: 'Get started with AWS services, EC2, S3, and basic cloud architecture concepts.',
-    seats: 60,
-    registered: 45,
-    fee: '₹1,000',
-  },
-  {
-    id: 6,
-    title: 'API Testing with Postman',
-    topic: 'Testing',
-    date: '2024-03-10',
-    time: '4:00 PM - 6:00 PM',
-    format: 'Online',
-    duration: '2 hours',
-    instructor: 'Emily Davis',
-    description: 'Master API testing, automation, and integration testing using Postman.',
-    seats: 45,
-    registered: 30,
-    fee: 'Free',
-  },
-]
+import { workshopAPI } from '../utils/api.js'
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
@@ -96,13 +8,12 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('en-US', options)
 }
 
-const getMonthYear = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-}
-
 export default function Workshops() {
+  const [workshops, setWorkshops] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [selectedWorkshop, setSelectedWorkshop] = useState(null)
+  const formRef = useRef(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -110,9 +21,36 @@ export default function Workshops() {
     company: '',
   })
 
+  useEffect(() => {
+    loadWorkshops()
+  }, [])
+
+  const loadWorkshops = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await workshopAPI.getAllWorkshops({ limit: 100 })
+      if (response.success) {
+        const list = response.data?.workshops || response.data || []
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        setWorkshops(list)
+      } else {
+        throw new Error(response.message || 'Unable to load workshops')
+      }
+    } catch (err) {
+      console.error('Error loading workshops:', err)
+      setError(err.message || 'Unable to load workshops right now.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleWorkshopSelect = (workshop) => {
     setSelectedWorkshop(workshop)
     setFormData({ name: '', email: '', phone: '+91', company: '' })
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 
   const handleInputChange = (e) => {
@@ -128,7 +66,14 @@ export default function Workshops() {
     }
   }
 
-  const availableSeats = (workshop) => workshop.seats - workshop.registered
+  const getWorkshopId = (workshop) => workshop._id || workshop.id
+
+  const availableSeats = (workshop) => {
+    if (workshop.seats == null) return null
+    const registered = Number(workshop.registered || workshop.bookedSeats || 0)
+    const remaining = Number(workshop.seats) - registered
+    return remaining >= 0 ? remaining : 0
+  }
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -154,100 +99,129 @@ export default function Workshops() {
             </div>
 
             <div className="space-y-4">
-              {workshops.map((workshop) => {
-                const seatsLeft = availableSeats(workshop)
-                const isFull = seatsLeft === 0
-                return (
-                  <div
-                    key={workshop.id}
-                    className={`bg-white rounded-xl border-2 p-6 transition-all ${
-                      selectedWorkshop?.id === workshop.id
-                        ? 'border-primary-600 shadow-lg'
-                        : 'border-gray-200 hover:shadow-xl hover:shadow-gray-400/50'
-                    } ${isFull ? 'opacity-75' : ''}`}
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="text-gray-600 mt-4">Loading workshops...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">{error}</p>
+                  <button
+                    onClick={loadWorkshops}
+                    className="mt-4 text-primary-700 hover:text-primary-800 font-semibold"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-gray-900">{workshop.title}</h3>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                            workshop.format === 'Online'
-                              ? 'bg-blue-100 text-blue-800'
-                              : workshop.format === 'Offline'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {workshop.format}
-                          </span>
+                    Retry loading
+                  </button>
+                </div>
+              ) : workshops.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">No workshops available right now. Please check back soon.</p>
+                </div>
+              ) : (
+                workshops.map((workshop) => {
+                  const workshopId = getWorkshopId(workshop)
+                  const isSelected = selectedWorkshop && getWorkshopId(selectedWorkshop) === workshopId
+                  const seatsLeft = availableSeats(workshop)
+                  const isFull = seatsLeft !== null && seatsLeft === 0
+                  const formatLabel = workshop.format || 'Online'
+                  const feeLabel = workshop.fee || (workshop.price ? `₹${workshop.price}` : 'Free')
+                  return (
+                    <div
+                      key={workshopId}
+                      className={`bg-white rounded-xl border-2 p-6 transition-all ${
+                        isSelected ? 'border-primary-600 shadow-lg' : 'border-gray-200 hover:shadow-xl hover:shadow-gray-400/50'
+                      } ${isFull ? 'opacity-75' : ''}`}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">{workshop.title}</h3>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                              formatLabel === 'Online'
+                                ? 'bg-blue-100 text-blue-800'
+                                : formatLabel === 'Offline'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {formatLabel}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">{workshop.description || 'Workshop details coming soon.'}</p>
                         </div>
-                        <p className="text-sm text-gray-600 mb-3">{workshop.description}</p>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-                      <div>
-                        <div className="text-gray-500 mb-1">Date</div>
-                        <div className="font-semibold text-gray-900">{formatDate(workshop.date)}</div>
-                      </div>
-                      <div>
-                        <div className="text-gray-500 mb-1">Time</div>
-                        <div className="font-semibold text-gray-900">{workshop.time}</div>
-                      </div>
-                      <div>
-                        <div className="text-gray-500 mb-1">Duration</div>
-                        <div className="font-semibold text-gray-900">{workshop.duration}</div>
-                      </div>
-                      <div>
-                        <div className="text-gray-500 mb-1">Fee</div>
-                        <div className="font-semibold text-primary-700">{workshop.fee}</div>
-                      </div>
-                    </div>
-
-                    {workshop.location && (
-                      <div className="mb-4 text-sm">
-                        <span className="text-gray-500">Location: </span>
-                        <span className="font-semibold text-gray-900">{workshop.location}</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <div className="flex items-center gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                         <div>
-                          <span className="text-gray-500">Instructor: </span>
-                          <span className="font-semibold text-gray-900">{workshop.instructor}</span>
+                          <div className="text-gray-500 mb-1">Date</div>
+                          <div className="font-semibold text-gray-900">
+                            {workshop.date ? formatDate(workshop.date) : 'To be announced'}
+                          </div>
                         </div>
                         <div>
-                          <span className="text-gray-500">Seats: </span>
-                          <span className={`font-semibold ${isFull ? 'text-red-600' : 'text-gray-900'}`}>
-                            {seatsLeft} left
-                          </span>
+                          <div className="text-gray-500 mb-1">Time</div>
+                          <div className="font-semibold text-gray-900">{workshop.time || 'Schedule TBA'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 mb-1">Duration</div>
+                          <div className="font-semibold text-gray-900">{workshop.duration || '—'}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 mb-1">Fee</div>
+                          <div className="font-semibold text-primary-700">{feeLabel}</div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleWorkshopSelect(workshop)}
-                        disabled={isFull}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
-                          isFull
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : selectedWorkshop?.id === workshop.id
-                            ? 'bg-primary-700 text-white shadow-xl shadow-primary-700/50'
-                            : 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)]'
-                        }`}
-                      >
-                        <span className="relative z-10">{isFull ? 'Full' : selectedWorkshop?.id === workshop.id ? 'Selected' : 'Register'}</span>
-                        {!isFull && selectedWorkshop?.id !== workshop.id && (
-                          <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                        )}
-                      </button>
+
+                      {workshop.location && (
+                        <div className="mb-4 text-sm">
+                          <span className="text-gray-500">Location: </span>
+                          <span className="font-semibold text-gray-900">{workshop.location}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div className="flex items-center gap-4 text-sm">
+                          {workshop.instructor && (
+                            <div>
+                              <span className="text-gray-500">Instructor: </span>
+                              <span className="font-semibold text-gray-900">{workshop.instructor}</span>
+                            </div>
+                          )}
+                          {seatsLeft !== null && (
+                            <div>
+                              <span className="text-gray-500">Seats: </span>
+                              <span className={`font-semibold ${isFull ? 'text-red-600' : 'text-gray-900'}`}>
+                                {seatsLeft} left
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleWorkshopSelect(workshop)}
+                          disabled={isFull}
+                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out relative overflow-hidden ${
+                            isFull
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : isSelected
+                              ? 'bg-primary-700 text-white shadow-xl shadow-primary-700/50'
+                              : 'bg-primary-600 text-white shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_30px_70px_rgba(147,51,234,0.8)]'
+                          }`}
+                        >
+                          <span className="relative z-10">{isFull ? 'Full' : isSelected ? 'Selected' : 'Register'}</span>
+                          {!isFull && !isSelected && (
+                            <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </div>
 
           {/* Registration Form */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1" ref={formRef}>
             <div className="bg-white rounded-xl border-2 border-gray-200 p-6 sticky top-20">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Workshop Registration</h2>
 

@@ -1,113 +1,48 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { internshipAPI } from '../utils/api.js'
 
-const internships = [
-  {
-    id: 1,
-    title: 'Frontend Development Intern',
-    company: 'TechStartup',
-    location: 'Remote',
-    duration: '3 months',
-    stipend: '₹8,000/month',
-    type: 'Full-time',
-    posted: '2 days ago',
-    applicants: '125',
-    skills: ['React', 'JavaScript', 'HTML/CSS'],
-    description: 'Work on cutting-edge web applications using React and modern frontend technologies.',
-  },
-  {
-    id: 2,
-    title: 'Data Science Intern',
-    company: 'DataViz Analytics',
-    location: 'Bangalore',
-    duration: '6 months',
-    stipend: '₹12,000/month',
-    type: 'Full-time',
-    posted: '1 day ago',
-    applicants: '89',
-    skills: ['Python', 'Machine Learning', 'SQL'],
-    description: 'Analyze real-world datasets and build ML models for business insights.',
-  },
-  {
-    id: 3,
-    title: 'Backend Development Intern',
-    company: 'CloudTech Solutions',
-    location: 'Hybrid',
-    duration: '3 months',
-    stipend: '₹10,000/month',
-    type: 'Full-time',
-    posted: '3 days ago',
-    applicants: '156',
-    skills: ['Node.js', 'MongoDB', 'Express'],
-    description: 'Develop scalable backend APIs and work with cloud infrastructure.',
-  },
-  {
-    id: 4,
-    title: 'UI/UX Design Intern',
-    company: 'DesignStudio',
-    location: 'Mumbai',
-    duration: '4 months',
-    stipend: '₹9,000/month',
-    type: 'Full-time',
-    posted: '5 days ago',
-    applicants: '203',
-    skills: ['Figma', 'Adobe XD', 'Prototyping'],
-    description: 'Design user interfaces and create interactive prototypes for web and mobile apps.',
-  },
-  {
-    id: 5,
-    title: 'DevOps Intern',
-    company: 'InfraCloud',
-    location: 'Remote',
-    duration: '6 months',
-    stipend: '₹15,000/month',
-    type: 'Full-time',
-    posted: '1 week ago',
-    applicants: '67',
-    skills: ['AWS', 'Docker', 'Kubernetes'],
-    description: 'Manage cloud infrastructure, CI/CD pipelines, and container orchestration.',
-  },
-  {
-    id: 6,
-    title: 'Mobile App Development Intern',
-    company: 'AppCraft',
-    location: 'Delhi NCR',
-    duration: '3 months',
-    stipend: '₹11,000/month',
-    type: 'Full-time',
-    posted: '4 days ago',
-    applicants: '142',
-    skills: ['React Native', 'Flutter', 'Mobile UI'],
-    description: 'Build cross-platform mobile applications using modern frameworks.',
-  },
-  {
-    id: 7,
-    title: 'Marketing Intern',
-    company: 'GrowthHacks',
-    location: 'Remote',
-    duration: '3 months',
-    stipend: '₹7,000/month',
-    type: 'Part-time',
-    posted: '6 days ago',
-    applicants: '234',
-    skills: ['Digital Marketing', 'SEO', 'Content Creation'],
-    description: 'Create marketing campaigns and manage social media presence.',
-  },
-  {
-    id: 8,
-    title: 'Content Writing Intern',
-    company: 'EduBlog',
-    location: 'Remote',
-    duration: '2 months',
-    stipend: '₹5,000/month',
-    type: 'Part-time',
-    posted: '1 week ago',
-    applicants: '189',
-    skills: ['Content Writing', 'SEO', 'Research'],
-    description: 'Write engaging blog posts and educational content for our platform.',
-  },
-]
+const formatPostedLabel = (isoDate) => {
+  if (!isoDate) return 'Recently'
+  const created = new Date(isoDate)
+  const diffMs = Date.now() - created.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays <= 0) return 'Today'
+  if (diffDays === 1) return '1 day ago'
+  if (diffDays < 7) return `${diffDays} days ago`
+  const diffWeeks = Math.floor(diffDays / 7)
+  if (diffWeeks === 1) return '1 week ago'
+  return `${diffWeeks} weeks ago`
+}
 
 export default function Internships() {
+  const [internships, setInternships] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    loadInternships()
+  }, [])
+
+  const loadInternships = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await internshipAPI.getAllInternships({ limit: 100 })
+      if (response.success) {
+        const list = response.data?.internships || response.data || []
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        setInternships(list)
+      } else {
+        throw new Error(response.message || 'Unable to load internships')
+      }
+    } catch (err) {
+      console.error('Error loading internships:', err)
+      setError(err.message || 'Unable to load internships right now.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -188,28 +123,76 @@ export default function Internships() {
               <p className="text-gray-600">Available internships from top companies</p>
             </div>
             <div className="text-sm text-gray-600">
-              Showing {internships.length} internships
+              {loading ? 'Loading…' : `Showing ${internships.length} internships`}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {internships.map((internship) => (
-              <div
-                key={internship.id}
-                className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Fetching the latest internship openings...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">{error}</p>
+              <button
+                onClick={loadInternships}
+                className="mt-4 text-primary-700 hover:text-primary-800 font-semibold"
               >
+                Retry loading
+              </button>
+            </div>
+          ) : internships.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No internships are live right now. Check back soon or subscribe for updates.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {internships.map((internship) => {
+                const internshipId = internship._id || internship.id
+                // Handle skills - use skillsRequired field from backend
+                const skills = Array.isArray(internship.skillsRequired)
+                  ? internship.skillsRequired
+                  : (typeof internship.skillsRequired === 'string' ? internship.skillsRequired.split(',').map(s => s.trim()) : [])
+                // Handle stipend - backend sends object with amount, currency, type
+                let stipendLabel = 'Stipend info on selection'
+                if (internship.stipend) {
+                  if (typeof internship.stipend === 'object' && internship.stipend.amount) {
+                    const currency = internship.stipend.currency || 'INR'
+                    const amount = internship.stipend.amount.toLocaleString('en-IN')
+                    if (internship.stipend.type === 'unpaid') {
+                      stipendLabel = 'Unpaid'
+                    } else if (internship.stipend.type === 'performance-based') {
+                      stipendLabel = `Performance-based (${currency === 'INR' ? '₹' : currency} ${amount})`
+                    } else {
+                      stipendLabel = `${currency === 'INR' ? '₹' : currency} ${amount}/month`
+                    }
+                  } else if (typeof internship.stipend === 'number') {
+                    stipendLabel = `₹${internship.stipend.toLocaleString('en-IN')}/month`
+                  }
+                }
+                // Handle company name - can be string or populated object
+                const companyName = typeof internship.company === 'object' && internship.company
+                  ? (internship.company.employerDetails?.companyName || internship.company.name || internship.companyName)
+                  : (internship.companyName || internship.company || 'Company')
+                const typeLabel = internship.type || internship.mode || 'Internship'
+                return (
+                  <div
+                    key={internshipId}
+                    className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+                  >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900 mb-1">{internship.title}</h3>
-                    <div className="text-lg font-semibold text-primary-700 mb-2">{internship.company}</div>
+                    <div className="text-lg font-semibold text-primary-700 mb-2">{companyName}</div>
                   </div>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                    internship.type === 'Full-time' 
-                      ? 'bg-blue-100 text-blue-800' 
+                    typeLabel.toLowerCase().includes('full')
+                      ? 'bg-blue-100 text-blue-800'
                       : 'bg-purple-100 text-purple-800'
                   }`}>
-                    {internship.type}
+                    {typeLabel}
                   </span>
                 </div>
 
@@ -220,49 +203,53 @@ export default function Internships() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>{internship.location}</span>
+                    <span>{internship.location || 'Flexible'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>{internship.duration}</span>
+                    <span>{internship.duration || 'Duration shared during screening'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>{internship.stipend}</span>
+                    <span>{stipendLabel}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Posted {internship.posted}</span>
+                    <span>Posted {formatPostedLabel(internship.createdAt || internship.updatedAt)}</span>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">{internship.description}</p>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  {internship.description || 'Role description will be shared during the interview process.'}
+                </p>
 
                 {/* Skills */}
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {internship.skills.map((skill, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+                {skills.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill, idx) => (
+                        <span
+                          key={`${internshipId}-skill-${idx}`}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <div className="text-xs text-gray-500">
-                    {internship.applicants} applicants
+                    {internship.applicationsReceived ? `${internship.applicationsReceived} applicants` : 'Be the first to apply'}
                   </div>
                   <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
                     <span className="relative z-10">Apply Now</span>
@@ -270,8 +257,10 @@ export default function Internships() {
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+            </div>
+          )}
         </div>
       </section>
     </main>

@@ -1,83 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { courseAPI } from '../utils/api.js'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
-
-const placementCourses = [
-  {
-    id: 1,
-    title: 'Full-Stack Web Development',
-    tagline: 'Highest salary offered: ₹12 LPA',
-    description: 'Comprehensive MERN stack training with guaranteed placement assistance.',
-    duration: '12 weeks',
-    features: [
-      '100+ hours of live coding sessions',
-      '1-on-1 mentoring sessions',
-      'Resume building and interview prep',
-      'Direct referrals to top companies',
-    ],
-    placementRate: '92%',
-    avgSalary: '₹8.5 LPA',
-  },
-  {
-    id: 2,
-    title: 'Data Science & Machine Learning',
-    tagline: 'Highest salary offered: ₹15 LPA',
-    description: 'Master data science with real-world projects and guaranteed placement support.',
-    duration: '16 weeks',
-    features: [
-      'Industry mentorship program',
-      'Portfolio project development',
-      'Mock interviews with industry experts',
-      'Exclusive job portal access',
-    ],
-    placementRate: '89%',
-    avgSalary: '₹9.2 LPA',
-  },
-  {
-    id: 3,
-    title: 'DevOps Engineering',
-    tagline: 'Highest salary offered: ₹14 LPA',
-    description: 'Complete DevOps training with hands-on experience and placement guarantee.',
-    duration: '12 weeks',
-    features: [
-      'Cloud infrastructure projects',
-      'CI/CD pipeline building',
-      'Technical interview preparation',
-      'LinkedIn profile optimization',
-    ],
-    placementRate: '88%',
-    avgSalary: '₹10.5 LPA',
-  },
-  {
-    id: 4,
-    title: 'Cloud Computing (AWS & Azure)',
-    tagline: 'Highest salary offered: ₹13 LPA',
-    description: 'Dual cloud certifications with guaranteed placement in top tech companies.',
-    duration: '10 weeks',
-    features: [
-      'AWS & Azure hands-on labs',
-      'Certification exam prep',
-      'Career counseling sessions',
-      'Placement support for 6 months',
-    ],
-    placementRate: '91%',
-    avgSalary: '₹8.8 LPA',
-  },
-  {
-    id: 5,
-    title: 'Mobile App Development',
-    tagline: 'Highest salary offered: ₹11 LPA',
-    description: 'React Native and Flutter training with placement guarantee.',
-    duration: '10 weeks',
-    features: [
-      'Cross-platform app development',
-      'App store deployment guidance',
-      'Startup connections',
-      'Freelancing opportunities',
-    ],
-    placementRate: '87%',
-    avgSalary: '₹7.5 LPA',
-  },
-]
 
 const successStories = [
   {
@@ -113,7 +36,24 @@ const successMetrics = [
   { label: 'Students Placed', value: '15,000+', description: 'Total students successfully placed' },
 ]
 
+const deriveFeatures = (course) => {
+  if (Array.isArray(course.features) && course.features.length) return course.features
+  if (Array.isArray(course.keyHighlights) && course.keyHighlights.length) return course.keyHighlights
+  if (Array.isArray(course.learningOutcomes) && course.learningOutcomes.length) return course.learningOutcomes
+  if (course.description) {
+    return course.description
+      .split('.')
+      .map((sentence) => sentence.trim())
+      .filter(Boolean)
+      .slice(0, 4)
+  }
+  return []
+}
+
 export default function PlacementTraining() {
+  const [placementCourses, setPlacementCourses] = useState([])
+  const [loadingCourses, setLoadingCourses] = useState(true)
+  const [coursesError, setCoursesError] = useState(null)
   const [animatedValues, setAnimatedValues] = useState({
     'Placement Rate': 0,
     'Average Salary': 0,
@@ -122,6 +62,10 @@ export default function PlacementTraining() {
   })
   const [hasAnimated, setHasAnimated] = useState(false)
   const metricsRef = useRef(null)
+
+  useEffect(() => {
+    loadPlacementCourses()
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -194,6 +138,28 @@ export default function PlacementTraining() {
         }))
       }, duration / steps)
     })
+  }
+
+  const loadPlacementCourses = async () => {
+    setLoadingCourses(true)
+    setCoursesError(null)
+    try {
+      const response = await courseAPI.getAllCourses({ limit: 100 })
+      if (response.success) {
+        const list = (response.data?.courses || []).filter(
+          (course) => course.placementGuaranteed || course.category === 'placement_training'
+        )
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        setPlacementCourses(list)
+      } else {
+        throw new Error(response.message || 'Unable to load placement programs')
+      }
+    } catch (err) {
+      console.error('Error loading placement courses:', err)
+      setCoursesError(err.message || 'Unable to load placement programs right now.')
+    } finally {
+      setLoadingCourses(false)
+    }
   }
 
   const handleViewSyllabus = (course) => {
@@ -314,83 +280,113 @@ export default function PlacementTraining() {
             <p className="text-gray-600">Choose a program that aligns with your career goals</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {placementCourses.map((course) => (
-              <div
-                key={course.id}
-                className="bg-white rounded-xl border-2 border-primary-200 p-6 hover:shadow-lg transition-shadow"
+          {loadingCourses ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading placement-guaranteed programs...</p>
+            </div>
+          ) : coursesError ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">{coursesError}</p>
+              <button
+                onClick={loadPlacementCourses}
+                className="mt-4 text-primary-700 hover:text-primary-800 font-semibold"
               >
-                {/* Course Header */}
-                <div className="mb-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                      Placement Guaranteed
-                    </span>
-                  </div>
-                  <div className="mt-2 p-3 rounded-lg bg-primary-50 border border-primary-200">
-                    <div className="text-sm font-semibold text-primary-900">{course.tagline}</div>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-3">{course.description}</p>
-                </div>
-
-                {/* Course Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Duration</div>
-                    <div className="text-sm font-semibold text-gray-900">{course.duration}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Placement Rate</div>
-                    <div className="text-sm font-semibold text-green-700">{course.placementRate}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Average Salary</div>
-                    <div className="text-sm font-semibold text-gray-900">{course.avgSalary}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Program Type</div>
-                    <div className="text-sm font-semibold text-gray-900">Guaranteed</div>
-                  </div>
-                </div>
-
-                {/* Course Features */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Program Features:</h4>
-                  <ul className="space-y-2">
-                    {course.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                        <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleViewSyllabus(course)}
-                    className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
+                Retry loading
+              </button>
+            </div>
+          ) : placementCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No placement-guaranteed programs are published yet. Please check back soon.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {placementCourses.map((course) => {
+                const courseId = course._id || course.id
+                const tagline = course.tagline || course.shortDescription || 'Placement-focused program'
+                const placementRate = course.placementRate || course.successRate || 'Guaranteed support'
+                const avgSalary = course.avgSalary || course.averageSalary || 'Top industry packages'
+                const features = deriveFeatures(course)
+                return (
+                  <div
+                    key={courseId}
+                    className="bg-white rounded-xl border-2 border-primary-200 p-6 hover:shadow-lg transition-shadow"
                   >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      View More
-                    </span>
-                    <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                  </button>
-                  <button className="flex-1 rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
-                    <span className="relative z-10">Enroll Now</span>
-                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    {/* Course Header */}
+                    <div className="mb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                          Placement Guaranteed
+                        </span>
+                      </div>
+                      <div className="mt-2 p-3 rounded-lg bg-primary-50 border border-primary-200">
+                        <div className="text-sm font-semibold text-primary-900">{tagline}</div>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-3">{course.description || 'Program details coming soon.'}</p>
+                    </div>
+
+                    {/* Course Stats */}
+                    <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Duration</div>
+                        <div className="text-sm font-semibold text-gray-900">{course.duration || 'Flexible'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Placement Rate</div>
+                        <div className="text-sm font-semibold text-green-700">{placementRate}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Average Salary</div>
+                        <div className="text-sm font-semibold text-gray-900">{avgSalary}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Program Type</div>
+                        <div className="text-sm font-semibold text-gray-900">Guaranteed</div>
+                      </div>
+                    </div>
+
+                    {/* Course Features */}
+                    {features.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Program Features:</h4>
+                        <ul className="space-y-2">
+                          {features.map((feature, idx) => (
+                            <li key={`${courseId}-feature-${idx}`} className="flex items-start gap-2 text-sm text-gray-600">
+                              <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleViewSyllabus(course)}
+                        className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          View More
+                        </span>
+                        <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                      </button>
+                      <button className="flex-1 rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                        <span className="relative z-10">Enroll Now</span>
+                        <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 

@@ -3,6 +3,24 @@ import { toast } from 'react-toastify'
 import { courseAPI } from '../utils/api.js'
 import SyllabusEditor from '../components/SyllabusEditor.jsx'
 
+const defaultCourseForm = {
+  title: '',
+  description: '',
+  shortDescription: '',
+  category: 'other',
+  courseType: 'non-certified',
+  instructor: '',
+  price: '',
+  originalPrice: '',
+  duration: '',
+  level: 'all',
+  language: 'English',
+  thumbnail: '',
+  certificateIncluded: false,
+  placementGuaranteed: false
+}
+
+
 export default function ContentDashboard() {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -16,22 +34,9 @@ export default function ContentDashboard() {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('all') // all, certification, placement_training, other
   const [user, setUser] = useState(null)
-  const [courseForm, setCourseForm] = useState({
-    title: '',
-    description: '',
-    shortDescription: '',
-    category: 'other',
-    courseType: 'non-certified', // certified or non-certified
-    instructor: '',
-    price: '',
-    originalPrice: '',
-    duration: '',
-    level: 'all',
-    language: 'English',
-    thumbnail: '',
-    certificateIncluded: false,
-    placementGuaranteed: false
-  })
+  const [courseForm, setCourseForm] = useState(() => ({ ...defaultCourseForm }))
+  const [activeSection, setActiveSection] = useState('courses')
+
 
   useEffect(() => {
     // Get user info from localStorage
@@ -47,9 +52,16 @@ export default function ContentDashboard() {
       }
     }
 
-    // Always load courses - ProtectedRoute ensures we have the right user
+    // Always load data - ProtectedRoute ensures we have the right user
     loadCourses()
   }, [])
+
+  useEffect(() => {
+    if (activeSection !== 'courses' && activeSection !== 'placements') {
+      setShowSyllabusEditor(false)
+      setSelectedCourse(null)
+    }
+  }, [activeSection])
 
   const loadCourses = async () => {
     setLoading(true)
@@ -71,6 +83,7 @@ export default function ContentDashboard() {
     }
   }
 
+
   const handleEditSyllabus = (course) => {
     setSelectedCourse(course)
     setShowSyllabusEditor(true)
@@ -89,22 +102,10 @@ export default function ContentDashboard() {
     loadCourses() // Refresh courses list
   }
 
-  const handleCreateCourse = () => {
+  const handleCreateCourse = (overrides = {}) => {
     setCourseForm({
-      title: '',
-      description: '',
-      shortDescription: '',
-      category: 'other',
-      courseType: 'non-certified',
-      instructor: '',
-      price: '',
-      originalPrice: '',
-      duration: '',
-      level: 'all',
-      language: 'English',
-      thumbnail: '',
-      certificateIncluded: false,
-      placementGuaranteed: false
+      ...defaultCourseForm,
+      ...overrides
     })
     setShowCreateModal(true)
   }
@@ -295,6 +296,27 @@ export default function ContentDashboard() {
   const filteredCourses = filter === 'all' 
     ? courses 
     : courses.filter(course => course.category === filter)
+  const placementCourses = courses.filter(course => course.placementGuaranteed)
+
+  const renderCourseTableEmptyState = (isPlacementView) => (
+    <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+      <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        {isPlacementView ? 'No placement programs found' : 'No courses found'}
+      </h3>
+      <p className="text-gray-600 mb-4">
+        {isPlacementView
+          ? 'Start by creating your first placement guaranteed program.'
+          : (filter === 'all'
+              ? "You haven't created any courses yet."
+              : `No ${getCourseTypeLabel(filter)} courses found.`)}
+      </p>
+    </div>
+  )
+
+
 
   const getSyllabusStats = (course) => {
     const modules = course?.syllabus?.modules?.length || 0
@@ -315,340 +337,372 @@ export default function ContentDashboard() {
     )
   }
 
+  const isPlacementView = activeSection === 'placements'
+  const sectionDescriptionMap = {
+    courses: 'Manage standard courses and edit course syllabuses',
+    placements: 'Curate placement guaranteed programs with end-to-end support'
+  }
+  const currentDescription = sectionDescriptionMap[activeSection] || 'Manage your content assets'
+
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">Content Writer Dashboard</h1>
-              {user && (
-                <span className="text-sm text-gray-500">Welcome, {user.name}</span>
-              )}
-            </div>
-            <p className="text-gray-600">Manage courses and edit course syllabuses</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">Content Writer Dashboard</h1>
+            {user && (
+              <span className="text-sm text-gray-500">Welcome, {user.name}</span>
+            )}
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCreateCourse}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg whitespace-nowrap"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Create Course
-            </button>
-          </div>
+          <p className="text-gray-600">{currentDescription}</p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (isPlacementView) {
+                handleCreateCourse({
+                  category: 'placement_training',
+                  placementGuaranteed: true,
+                  certificateIncluded: true,
+                  courseType: 'certified'
+                })
+              } else {
+                handleCreateCourse()
+              }
+            }}
+            className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg whitespace-nowrap"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            {isPlacementView ? 'Create Placement Course' : 'Create Course'}
+          </button>
+        </div>
+      </div>
 
-        {showSyllabusEditor && selectedCourse ? (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <SyllabusEditor
-              key={`syllabus-editor-${selectedCourse._id}-${editorKey}`}
-              courseId={selectedCourse._id}
-              courseTitle={selectedCourse.title}
-              courseCategory={selectedCourse.category}
-              onClose={() => {
-                setShowSyllabusEditor(false)
-                setSelectedCourse(null)
-              }}
-              onSave={handleSyllabusSaved}
-              onSaveAndPublish={handleSyllabusSavedAndPublished}
-            />
-          </div>
-        ) : (
-          <>
-            {/* Filter Tabs */}
-            <div className="mb-6 bg-white rounded-lg shadow p-4">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    filter === 'all'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  All Courses ({courses.length})
-                </button>
-                <button
-                  onClick={() => setFilter('certification')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    filter === 'certification'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Certification ({courses.filter(c => c.category === 'certification').length})
-                </button>
-                <button
-                  onClick={() => setFilter('placement_training')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    filter === 'placement_training'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Placement Training ({courses.filter(c => c.category === 'placement_training').length})
-                </button>
-                <button
-                  onClick={() => setFilter('other')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    filter === 'other'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Regular Courses ({courses.filter(c => c.category === 'other' || !c.category).length})
-                </button>
-              </div>
+      <div className="mb-8 bg-white rounded-lg shadow p-4">
+        <div className="flex flex-wrap gap-3">
+          {[
+            { key: 'courses', label: 'Courses' },
+            { key: 'placements', label: 'Placement Programs' }
+          ].map(section => (
+            <button
+              key={section.key}
+              onClick={() => setActiveSection(section.key)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                activeSection === section.key
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {(activeSection === 'courses' || isPlacementView) && (
+        <>
+          {showSyllabusEditor && selectedCourse ? (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <SyllabusEditor
+                key={`syllabus-editor-${selectedCourse._id}-${editorKey}`}
+                courseId={selectedCourse._id}
+                courseTitle={selectedCourse.title}
+                courseCategory={selectedCourse.category}
+                onClose={() => {
+                  setShowSyllabusEditor(false)
+                  setSelectedCourse(null)
+                }}
+                onSave={handleSyllabusSaved}
+                onSaveAndPublish={handleSyllabusSavedAndPublished}
+              />
             </div>
-
-            {/* Courses List */}
-            {filteredCourses.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No courses found</h3>
-                <p className="text-gray-600 mb-4">
-                  {filter === 'all' 
-                    ? "You haven't created any courses yet." 
-                    : `No ${getCourseTypeLabel(filter)} courses found.`}
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 table-auto">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Course Title
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Category
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Course Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Duration
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Syllabus
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[240px]">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredCourses.map((course) => (
-                          <tr key={course._id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4">
-                              <div className="text-sm font-medium text-gray-900">{course.title}</div>
-                              {course.shortDescription && (
-                                <div className="text-sm text-gray-500 mt-1">{course.shortDescription.substring(0, 60)}...</div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getCourseTypeColor(course.category)}`}>
-                                {getCourseTypeLabel(course.category)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                course.certificateIncluded 
-                                  ? 'bg-blue-100 text-blue-800' 
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {course.certificateIncluded ? 'Certified' : 'Non-Certified'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {course.duration}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                course.isPublished 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {course.isPublished ? 'Published' : 'Draft'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {(() => {
-                                const { modules, projects } = getSyllabusStats(course)
-                                if (!modules && !projects) {
-                                  return <span className="text-gray-400">No syllabus</span>
-                                }
-                                return (
-                                  <div className="flex flex-col">
-                                    {modules > 0 && (
-                                      <span className="text-green-600 font-semibold">{modules} modules</span>
-                                    )}
-                                    {projects > 0 && (
-                                      <span className="text-purple-600 font-semibold">{projects} projects</span>
-                                    )}
-                                  </div>
-                                )
-                              })()}
-                            </td>
-                            <td className="px-6 py-4 text-sm font-medium">
-                              <div className="flex items-center gap-3">
-                                <button
-                                  onClick={() => handleEditCourse(course)}
-                                  className="text-blue-600 hover:text-blue-900 font-semibold whitespace-nowrap"
-                                  title="Edit course"
-                                >
-                                  Edit
-                                </button>
-                                <span className="text-gray-300">|</span>
-                                <button
-                                  onClick={() => handleEditSyllabus(course)}
-                                  className="text-primary-600 hover:text-primary-900 font-semibold whitespace-nowrap"
-                                  title="Edit syllabus"
-                                >
-                                  Edit Syllabus
-                                </button>
-                                <span className="text-gray-300">|</span>
-                                {course.isPublished ? (
-                                  <button
-                                    onClick={() => handlePublishCourse(course, 'unpublish')}
-                                    className="text-orange-600 hover:text-orange-900 font-semibold whitespace-nowrap disabled:opacity-50"
-                                    title="Unpublish course"
-                                    disabled={saving}
-                                  >
-                                    Unpublish
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => handlePublishCourse(course, 'publish')}
-                                    className="text-green-600 hover:text-green-900 font-semibold whitespace-nowrap disabled:opacity-50"
-                                    title="Publish course"
-                                    disabled={saving}
-                                  >
-                                    Publish
-                                  </button>
-                                )}
-                                <span className="text-gray-300">|</span>
-                                <button
-                                  onClick={() => handleDeleteCourse(course)}
-                                  className="text-red-600 hover:text-red-900 font-semibold whitespace-nowrap"
-                                  title="Delete course"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+          ) : (
+            <>
+              {!isPlacementView && (
+                <div className="mb-6 bg-white rounded-lg shadow p-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilter('all')}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        filter === 'all'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      All Courses ({courses.length})
+                    </button>
+                    <button
+                      onClick={() => setFilter('certification')}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        filter === 'certification'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Certification ({courses.filter(c => c.category === 'certification').length})
+                    </button>
+                    <button
+                      onClick={() => setFilter('placement_training')}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        filter === 'placement_training'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Placement Training ({courses.filter(c => c.category === 'placement_training').length})
+                    </button>
+                    <button
+                      onClick={() => setFilter('other')}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        filter === 'other'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Regular Courses ({courses.filter(c => c.category === 'other' || !c.category).length})
+                    </button>
                   </div>
                 </div>
+              )}
 
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-4">
-                  {filteredCourses.map((course) => (
-                    <div key={course._id} className="bg-white rounded-lg shadow-lg p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{course.title}</h3>
-                          {course.shortDescription && (
-                            <p className="text-sm text-gray-500 mb-2">{course.shortDescription}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getCourseTypeColor(course.category)}`}>
-                          {getCourseTypeLabel(course.category)}
-                        </span>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          course.certificateIncluded 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {course.certificateIncluded ? 'Certified' : 'Non-Certified'}
-                        </span>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          course.isPublished 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {course.isPublished ? 'Published' : 'Draft'}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-600 mb-3 space-y-1">
-                        <div>
-                          <span className="font-medium">Duration:</span> {course.duration}
-                        </div>
-                        {(() => {
-                          const { modules, projects } = getSyllabusStats(course)
-                          if (!modules && !projects) return null
-                          return (
-                            <div className="flex flex-wrap gap-3 text-xs font-semibold">
-                              {modules > 0 && (
-                                <span className="text-green-600">{modules} modules</span>
-                              )}
-                              {projects > 0 && (
-                                <span className="text-purple-600">{projects} projects</span>
-                              )}
-                            </div>
-                          )
-                        })()}
-                      </div>
-                      <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
-                        <button
-                          onClick={() => handleEditCourse(course)}
-                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleEditSyllabus(course)}
-                          className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
-                        >
-                          Syllabus
-                        </button>
-                        {course.isPublished ? (
-                          <button
-                            onClick={() => handlePublishCourse(course, 'unpublish')}
-                            className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition-colors"
-                            disabled={saving}
-                          >
-                            Unpublish
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handlePublishCourse(course, 'publish')}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
-                            disabled={saving}
-                          >
-                            Publish
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteCourse(course)}
-                          className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
+              {(isPlacementView ? placementCourses : filteredCourses).length === 0 ? (
+                renderCourseTableEmptyState(isPlacementView)
+              ) : (
+                <>
+                  <div className="hidden md:block bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 table-auto">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Course Title
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Category
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Course Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Duration
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Syllabus
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[240px]">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(isPlacementView ? placementCourses : filteredCourses).map((course) => (
+                            <tr key={course._id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-gray-900">{course.title}</div>
+                                {course.shortDescription && (
+                                  <div className="text-sm text-gray-500 mt-1">{course.shortDescription.substring(0, 60)}...</div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getCourseTypeColor(course.category)}`}>
+                                  {getCourseTypeLabel(course.category)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  course.certificateIncluded 
+                                    ? 'bg-blue-100 text-blue-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {course.certificateIncluded ? 'Certified' : 'Non-Certified'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {course.duration}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  course.isPublished 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {course.isPublished ? 'Published' : 'Draft'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {(() => {
+                                  const { modules, projects } = getSyllabusStats(course)
+                                  if (!modules && !projects) {
+                                    return <span className="text-gray-400">No syllabus</span>
+                                  }
+                                  return (
+                                    <div className="flex flex-col">
+                                      {modules > 0 && (
+                                        <span className="text-green-600 font-semibold">{modules} modules</span>
+                                      )}
+                                      {projects > 0 && (
+                                        <span className="text-purple-600 font-semibold">{projects} projects</span>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
+                              </td>
+                              <td className="px-6 py-4 text-sm font-medium">
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => handleEditCourse(course)}
+                                    className="text-blue-600 hover:text-blue-900 font-semibold whitespace-nowrap"
+                                    title="Edit course"
+                                  >
+                                    Edit
+                                  </button>
+                                  <span className="text-gray-300">|</span>
+                                  <button
+                                    onClick={() => handleEditSyllabus(course)}
+                                    className="text-primary-600 hover:text-primary-900 font-semibold whitespace-nowrap"
+                                    title="Edit syllabus"
+                                  >
+                                    Edit Syllabus
+                                  </button>
+                                  <span className="text-gray-300">|</span>
+                                  {course.isPublished ? (
+                                    <button
+                                      onClick={() => handlePublishCourse(course, 'unpublish')}
+                                      className="text-orange-600 hover:text-orange-900 font-semibold whitespace-nowrap disabled:opacity-50"
+                                      title="Unpublish course"
+                                      disabled={saving}
+                                    >
+                                      Unpublish
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handlePublishCourse(course, 'publish')}
+                                      className="text-green-600 hover:text-green-900 font-semibold whitespace-nowrap disabled:opacity-50"
+                                      title="Publish course"
+                                      disabled={saving}
+                                    >
+                                      Publish
+                                    </button>
+                                  )}
+                                  <span className="text-gray-300">|</span>
+                                  <button
+                                    onClick={() => handleDeleteCourse(course)}
+                                    className="text-red-600 hover:text-red-900 font-semibold whitespace-nowrap"
+                                    title="Delete course"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        )}
+                  </div>
+
+                  <div className="md:hidden space-y-4">
+                    {(isPlacementView ? placementCourses : filteredCourses).map((course) => (
+                      <div key={course._id} className="bg-white rounded-lg shadow-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">{course.title}</h3>
+                            {course.shortDescription && (
+                              <p className="text-sm text-gray-500 mb-2">{course.shortDescription}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getCourseTypeColor(course.category)}`}>
+                            {getCourseTypeLabel(course.category)}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            course.certificateIncluded 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {course.certificateIncluded ? 'Certified' : 'Non-Certified'}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            course.isPublished 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {course.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-3 space-y-1">
+                          <div>
+                            <span className="font-medium">Duration:</span> {course.duration}
+                          </div>
+                          {(() => {
+                            const { modules, projects } = getSyllabusStats(course)
+                            if (!modules && !projects) return null
+                            return (
+                              <div className="flex flex-wrap gap-3 text-xs font-semibold">
+                                {modules > 0 && (
+                                  <span className="text-green-600">{modules} modules</span>
+                                )}
+                                {projects > 0 && (
+                                  <span className="text-purple-600">{projects} projects</span>
+                                )}
+                              </div>
+                            )
+                          })()}
+                        </div>
+                        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                          <button
+                            onClick={() => handleEditCourse(course)}
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleEditSyllabus(course)}
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
+                          >
+                            Syllabus
+                          </button>
+                          {course.isPublished ? (
+                            <button
+                              onClick={() => handlePublishCourse(course, 'unpublish')}
+                              className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition-colors"
+                              disabled={saving}
+                            >
+                              Unpublish
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handlePublishCourse(course, 'publish')}
+                              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+                              disabled={saving}
+                            >
+                              Publish
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteCourse(course)}
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </>
+      )}
+
 
         {/* Create Course Modal */}
         {showCreateModal && (
@@ -797,6 +851,7 @@ export default function ContentDashboard() {
             </div>
           </div>
         )}
+
       </div>
     </main>
   )
@@ -1051,4 +1106,5 @@ function CourseForm({ formData, setFormData }) {
     </div>
   )
 }
+
 

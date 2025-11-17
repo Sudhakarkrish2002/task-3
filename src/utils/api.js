@@ -41,11 +41,20 @@ const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'An error occurred');
+      // Create an error with more details
+      const error = new Error(data.message || data.error || 'An error occurred');
+      error.status = response.status;
+      error.data = data;
+      throw error;
     }
 
     return data;
   } catch (error) {
+    // If it's already our custom error, just re-throw it
+    if (error.status) {
+      throw error;
+    }
+    // Otherwise, log and wrap it
     console.error('API Error:', error);
     throw error;
   }
@@ -253,6 +262,12 @@ export const workshopAPI = {
   // Get workshop by ID
   getWorkshopById: async (workshopId) => {
     return apiRequest(`/workshops/${workshopId}`);
+  },
+
+  // Get my workshops (employer/content_writer/admin)
+  getMyWorkshops: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/workshops/my-workshops/list${queryParams ? `?${queryParams}` : ''}`);
   },
 
   // Create workshop (admin)
