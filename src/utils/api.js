@@ -37,8 +37,15 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   try {
+    console.log(`[API Request] ${options.method || 'GET'} ${url}`, options.body ? JSON.parse(options.body) : '');
     const response = await fetch(url, config);
     const data = await response.json();
+    
+    console.log(`[API Response] ${options.method || 'GET'} ${url}`, {
+      status: response.status,
+      ok: response.ok,
+      data: data
+    });
 
     if (!response.ok) {
       // Create an error with more details
@@ -52,10 +59,15 @@ const apiRequest = async (endpoint, options = {}) => {
   } catch (error) {
     // If it's already our custom error, just re-throw it
     if (error.status) {
+      console.error(`[API Error] ${options.method || 'GET'} ${url}`, {
+        status: error.status,
+        message: error.message,
+        data: error.data
+      });
       throw error;
     }
     // Otherwise, log and wrap it
-    console.error('API Error:', error);
+    console.error(`[API Network Error] ${options.method || 'GET'} ${url}`, error);
     throw error;
   }
 };

@@ -220,7 +220,7 @@ export default function EmployerDashboard() {
         responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').filter(r => r.trim()) : [],
         benefits: formData.benefits ? formData.benefits.split('\n').filter(b => b.trim()) : [],
         startDate: formData.startDate || undefined,
-        status: 'draft'
+        isPublished: false
       }
 
       if (editingInternship) {
@@ -285,7 +285,7 @@ export default function EmployerDashboard() {
   }
 
   const handlePublish = async (internship) => {
-    const action = internship.status === 'published' ? 'unpublish' : 'publish'
+    const action = internship.isPublished ? 'unpublish' : 'publish'
     const confirmMessage = action === 'publish'
       ? `Are you sure you want to publish "${internship.title}"? It will be visible to all users.`
       : `Are you sure you want to unpublish "${internship.title}"? It will no longer be visible to users.`
@@ -296,22 +296,14 @@ export default function EmployerDashboard() {
 
     try {
       setLoading(true)
-      const newStatus = internship.status === 'published' ? 'draft' : 'published'
+      const newIsPublished = !internship.isPublished
       
-      // Ensure we send all required fields to avoid validation errors
-      // The backend will only update what's provided, but we need to ensure
-      // the internship has all required fields before publishing
-      const updateData = { status: newStatus }
-      
-      // If publishing, ensure isActive is set (backend will handle this, but being explicit)
-      if (newStatus === 'published') {
-        updateData.isActive = true
-      }
+      const updateData = { isPublished: newIsPublished }
       
       const response = await internshipAPI.updateInternship(internship._id, updateData)
       
       if (response.success) {
-        toast.success(`Internship ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`)
+        toast.success(`Internship ${newIsPublished ? 'published' : 'unpublished'} successfully!`)
         fetchMyInternships()
       } else {
         throw new Error(response.message || 'Failed to update internship status')
@@ -338,7 +330,7 @@ export default function EmployerDashboard() {
         status: error.status,
         message: errorMessage,
         internshipId: internship._id,
-        currentStatus: internship.status
+        isPublished: internship.isPublished
       })
       
       toast.error(errorMessage)
@@ -467,19 +459,76 @@ export default function EmployerDashboard() {
 
     try {
       setLoading(true)
-      if (workshop.isPublished) {
-        // Unpublish by updating isPublished to false and isActive to false
-        await workshopAPI.updateWorkshop(workshop._id, { isPublished: false, isActive: false })
-        toast.success('Workshop unpublished successfully!')
+      const newIsPublished = !workshop.isPublished
+      
+      console.log('[EmployerDashboard] Publishing workshop:', {
+        workshopId: workshop._id,
+        title: workshop.title,
+        currentIsPublished: workshop.isPublished,
+        currentIsActive: workshop.isActive,
+        newIsPublished: newIsPublished
+      })
+      
+      // Use updateWorkshop for both publish and unpublish (consistent with internships)
+      const updateData = { isPublished: newIsPublished }
+      
+      const response = await workshopAPI.updateWorkshop(workshop._id, updateData)
+      
+      console.log('[EmployerDashboard] Workshop update response:', {
+        success: response.success,
+        data: response.data,
+        workshopId: response.data?._id,
+        isPublished: response.data?.isPublished,
+        isActive: response.data?.isActive,
+        title: response.data?.title
+      })
+      
+      if (response.success) {
+        // Verify the workshop was saved correctly
+        if (response.data) {
+          const savedWorkshop = response.data
+          console.log('[EmployerDashboard] Saved workshop verification:', {
+            id: savedWorkshop._id,
+            title: savedWorkshop.title,
+            isPublished: savedWorkshop.isPublished,
+            isActive: savedWorkshop.isActive
+          })
+          
+          if (newIsPublished && (!savedWorkshop.isPublished || !savedWorkshop.isActive)) {
+            console.error('[EmployerDashboard] WARNING: Workshop was not saved with correct publish status!', {
+              expected: { isPublished: true, isActive: true },
+              actual: { isPublished: savedWorkshop.isPublished, isActive: savedWorkshop.isActive }
+            })
+            toast.warning('Workshop published, but there may be an issue. Please check the workshop status.')
+          }
+        }
+        
+        toast.success(`Workshop ${newIsPublished ? 'published' : 'unpublished'} successfully!`)
+        fetchMyWorkshops()
       } else {
-        // Publish using publish endpoint
-        await workshopAPI.publishWorkshop(workshop._id)
-        toast.success('Workshop published successfully!')
+        throw new Error(response.message || 'Failed to update workshop status')
       }
-      fetchMyWorkshops()
     } catch (error) {
-      const errorMessage = error.message || 'Failed to update workshop status. Please try again.'
-      console.error('Error updating workshop status:', error)
+      // Extract detailed error message from API response
+      let errorMessage = 'Failed to update workshop status. Please try again.'
+      
+      if (error.data?.message) {
+        errorMessage = error.data.message
+      } else if (error.message) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+      
+      console.error('[EmployerDashboard] Error publishing workshop:', {
+        error,
+        errorData: error.data,
+        status: error.status,
+        message: errorMessage,
+        workshopId: workshop._id,
+        isPublished: workshop.isPublished
+      })
+      
       toast.error(errorMessage)
     } finally {
       setLoading(false)
@@ -496,19 +545,8 @@ export default function EmployerDashboard() {
       .slice(0, 2)
   }
 
-  const getStatusBadgeColor = (status) => {
-    switch (status) {
-      case 'published':
-        return 'bg-green-100 text-green-800'
-      case 'draft':
-        return 'bg-gray-100 text-gray-800'
-      case 'active':
-        return 'bg-blue-100 text-blue-800'
-      case 'closed':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-yellow-100 text-yellow-800'
-    }
+  const getStatusBadgeColor = (isPublished) => {
+    return isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
   }
 
   const getApprovalStatusBadgeColor = (status) => {
@@ -664,8 +702,8 @@ export default function EmployerDashboard() {
                             <p className="text-sm text-gray-600 mt-1">{internship.location} {internship.isRemote && '(Remote)'}</p>
                             <p className="text-sm text-gray-500 mt-2 line-clamp-2">{internship.description}</p>
                             <div className="flex flex-wrap gap-2 mt-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(internship.status)}`}>
-                                {internship.status}
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(internship.isPublished)}`}>
+                                {internship.isPublished ? 'Published' : 'Draft'}
                               </span>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getApprovalStatusBadgeColor(internship.adminApprovalStatus)}`}>
                                 {internship.adminApprovalStatus}
@@ -687,12 +725,12 @@ export default function EmployerDashboard() {
                             onClick={() => handlePublish(internship)}
                             disabled={loading}
                             className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ease-in-out hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                              internship.status === 'published'
+                              internship.isPublished
                                 ? 'bg-yellow-600 text-white hover:bg-yellow-700'
                                 : 'bg-green-600 text-white hover:bg-green-700'
                             }`}
                           >
-                            {loading ? 'Processing...' : (internship.status === 'published' ? 'Unpublish' : 'Publish')}
+                            {loading ? 'Processing...' : (internship.isPublished ? 'Unpublish' : 'Publish')}
                           </button>
                           <button
                             onClick={() => handleDelete(internship._id)}

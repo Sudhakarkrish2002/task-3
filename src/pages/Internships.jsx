@@ -27,16 +27,30 @@ export default function Internships() {
     setLoading(true)
     setError(null)
     try {
+      console.log('[Internships] Fetching internships from backend...')
       const response = await internshipAPI.getAllInternships({ limit: 100 })
+      console.log('[Internships] Backend response received:', response)
+      console.log('[Internships] Response success:', response.success)
+      console.log('[Internships] Response data:', response.data)
+      
       if (response.success) {
         const list = response.data?.internships || response.data || []
+        console.log('[Internships] Processed internships list:', list)
+        console.log('[Internships] Number of internships:', list.length)
         list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         setInternships(list)
+        console.log('[Internships] Internships set in state successfully')
       } else {
+        console.error('[Internships] Response indicates failure:', response.message)
         throw new Error(response.message || 'Unable to load internships')
       }
     } catch (err) {
-      console.error('Error loading internships:', err)
+      console.error('[Internships] Error loading internships:', err)
+      console.error('[Internships] Error details:', {
+        message: err.message,
+        status: err.status,
+        data: err.data
+      })
       setError(err.message || 'Unable to load internships right now.')
     } finally {
       setLoading(false)

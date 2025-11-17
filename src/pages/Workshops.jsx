@@ -29,16 +29,30 @@ export default function Workshops() {
     setLoading(true)
     setError(null)
     try {
+      console.log('[Workshops] Fetching workshops from backend...')
       const response = await workshopAPI.getAllWorkshops({ limit: 100 })
+      console.log('[Workshops] Backend response received:', response)
+      console.log('[Workshops] Response success:', response.success)
+      console.log('[Workshops] Response data:', response.data)
+      
       if (response.success) {
         const list = response.data?.workshops || response.data || []
+        console.log('[Workshops] Processed workshops list:', list)
+        console.log('[Workshops] Number of workshops:', list.length)
         list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         setWorkshops(list)
+        console.log('[Workshops] Workshops set in state successfully')
       } else {
+        console.error('[Workshops] Response indicates failure:', response.message)
         throw new Error(response.message || 'Unable to load workshops')
       }
     } catch (err) {
-      console.error('Error loading workshops:', err)
+      console.error('[Workshops] Error loading workshops:', err)
+      console.error('[Workshops] Error details:', {
+        message: err.message,
+        status: err.status,
+        data: err.data
+      })
       setError(err.message || 'Unable to load workshops right now.')
     } finally {
       setLoading(false)
@@ -68,12 +82,6 @@ export default function Workshops() {
 
   const getWorkshopId = (workshop) => workshop._id || workshop.id
 
-  const availableSeats = (workshop) => {
-    if (workshop.seats == null) return null
-    const registered = Number(workshop.registered || workshop.bookedSeats || 0)
-    const remaining = Number(workshop.seats) - registered
-    return remaining >= 0 ? remaining : 0
-  }
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -122,10 +130,18 @@ export default function Workshops() {
                 workshops.map((workshop) => {
                   const workshopId = getWorkshopId(workshop)
                   const isSelected = selectedWorkshop && getWorkshopId(selectedWorkshop) === workshopId
-                  const seatsLeft = availableSeats(workshop)
+                  // Calculate available seats from backend fields
+                  const maxSeats = workshop.maxParticipants || 0
+                  const currentSeats = workshop.currentParticipants || 0
+                  const seatsLeft = maxSeats > 0 ? maxSeats - currentSeats : null
                   const isFull = seatsLeft !== null && seatsLeft === 0
-                  const formatLabel = workshop.format || 'Online'
-                  const feeLabel = workshop.fee || (workshop.price ? `₹${workshop.price}` : 'Free')
+                  // Use mode from backend (online, offline, hybrid)
+                  const modeLabel = workshop.mode || 'online'
+                  const formatLabel = modeLabel.charAt(0).toUpperCase() + modeLabel.slice(1)
+                  const feeLabel = workshop.price ? `₹${workshop.price}` : 'Free'
+                  // Get date from schedule.startDate
+                  const startDate = workshop.schedule?.startDate
+                  const endDate = workshop.schedule?.endDate
                   return (
                     <div
                       key={workshopId}
@@ -138,29 +154,31 @@ export default function Workshops() {
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-xl font-bold text-gray-900">{workshop.title}</h3>
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              formatLabel === 'Online'
+                              modeLabel === 'online'
                                 ? 'bg-blue-100 text-blue-800'
-                                : formatLabel === 'Offline'
+                                : modeLabel === 'offline'
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-purple-100 text-purple-800'
                             }`}>
                               {formatLabel}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">{workshop.description || 'Workshop details coming soon.'}</p>
+                          <p className="text-sm text-gray-600 mb-3">{workshop.description || workshop.shortDescription || 'Workshop details coming soon.'}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                         <div>
-                          <div className="text-gray-500 mb-1">Date</div>
+                          <div className="text-gray-500 mb-1">Start Date</div>
                           <div className="font-semibold text-gray-900">
-                            {workshop.date ? formatDate(workshop.date) : 'To be announced'}
+                            {startDate ? formatDate(startDate) : 'To be announced'}
                           </div>
                         </div>
                         <div>
-                          <div className="text-gray-500 mb-1">Time</div>
-                          <div className="font-semibold text-gray-900">{workshop.time || 'Schedule TBA'}</div>
+                          <div className="text-gray-500 mb-1">End Date</div>
+                          <div className="font-semibold text-gray-900">
+                            {endDate ? formatDate(endDate) : startDate ? 'Ongoing' : 'TBA'}
+                          </div>
                         </div>
                         <div>
                           <div className="text-gray-500 mb-1">Duration</div>
@@ -191,7 +209,7 @@ export default function Workshops() {
                             <div>
                               <span className="text-gray-500">Seats: </span>
                               <span className={`font-semibold ${isFull ? 'text-red-600' : 'text-gray-900'}`}>
-                                {seatsLeft} left
+                                {seatsLeft} of {maxSeats} left
                               </span>
                             </div>
                           )}
@@ -231,7 +249,8 @@ export default function Workshops() {
                     <div className="text-sm font-semibold text-primary-900 mb-1">Selected Workshop:</div>
                     <div className="text-base font-bold text-gray-900">{selectedWorkshop.title}</div>
                     <div className="text-xs text-gray-600 mt-1">
-                      {formatDate(selectedWorkshop.date)} • {selectedWorkshop.time}
+                      {selectedWorkshop.schedule?.startDate ? formatDate(selectedWorkshop.schedule.startDate) : 'Date TBA'}
+                      {selectedWorkshop.schedule?.endDate && ` - ${formatDate(selectedWorkshop.schedule.endDate)}`}
                     </div>
                     <button
                       onClick={() => setSelectedWorkshop(null)}
