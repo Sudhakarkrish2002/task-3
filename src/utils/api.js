@@ -95,6 +95,14 @@ export const authAPI = {
     return apiRequest('/auth/me');
   },
 
+  // Update user profile
+  updateProfile: async (profileData) => {
+    return apiRequest('/auth/update-profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  },
+
   // Get all roles
   getRoles: async () => {
     return apiRequest('/auth/roles');
@@ -118,6 +126,18 @@ export const courseAPI = {
   getMyCourses: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
     return apiRequest(`/courses/my-courses/list${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Get my enrolled courses (for students)
+  getMyEnrolledCourses: async () => {
+    return apiRequest('/courses/my-enrolled-courses');
+  },
+
+  // Enroll in a course (for students)
+  enrollInCourse: async (courseId) => {
+    return apiRequest(`/courses/${courseId}/enroll`, {
+      method: 'POST',
+    });
   },
 
   // Create course (admin/content_writer)
@@ -365,17 +385,122 @@ export const paymentAPI = {
   },
 };
 
-// Admin API functions (common admin endpoints)
+// Admin API functions
 export const adminAPI = {
-  // Get dashboard stats
+  // Dashboard
   getDashboardStats: async () => {
-    return apiRequest('/admin/dashboard/stats');
+    return apiRequest('/admin/dashboard');
   },
 
-  // Get all users
-  getAllUsers: async (params = {}) => {
+  // Student Management
+  getAllStudents: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/admin/users${queryParams ? `?${queryParams}` : ''}`);
+    return apiRequest(`/admin/students${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getStudentById: async (studentId) => {
+    return apiRequest(`/admin/students/${studentId}`);
+  },
+
+  updateStudent: async (studentId, studentData) => {
+    return apiRequest(`/admin/students/${studentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(studentData),
+    });
+  },
+
+  exportStudentsData: async () => {
+    return apiRequest('/admin/students/export');
+  },
+
+  // Employer Management
+  getAllEmployers: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/employers${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getEmployerById: async (employerId) => {
+    return apiRequest(`/admin/employers/${employerId}`);
+  },
+
+  approveEmployer: async (employerId, action, rejectionReason = '') => {
+    return apiRequest(`/admin/employers/${employerId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ action, rejectionReason }),
+    });
+  },
+
+  // College Management
+  getAllColleges: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/colleges${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getCollegeById: async (collegeId) => {
+    return apiRequest(`/admin/colleges/${collegeId}`);
+  },
+
+  approveCollege: async (collegeId, action, data = {}) => {
+    return apiRequest(`/admin/colleges/${collegeId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ action, ...data }),
+    });
+  },
+
+  updateCollegePartnership: async (collegeId, partnershipLevel) => {
+    return apiRequest(`/admin/colleges/${collegeId}/partnership`, {
+      method: 'PUT',
+      body: JSON.stringify({ partnershipLevel }),
+    });
+  },
+
+  // Course Management
+  getAllCourses: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/courses${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Blog Management
+  getAllBlogs: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/blogs${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  approveBlog: async (blogId, action, reason = '') => {
+    return apiRequest(`/admin/blogs/${blogId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ action, reason }),
+    });
+  },
+
+  // Submission Management
+  getAllSubmissions: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/submissions${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  reviewSubmission: async (submissionId, action, reviewData = {}) => {
+    return apiRequest(`/admin/submissions/${submissionId}/review`, {
+      method: 'PUT',
+      body: JSON.stringify({ action, ...reviewData }),
+    });
+  },
+
+  // Internship Management
+  getAllInternships: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/internships${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getInternshipById: async (internshipId) => {
+    return apiRequest(`/admin/internships/${internshipId}`);
+  },
+
+  approveInternship: async (internshipId, action, rejectionReason = '') => {
+    return apiRequest(`/admin/internships/${internshipId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ action, rejectionReason }),
+    });
   },
 };
 

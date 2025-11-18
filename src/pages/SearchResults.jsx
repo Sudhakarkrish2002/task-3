@@ -1,81 +1,51 @@
-import React, { useState } from 'react'
-
-const sampleResults = [
-  {
-    id: 1,
-    type: 'Course',
-    title: 'Full-Stack Web Development',
-    category: 'Web Development',
-    location: 'Online',
-    description: 'Master MERN stack with hands-on projects',
-    fee: '₹25,999',
-    duration: '12 weeks',
-  },
-  {
-    id: 2,
-    type: 'Internship',
-    title: 'Frontend Development Intern',
-    category: 'Web Development',
-    location: 'Bangalore',
-    company: 'TechStartup',
-    stipend: '₹8,000/month',
-    duration: '3 months',
-  },
-  {
-    id: 3,
-    type: 'Job',
-    title: 'Senior Full-Stack Developer',
-    category: 'Web Development',
-    location: 'Remote',
-    company: 'CloudTech Solutions',
-    salary: '₹12-18 LPA',
-    experience: '3-5 years',
-  },
-  {
-    id: 4,
-    type: 'Course',
-    title: 'Data Science & Machine Learning',
-    category: 'Data Science',
-    location: 'Hybrid',
-    description: 'Learn Python, statistics, ML algorithms',
-    fee: '₹29,999',
-    duration: '16 weeks',
-  },
-  {
-    id: 5,
-    type: 'Internship',
-    title: 'Data Science Intern',
-    category: 'Data Science',
-    location: 'Mumbai',
-    company: 'DataViz Analytics',
-    stipend: '₹12,000/month',
-    duration: '6 months',
-  },
-  {
-    id: 6,
-    type: 'Job',
-    title: 'React Developer',
-    category: 'Web Development',
-    location: 'Delhi NCR',
-    company: 'AppCraft',
-    salary: '₹8-12 LPA',
-    experience: '2-4 years',
-  },
-]
+import React, { useState, useEffect } from 'react'
+import { courseAPI } from '../utils/api.js'
 
 export default function SearchResults() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
     type: 'All',
     category: 'All',
     location: 'All',
   })
 
+  useEffect(() => {
+    fetchResults()
+  }, [])
+
+  const fetchResults = async () => {
+    try {
+      setLoading(true)
+      const response = await courseAPI.getAllCourses({ limit: 100 })
+      if (response.success && response.data.courses) {
+        const courseResults = response.data.courses.map(course => ({
+          id: course._id,
+          type: 'Course',
+          title: course.title,
+          category: course.category || 'General',
+          location: 'Online',
+          description: course.shortDescription || course.description,
+          fee: course.price ? `₹${course.price.toLocaleString()}` : 'Free',
+          duration: course.duration || 'N/A',
+          course: course
+        }))
+        setResults(courseResults)
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error)
+      setResults([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleFilterChange = (filterName, value) => {
     setFilters({ ...filters, [filterName]: value })
   }
 
-  const filteredResults = sampleResults.filter((result) => {
+  const filteredResults = results.filter((result) => {
     const matchesSearch = searchQuery === '' || 
       result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (result.company && result.company.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -87,9 +57,10 @@ export default function SearchResults() {
     return matchesSearch && matchesType && matchesCategory && matchesLocation
   })
 
-  const categories = ['All', 'Web Development', 'Data Science', 'Cloud', 'DevOps', 'Mobile Development']
-  const locations = ['All', 'Online', 'Remote', 'Bangalore', 'Mumbai', 'Delhi NCR', 'Hybrid']
-  const types = ['All', 'Course', 'Internship', 'Job']
+  // Extract unique categories from results
+  const categories = ['All', ...new Set(results.map(r => r.category).filter(Boolean))]
+  const locations = ['All', ...new Set(results.map(r => r.location).filter(Boolean))]
+  const types = ['All', ...new Set(results.map(r => r.type).filter(Boolean))]
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -187,7 +158,12 @@ export default function SearchResults() {
       {/* Results */}
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {filteredResults.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+              <p className="mt-4 text-gray-600">Loading results...</p>
+            </div>
+          ) : filteredResults.length === 0 ? (
             <div className="text-center py-12">
               <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -292,8 +268,15 @@ export default function SearchResults() {
                   </div>
 
                   {/* Action Button - Prominent */}
-                  <button className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
-                    <span className="relative z-10">{result.type === 'Course' ? 'Enroll Now' : 'Apply Now'}</span>
+                  <button 
+                    onClick={() => {
+                      if (result.type === 'Course' && result.course) {
+                        window.location.hash = `#/courses/${result.course._id}`
+                      }
+                    }}
+                    className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
+                  >
+                    <span className="relative z-10">{result.type === 'Course' ? 'View Course' : 'Apply Now'}</span>
                     <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>

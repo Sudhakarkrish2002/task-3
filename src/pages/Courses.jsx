@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { courseAPI } from '../utils/api.js'
+import { processRazorpayPayment } from '../utils/razorpay.js'
 
 const categories = ['All', 'certification', 'placement_training', 'workshop', 'other']
 const categoryLabels = {
@@ -71,6 +73,88 @@ export default function Courses() {
     }
     
     window.location.hash = `#/courses/syllabus?${params.toString()}`
+  }
+
+  const handleEnroll = async (course) => {
+    try {
+      // Check if user is logged in
+      const token = localStorage.getItem('token')
+      const userData = localStorage.getItem('user')
+      
+      if (!token || !userData) {
+        toast.info('Please login to enroll in courses')
+        window.location.hash = '#/auth'
+        return
+      }
+
+      const user = JSON.parse(userData)
+      
+      // Check if user is a student
+      if (user.role !== 'student') {
+        toast.error('Only students can enroll in courses')
+        return
+      }
+
+      // If course is free, enroll directly
+      if (!course.price || course.price === 0) {
+        try {
+          const response = await courseAPI.enrollInCourse(course._id)
+          if (response.success) {
+            toast.success(`Successfully enrolled in ${course.title}!`)
+            // Redirect to dashboard or course page
+            window.location.hash = '#/dashboard/student'
+          }
+        } catch (error) {
+          toast.error(error.message || 'Failed to enroll in course')
+        }
+        return
+      }
+
+      // For paid courses, redirect to Razorpay
+      // Send amount in rupees, backend will convert to paise
+      const amount = parseFloat(course.price)
+      
+      if (isNaN(amount) || amount <= 0) {
+        toast.error('Invalid course price. Please contact support.')
+        return
+      }
+      
+      await processRazorpayPayment({
+        amount,
+        currency: 'INR',
+        items: [{
+          itemId: course._id,
+          itemName: course.title,
+          itemType: 'course',
+          quantity: 1,
+          price: amount
+        }],
+        user: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone || ''
+        },
+        metadata: {
+          courseId: course._id,
+          courseTitle: course.title
+        },
+        onSuccess: async (paymentData) => {
+          toast.success(`Payment successful! You have been enrolled in ${course.title}`)
+          // Redirect to dashboard
+          setTimeout(() => {
+            window.location.hash = '#/dashboard/student'
+          }, 2000)
+        },
+        onError: (error) => {
+          console.error('Payment error:', error)
+          const errorMessage = error.data?.message || error.message || 'Payment failed. Please try again.'
+          toast.error(errorMessage)
+        }
+      })
+    } catch (error) {
+      console.error('Enrollment error:', error)
+      toast.error('Failed to process enrollment. Please try again.')
+    }
   }
 
   return (
@@ -231,7 +315,10 @@ export default function Courses() {
                         </span>
                         <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                       </button>
-                      <button className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                      <button 
+                        onClick={() => handleEnroll(course)}
+                        className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
+                      >
                         <span className="relative z-10">Enroll Now</span>
                         <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                       </button>

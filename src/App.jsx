@@ -21,20 +21,21 @@ import StudentDashboard from './pages/StudentDashboard.jsx'
 import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import CollegeDashboard from './pages/CollegeDashboard.jsx'
 import AdminCourseManagement from './pages/AdminCourseManagement.jsx'
+import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import AdminStudents from './pages/admin/AdminStudents.jsx'
+import AdminEmployers from './pages/admin/AdminEmployers.jsx'
+import AdminColleges from './pages/admin/AdminColleges.jsx'
+import AdminCourses from './pages/admin/AdminCourses.jsx'
+import AdminBlogs from './pages/admin/AdminBlogs.jsx'
+import AdminSubmissions from './pages/admin/AdminSubmissions.jsx'
+import AdminInternships from './pages/admin/AdminInternships.jsx'
 import ContentDashboard from './pages/ContentDashboard.jsx'
 import TermsConditions from './pages/TermsConditions.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import RefundPolicy from './pages/RefundPolicy.jsx'
 import Syllabus from './pages/Syllabus.jsx'
-
-function Placeholder({ title }) {
-  return (
-    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-      <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-      <p className="mt-2 text-gray-600">This page will be available soon.</p>
-    </main>
-  )
-}
+import FAQ from './pages/FAQ.jsx'
+import Careers from './pages/Careers.jsx'
 
 const routes = {
   '#/': <Home />,
@@ -55,13 +56,20 @@ const routes = {
   '#/dashboard/employer': <ProtectedRoute requiredRole="employer"><EmployerDashboard /></ProtectedRoute>,
   '#/dashboard/college': <ProtectedRoute requiredRole="college"><CollegeDashboard /></ProtectedRoute>,
   '#/dashboard/content': <ProtectedRoute requiredRole="content_writer"><ContentDashboard /></ProtectedRoute>,
-  '#/admin/courses': <ProtectedRoute requiredRole="admin"><AdminCourseManagement /></ProtectedRoute>,
+  '#/admin': <ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>,
+  '#/admin/students': <ProtectedRoute requiredRole="admin"><AdminStudents /></ProtectedRoute>,
+  '#/admin/employers': <ProtectedRoute requiredRole="admin"><AdminEmployers /></ProtectedRoute>,
+  '#/admin/colleges': <ProtectedRoute requiredRole="admin"><AdminColleges /></ProtectedRoute>,
+  '#/admin/courses': <ProtectedRoute requiredRole="admin"><AdminCourses /></ProtectedRoute>,
+  '#/admin/blogs': <ProtectedRoute requiredRole="admin"><AdminBlogs /></ProtectedRoute>,
+  '#/admin/submissions': <ProtectedRoute requiredRole="admin"><AdminSubmissions /></ProtectedRoute>,
+  '#/admin/internships': <ProtectedRoute requiredRole="admin"><AdminInternships /></ProtectedRoute>,
   '#/terms': <TermsConditions />,
   '#/privacy': <PrivacyPolicy />,
   '#/refund': <RefundPolicy />,
   '#/courses/syllabus': <Syllabus />,
-  '#/faq': <Placeholder title="FAQ" />,
-  '#/careers': <Placeholder title="Careers" />,
+  '#/faq': <FAQ />,
+  '#/careers': <Careers />,
 }
 
 export default function App() {

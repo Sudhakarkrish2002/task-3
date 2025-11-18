@@ -31,16 +31,25 @@ export const processRazorpayPayment = async ({
     }
 
     // Step 1: Create order on backend
-    const orderResponse = await paymentAPI.createOrder({
-      amount,
-      currency,
-      items,
-      billingAddress,
-      metadata,
-    });
+    let orderResponse;
+    try {
+      orderResponse = await paymentAPI.createOrder({
+        amount,
+        currency,
+        items,
+        billingAddress,
+        metadata,
+      });
+    } catch (apiError) {
+      // Handle API errors
+      console.error('API error creating order:', apiError);
+      const errorMessage = apiError.data?.message || apiError.message || 'Failed to create payment order';
+      throw new Error(errorMessage);
+    }
 
     if (!orderResponse.success) {
-      throw new Error(orderResponse.message || 'Failed to create order');
+      const errorMessage = orderResponse.message || orderResponse.error || 'Failed to create order';
+      throw new Error(errorMessage);
     }
 
     const { order, payment } = orderResponse.data;

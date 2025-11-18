@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { internshipAPI, workshopAPI } from '../utils/api.js'
+import { internshipAPI, workshopAPI, authAPI } from '../utils/api.js'
 
 export default function EmployerDashboard() {
   const [contentType, setContentType] = useState('internships') // 'internships' or 'workshops'
@@ -11,6 +11,14 @@ export default function EmployerDashboard() {
   const [workshops, setWorkshops] = useState([])
   const [editingInternship, setEditingInternship] = useState(null)
   const [editingWorkshop, setEditingWorkshop] = useState(null)
+  const [profileData, setProfileData] = useState({
+    name: '',
+    phone: '',
+    companyName: '',
+    companyWebsite: '',
+    companyDescription: '',
+    industry: ''
+  })
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -57,22 +65,67 @@ export default function EmployerDashboard() {
     certificateIncluded: false
   })
 
+  // Fetch user data on component mount
   useEffect(() => {
-    try {
-      const userData = localStorage.getItem('user')
-      if (userData) {
-        setUser(JSON.parse(userData))
-      }
-      if (contentType === 'internships') {
-        fetchMyInternships()
-      } else {
-        fetchMyWorkshops()
-      }
-    } catch (error) {
-      console.error('Error loading employer profile:', error)
-      toast.error('Unable to load employer profile. Please refresh.')
+    fetchUserData()
+  }, [])
+
+  // Fetch internships/workshops when contentType changes
+  useEffect(() => {
+    if (contentType === 'internships') {
+      fetchMyInternships()
+    } else {
+      fetchMyWorkshops()
     }
   }, [contentType])
+
+  // Fetch user data when profile tab is opened (but don't overwrite if already loaded)
+  useEffect(() => {
+    if (activeTab === 'profile' && !user) {
+      fetchUserData()
+    } else if (activeTab === 'profile') {
+      // Refresh data when opening profile tab to ensure latest data
+      fetchUserData()
+    }
+  }, [activeTab])
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true)
+      // Fetch fresh user data from MongoDB Atlas via API (cloud storage only)
+      const response = await authAPI.getMe()
+      if (response.success && response.user) {
+        setUser(response.user)
+        // Set profile data from MongoDB API response - always update from database
+        const employerDetails = response.user.employerDetails || {}
+        const fetchedProfileData = {
+          name: response.user.name || '',
+          phone: response.user.phone || '',
+          companyName: employerDetails.companyName || '',
+          companyWebsite: employerDetails.companyWebsite || '',
+          companyDescription: employerDetails.companyDescription || '',
+          industry: employerDetails.industry || ''
+        }
+        setProfileData(fetchedProfileData)
+        console.log('User data fetched from MongoDB:', {
+          name: response.user.name,
+          companyName: employerDetails.companyName,
+          industry: employerDetails.industry,
+          companyWebsite: employerDetails.companyWebsite,
+          companyDescription: employerDetails.companyDescription,
+          fullEmployerDetails: employerDetails,
+          fetchedProfileData: fetchedProfileData
+        })
+      } else {
+        throw new Error(response.message || 'Invalid response from server')
+      }
+    } catch (error) {
+      console.error('Error fetching user from MongoDB:', error)
+      toast.error('Unable to load employer profile. Please refresh.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchMyInternships = async () => {
     try {
@@ -579,6 +632,7 @@ export default function EmployerDashboard() {
               setActiveTab('my-internships')
               resetForm()
               resetWorkshopForm()
+              // Note: profileData is NOT reset - it persists across tab switches
             }}
             className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out ${
               contentType === 'internships'
@@ -594,6 +648,7 @@ export default function EmployerDashboard() {
               setActiveTab('my-workshops')
               resetForm()
               resetWorkshopForm()
+              // Note: profileData is NOT reset - it persists across tab switches
             }}
             className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out ${
               contentType === 'workshops'
@@ -1388,9 +1443,71 @@ export default function EmployerDashboard() {
             {activeTab === 'profile' && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Company Profile</h2>
-                <form onSubmit={(e) => {
+                {loading && !user ? (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    <p className="mt-4 text-gray-600">Loading profile...</p>
+                  </div>
+                ) : (
+                <form onSubmit={async (e) => {
                   e.preventDefault()
-                  toast.info('Profile update functionality coming soon!')
+                  try {
+                    // Update profile via API (real-time data) - send all fields including empty strings
+                    const updateData = {
+                      name: profileData.name || '',
+                      phone: profileData.phone || '',
+                      companyName: profileData.companyName || '',
+                      companyWebsite: profileData.companyWebsite || '',
+                      companyDescription: profileData.companyDescription || '',
+                      industry: profileData.industry || '' // Ensure industry is always sent, even if empty
+                    }
+                    
+                    console.log('Sending update data to MongoDB:', updateData)
+                    const response = await authAPI.updateProfile(updateData)
+                    
+                    if (response.success) {
+                      // Verify the response has the updated data
+                      console.log('Response from MongoDB:', response.user)
+                      const employerDetails = response.user.employerDetails || {}
+                      console.log('Employer details from response:', employerDetails)
+                      
+                      // Update local state with fresh data from MongoDB
+                      setUser(response.user)
+                      const updatedProfileData = {
+                        name: response.user.name || '',
+                        phone: response.user.phone || '',
+                        companyName: employerDetails.companyName || '',
+                        companyWebsite: employerDetails.companyWebsite || '',
+                        companyDescription: employerDetails.companyDescription || '',
+                        industry: employerDetails.industry || ''
+                      }
+                      setProfileData(updatedProfileData)
+                      console.log('Updated profileData state:', updatedProfileData)
+                      
+                      // Verify by fetching again after a short delay
+                      setTimeout(async () => {
+                        try {
+                          const verifyResponse = await authAPI.getMe()
+                          if (verifyResponse.success) {
+                            const verifyDetails = verifyResponse.user.employerDetails || {}
+                            console.log('Verification - Data in MongoDB:', {
+                              industry: verifyDetails.industry,
+                              companyName: verifyDetails.companyName
+                            })
+                          }
+                        } catch (err) {
+                          console.error('Verification fetch error:', err)
+                        }
+                      }, 1000)
+                      
+                      toast.success('Profile updated successfully in MongoDB!')
+                    } else {
+                      throw new Error(response.message || 'Failed to update profile')
+                    }
+                  } catch (error) {
+                    console.error('Error updating profile:', error)
+                    toast.error(error.message || 'Failed to update profile. Please try again.')
+                  }
                 }}>
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
@@ -1398,47 +1515,95 @@ export default function EmployerDashboard() {
                         <span className="text-2xl font-bold text-primary-700">{getUserInitials()}</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">{user?.employerDetails?.companyName || 'Company Name'}</h3>
+                        <h3 className="text-lg font-bold text-gray-900">{profileData.companyName || 'Company Name'}</h3>
                         <p className="text-sm text-gray-600">{user?.email || 'company@example.com'}</p>
                       </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                         <input
                           type="text"
-                          defaultValue={user?.employerDetails?.companyName || ''}
+                          value={profileData.name}
+                          onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                           className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
-                          disabled
+                          placeholder="Your name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input
+                          type="text"
+                          value={profileData.phone}
+                          onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                          placeholder="+91 9876543210"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                        <input
+                          type="text"
+                          value={profileData.companyName}
+                          onChange={(e) => setProfileData({ ...profileData, companyName: e.target.value })}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                          placeholder="Enter company name"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
                         <input
                           type="text"
-                          defaultValue={user?.employerDetails?.industry || ''}
+                          value={profileData.industry}
+                          onChange={(e) => setProfileData({ ...profileData, industry: e.target.value })}
                           className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
-                          disabled
+                          placeholder="e.g., Technology, Finance, Healthcare"
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company Website</label>
+                      <input
+                        type="url"
+                        value={profileData.companyWebsite}
+                        onChange={(e) => setProfileData({ ...profileData, companyWebsite: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                        placeholder="https://www.company.com"
+                      />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Company Description</label>
                       <textarea
                         rows={4}
-                        defaultValue={user?.employerDetails?.companyDescription || ''}
+                        value={profileData.companyDescription}
+                        onChange={(e) => setProfileData({ ...profileData, companyDescription: e.target.value })}
                         className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
-                        disabled
+                        placeholder="Describe your company, its mission, and what makes it unique..."
                       />
                     </div>
 
-                    <button type="submit" className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden">
-                      <span className="relative z-10">Update Profile</span>
-                    </button>
+                    <div className="pt-4 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 mb-4">
+                        <span className="font-semibold">Note:</span> Email cannot be changed. Contact support if you need to update your email address.
+                      </p>
+                      <button 
+                        type="submit" 
+                        className="rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-semibold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_35px_80px_rgba(147,51,234,0.9)] relative overflow-hidden"
+                      >
+                        <span className="relative z-10">Update Profile</span>
+                        <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                      </button>
+                    </div>
                   </div>
                 </form>
+                )}
               </div>
             )}
           </div>

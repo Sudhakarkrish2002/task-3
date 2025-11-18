@@ -107,7 +107,7 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
     if (role === 'student') return '#/dashboard/student'
     if (role === 'employer') return '#/dashboard/employer'
     if (role === 'college') return '#/dashboard/college'
-    if (role === 'admin') return '#/admin/courses'
+    if (role === 'admin') return '#/admin'
     if (role === 'content_writer') return '#/dashboard/content'
     return '#/auth'
   }
@@ -144,30 +144,32 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
       className="fixed left-0 right-0 z-50 bg-white border-b border-primary-200 shadow-sm shadow-primary-100/20"
       style={{ top: bannerVisible ? `${bannerHeight}px` : '0' }}
     >
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 xl:px-12">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 xl:px-6 2xl:px-8 3xl:px-12">
         <div className="flex h-16 sm:h-20 items-center justify-between">
-          <a href="#/" className="flex items-center gap-2">
+          {/* Logo - Left Side */}
+          <a href="#/" className="flex items-center gap-1.5 xl:gap-2 shrink-0">
             <img
               src="/Assets/kiwisedutech_logo.jpeg"
               alt="KiwisEdutech Logo"
-              className="h-10 sm:h-12 xl:h-14 w-auto object-contain"
+              className="h-10 sm:h-12 xl:h-12 2xl:h-14 w-auto object-contain shrink-0"
             />
-            <span className="text-xl sm:text-2xl font-semibold text-gray-900">
+            <span className="text-lg sm:text-xl xl:text-xl 2xl:text-2xl font-semibold text-gray-900 whitespace-nowrap">
               KiwisEdutech
             </span>
           </a>
 
+          {/* Navigation - Right Side */}
           <nav
-            className="hidden xl:flex items-center gap-4 2xl:gap-6"
+            className="hidden xl:flex items-center gap-1.5 xl:gap-2 2xl:gap-3 3xl:gap-4 shrink-0"
             ref={desktopNavRef}
           >
             {/* Search Link */}
             <a
               href="#/search"
-              className="p-2 rounded-lg text-gray-700 hover:text-primary-700 hover:bg-gray-100 transition-colors"
+              className="p-1.5 xl:p-2 rounded-lg text-gray-700 hover:text-primary-700 hover:bg-gray-100 transition-colors shrink-0"
               title="Search"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 xl:w-5 2xl:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </a>
@@ -184,13 +186,13 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
                 <div key={item.hash} className="relative group">
                   <button
                     type="button"
-                    className="text-sm 2xl:text-base font-medium text-gray-700 hover:text-primary-700 transition-all duration-300 ease-in-out relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full cursor-pointer inline-flex items-center gap-2"
+                    className="text-xs xl:text-sm 2xl:text-base font-medium text-gray-700 hover:text-primary-700 transition-all duration-300 ease-in-out relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full cursor-pointer inline-flex items-center gap-1 whitespace-nowrap px-1 xl:px-1.5 shrink-0"
                     onClick={() => toggleDesktopDropdown(item.hash)}
                     onMouseEnter={() => setOpenDesktopDropdown(item.hash)}
                     onFocus={() => setOpenDesktopDropdown(item.hash)}
                   >
-                    {item.label}
-                    <svg className="w-4 h-4 text-gray-500 group-hover:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="whitespace-nowrap">{item.label}</span>
+                    <svg className="w-3 h-3 xl:w-3.5 2xl:w-4 text-gray-500 group-hover:text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
@@ -225,7 +227,7 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
                 <a
                   key={item.hash}
                   href={item.hash}
-                  className="text-sm 2xl:text-base font-medium text-gray-700 hover:text-primary-700 transition-all duration-300 ease-in-out relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full"
+                  className="text-xs xl:text-sm 2xl:text-base font-medium text-gray-700 hover:text-primary-700 transition-all duration-300 ease-in-out relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap px-1 xl:px-1.5 shrink-0"
                 >
                   {item.label}
                 </a>
@@ -234,30 +236,18 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
             
             {/* Admin Menu (only show when admin is logged in and on dashboard pages) */}
             {isAdmin && shouldShowAuthButtons() && (
-              <div className="relative group">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-2xl hover:shadow-primary-600/60"
+              <div className="relative group shrink-0">
+                <a
+                  href="#/admin"
+                  className="inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 2xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg whitespace-nowrap"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 xl:w-4 2xl:w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  Admin
-                </button>
-                <div className="absolute top-full right-0 mt-2 w-64 rounded-md border border-gray-200 bg-white shadow-lg p-2 flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-60">
-                  <a
-                    href="#/admin/courses"
-                    className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Manage Course Syllabuses
-                    </div>
-                  </a>
-                </div>
+                  <span className="hidden 2xl:inline">Admin</span>
+                  <span className="2xl:hidden">⚙️</span>
+                </a>
               </div>
             )}
             
@@ -265,12 +255,13 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
             {!isAdmin && shouldShowAuthButtons() && (
               <a
                 href={getDashboardLink()}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm 2xl:text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-2xl hover:shadow-primary-600/60"
+                className="inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 2xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg shrink-0 whitespace-nowrap"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 xl:w-4 2xl:w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Dashboard
+                <span className="hidden 2xl:inline">Dashboard</span>
+                <span className="2xl:hidden">Dash</span>
               </a>
             )}
             
@@ -278,12 +269,13 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
             {shouldShowAuthButtons() && (
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm 2xl:text-base font-semibold text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-300 transition-all duration-300 ease-in-out"
+                className="inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 2xl:px-3 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-300 transition-all duration-300 ease-in-out shrink-0 whitespace-nowrap"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 xl:w-4 2xl:w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Logout
+                <span className="hidden 2xl:inline">Logout</span>
+                <span className="2xl:hidden">Out</span>
               </button>
             )}
           </nav>
@@ -359,13 +351,64 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
                 <>
                   <div className="border-t border-gray-200 my-2"></div>
                   {isAdmin && (
-                    <a
-                      href="#/admin/courses"
-                      className="rounded px-3 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 mb-2"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      ⚙️ Manage Course Syllabuses
-                    </a>
+                    <>
+                      <a
+                        href="#/admin"
+                        className="rounded px-3 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 mb-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        📊 Admin Dashboard
+                      </a>
+                      <a
+                        href="#/admin/students"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        👥 Students
+                      </a>
+                      <a
+                        href="#/admin/employers"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        🏢 Employers
+                      </a>
+                      <a
+                        href="#/admin/colleges"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        🏫 Colleges
+                      </a>
+                      <a
+                        href="#/admin/courses"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        📚 Courses
+                      </a>
+                      <a
+                        href="#/admin/blogs"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        📝 Blogs
+                      </a>
+                      <a
+                        href="#/admin/submissions"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        📤 Submissions
+                      </a>
+                      <a
+                        href="#/admin/internships"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        💼 Internships
+                      </a>
+                    </>
                   )}
                   {!isAdmin && (
                     <a
