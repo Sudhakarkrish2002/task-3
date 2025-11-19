@@ -38,8 +38,19 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     console.log(`[API Request] ${options.method || 'GET'} ${url}`, options.body ? JSON.parse(options.body) : '');
+    
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Handle non-JSON responses
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error(`[API Error] Non-JSON response from ${url}:`, text);
+      throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+    }
     
     console.log(`[API Response] ${options.method || 'GET'} ${url}`, {
       status: response.status,
