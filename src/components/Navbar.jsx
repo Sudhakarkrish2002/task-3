@@ -324,10 +324,13 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
             >
               <a
                 href="#/search"
-                className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium mb-2 border-b border-gray-200"
+                className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium mb-2 border-b border-gray-200 flex items-center gap-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                🔍 Search
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Search
               </a>
               {flatMenuItems
                 .filter(item => {
@@ -354,69 +357,98 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
                     <>
                       <a
                         href="#/admin"
-                        className="rounded px-3 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 mb-2"
+                        className="rounded px-3 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 mb-2 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        📊 Admin Dashboard
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Admin Dashboard
                       </a>
                       <a
                         href="#/admin/students"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        👥 Students
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Students
                       </a>
                       <a
                         href="#/admin/employers"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        🏢 Employers
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Employers
                       </a>
                       <a
                         href="#/admin/colleges"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        🏫 Colleges
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v9M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                        Colleges
                       </a>
                       <a
                         href="#/admin/courses"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        📚 Courses
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        Courses
                       </a>
                       <a
                         href="#/admin/blogs"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        📝 Blogs
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Blogs
                       </a>
                       <a
                         href="#/admin/submissions"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-1 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        📤 Submissions
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Submissions
                       </a>
                       <a
                         href="#/admin/internships"
-                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-2"
+                        className="rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 mb-2 flex items-center gap-2"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        💼 Internships
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Internships
                       </a>
                     </>
                   )}
                   {!isAdmin && (
                     <a
                       href={getDashboardLink()}
-                      className="rounded px-3 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 mb-2"
+                      className="rounded px-3 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 mb-2 flex items-center gap-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      📊 Dashboard
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Dashboard
                     </a>
                   )}
                   <button
@@ -424,9 +456,12 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
                       handleLogout()
                       setIsMobileMenuOpen(false)
                     }}
-                    className="rounded px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-red-50 text-left"
+                    className="rounded px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-red-50 text-left flex items-center gap-2 w-full"
                   >
-                    🚪 Logout
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
                   </button>
                 </>
               )}
