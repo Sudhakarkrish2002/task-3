@@ -17,16 +17,45 @@ import {
 } from '../../components/admin/Icons.jsx'
 
 export default function AdminSubmissions() {
+  // Helper function to extract query parameters from hash-based routing
+  const getQueryParamsFromHash = () => {
+    const hash = window.location.hash || ''
+    const queryString = hash.split('?')[1] || ''
+    return new URLSearchParams(queryString)
+  }
+
+  // Read URL query parameters to initialize filters
+  const urlParams = getQueryParamsFromHash()
+  const statusParam = urlParams.get('status')
+
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedSubmission, setSelectedSubmission] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [typeFilter, setTypeFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(statusParam || 'all')
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 })
   const [reviewNotes, setReviewNotes] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
+
+  // Listen for hash changes to update filters when URL changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const params = getQueryParamsFromHash()
+      const newStatusParam = params.get('status')
+      if (newStatusParam && newStatusParam !== statusFilter) {
+        setStatusFilter(newStatusParam)
+        setPagination((prev) => ({ ...prev, page: 1 }))
+      } else if (!newStatusParam && statusFilter !== 'all') {
+        setStatusFilter('all')
+        setPagination((prev) => ({ ...prev, page: 1 }))
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [statusFilter])
 
   useEffect(() => {
     loadSubmissions()

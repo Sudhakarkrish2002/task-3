@@ -421,7 +421,24 @@ export const adminAPI = {
   },
 
   exportStudentsData: async () => {
-    return apiRequest('/admin/students/export');
+    const token = getAuthToken();
+    const url = `${API_BASE_URL}/admin/students/export`;
+    
+    const config = {
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    };
+
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Export failed: ${error}`);
+    }
+    
+    // Return CSV text content
+    return await response.text();
   },
 
   // Employer Management
@@ -471,6 +488,12 @@ export const adminAPI = {
     return apiRequest(`/admin/courses${queryParams ? `?${queryParams}` : ''}`);
   },
 
+  deleteCourse: async (courseId) => {
+    return apiRequest(`/courses/${courseId}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Blog Management
   getAllBlogs: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
@@ -512,6 +535,12 @@ export const adminAPI = {
       method: 'PUT',
       body: JSON.stringify({ action, rejectionReason }),
     });
+  },
+
+  // User Verification
+  getUnverifiedUsers: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/users/unverified${queryParams ? `?${queryParams}` : ''}`);
   },
 };
 

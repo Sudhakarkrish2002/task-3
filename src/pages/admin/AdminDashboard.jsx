@@ -8,34 +8,113 @@ import {
   SchoolIcon,
   BookIcon,
   BriefcaseIcon,
-  ClockIcon,
   RevenueIcon,
   ChartIcon,
   ArrowRightIcon,
   CalendarIcon,
+  CheckIcon,
 } from '../../components/admin/Icons.jsx'
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
+  const [unverifiedUsers, setUnverifiedUsers] = useState([])
+  const [loadingUnverified, setLoadingUnverified] = useState(false)
+  const [roleFilter, setRoleFilter] = useState('all')
 
   useEffect(() => {
     loadDashboardStats()
   }, [])
 
+  useEffect(() => {
+    loadUnverifiedUsers()
+  }, [roleFilter])
+
   const loadDashboardStats = async () => {
     setLoading(true)
     try {
       const response = await adminAPI.getDashboardStats()
-      if (response.success) {
+      if (response.success && response.data) {
+        // Only set stats if we have valid data from API
         setStats(response.data)
+      } else {
+        // If API doesn't return success or data, set to null to show "No data available"
+        setStats(null)
       }
     } catch (error) {
       console.error('Error loading dashboard stats:', error)
       toast.error('Error loading dashboard statistics')
+      setStats(null)
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadUnverifiedUsers = async () => {
+    setLoadingUnverified(true)
+    try {
+      const params = { limit: 15 }
+      if (roleFilter !== 'all') params.role = roleFilter
+      const response = await adminAPI.getUnverifiedUsers(params)
+      if (response.success) {
+        setUnverifiedUsers(response.data.users || [])
+      }
+    } catch (error) {
+      console.error('Error loading unverified users:', error)
+      // Don't show error toast if route doesn't exist (404) - backend might not be updated yet
+      if (error.status !== 404) {
+        toast.error('Error loading unverified users')
+      }
+      // Set empty array on error so UI doesn't break
+      setUnverifiedUsers([])
+    } finally {
+      setLoadingUnverified(false)
+    }
+  }
+
+  const handleVerifyUser = async (userId, role) => {
+    try {
+      let response
+      if (role === 'student') {
+        response = await adminAPI.updateStudent(userId, { isVerified: true })
+      } else if (role === 'employer') {
+        response = await adminAPI.approveEmployer(userId, 'approve')
+      } else if (role === 'college') {
+        response = await adminAPI.approveCollege(userId, 'approve')
+      } else if (role === 'content_writer') {
+        // Content writers use the same updateStudent endpoint (now supports content_writer role)
+        response = await adminAPI.updateStudent(userId, { isVerified: true })
+      }
+
+      if (response && response.success) {
+        toast.success('User verified successfully')
+        loadUnverifiedUsers()
+        loadDashboardStats()
+      }
+    } catch (error) {
+      console.error('Error verifying user:', error)
+      toast.error('Error verifying user')
+    }
+  }
+
+  const getRoleDisplayName = (role) => {
+    const roleMap = {
+      student: 'Student',
+      employer: 'Employer',
+      college: 'College',
+      content_writer: 'Content Writer'
+    }
+    return roleMap[role] || role
+  }
+
+  const getRoleLink = (role) => {
+    const linkMap = {
+      student: '#/admin/students',
+      employer: '#/admin/employers',
+      college: '#/admin/colleges',
+      content_writer: '#/admin/students'
+    }
+    return linkMap[role] || '#/admin/students'
   }
 
   const statCards = stats
@@ -81,12 +160,13 @@ export default function AdminDashboard() {
           link: '#/admin/internships',
         },
         {
-          title: 'Pending Approvals',
-          value: stats.widgets?.pendingApprovals || 0,
-          Icon: ClockIcon,
+          title: 'Unverified Users',
+          value: stats.unverifiedUsers?.total || 0,
+          Icon: CheckIcon,
           gradient: 'from-orange-500 to-orange-600',
           iconBg: 'bg-orange-500/20',
-          link: '#/admin/submissions',
+          link: null,
+          badge: stats.unverifiedUsers?.total > 0 ? 'Needs Attention' : null,
         },
         {
           title: 'Total Revenue',
@@ -178,7 +258,14 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-white/90 text-sm font-medium mb-1">{card.title}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-white/90 text-sm font-medium">{card.title}</p>
+                      {card.badge && (
+                        <span className="px-2 py-0.5 bg-white/20 text-white text-xs font-semibold rounded-full">
+                          {card.badge}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-3xl font-bold">{card.value}</p>
                   </div>
                   <div className={`${card.iconBg} p-3 rounded-lg`}>
@@ -284,6 +371,114 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Quick User Verification */}
+        {stats?.unverifiedUsers?.total > 0 && unverifiedUsers.length >= 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <CheckIcon className="w-5 h-5 text-primary-600" />
+                  Quick User Verification
+                </h2>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="student">Students</option>
+                    <option value="employer">Employers</option>
+                    <option value="college">Colleges</option>
+                    <option value="content_writer">Content Writers</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              {loadingUnverified ? (
+                <div className="p-12 text-center">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                  <p className="mt-4 text-gray-600">Loading unverified users...</p>
+                </div>
+              ) : unverifiedUsers.length === 0 ? (
+                <div className="p-12 text-center">
+                  <CheckIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">No unverified users found</p>
+                  <p className="text-gray-400 text-sm mt-1">All users have been verified</p>
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Registered
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {unverifiedUsers.map((user) => (
+                      <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{user.name || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{user.email || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {getRoleDisplayName(user.role)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">
+                            {user.createdAt
+                              ? new Date(user.createdAt).toLocaleDateString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                              : 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleVerifyUser(user._id, user.role)}
+                              className="flex items-center gap-1 text-green-600 hover:text-green-900 font-medium"
+                            >
+                              <CheckIcon className="w-4 h-4" />
+                              Verify
+                            </button>
+                            <a
+                              href={getRoleLink(user.role)}
+                              className="flex items-center gap-1 text-primary-600 hover:text-primary-900 font-medium"
+                            >
+                              View Details
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Recent Payments */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

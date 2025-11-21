@@ -84,12 +84,21 @@ export default function AdminStudents() {
   const handleExport = async () => {
     try {
       const response = await adminAPI.exportStudentsData()
+      // Generate filename with date, day, and year
+      const now = new Date()
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      const dayName = dayNames[now.getDay()]
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const filename = `students-export-${year}-${month}-${day}-${dayName}.csv`
+      
       // Create blob and download
       const blob = new Blob([response], { type: 'text/csv' })
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'students-export.csv'
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)

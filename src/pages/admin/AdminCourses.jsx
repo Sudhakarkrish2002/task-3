@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { adminAPI } from '../../utils/api.js'
+import { adminAPI, courseAPI } from '../../utils/api.js'
 import AdminLayout from '../../components/admin/AdminLayout.jsx'
 import SyllabusEditor from '../../components/SyllabusEditor.jsx'
 import {
@@ -12,7 +12,26 @@ import {
   FilterIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  TrashIcon,
+  PlusIcon,
 } from '../../components/admin/Icons.jsx'
+
+const defaultCourseForm = {
+  title: '',
+  description: '',
+  shortDescription: '',
+  category: 'other',
+  courseType: 'non-certified',
+  instructor: '',
+  price: '',
+  originalPrice: '',
+  duration: '',
+  level: 'all',
+  language: 'English',
+  thumbnail: '',
+  certificateIncluded: false,
+  placementGuaranteed: false
+}
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState([])
@@ -20,11 +39,16 @@ export default function AdminCourses() {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showSyllabusEditor, setShowSyllabusEditor] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [courseToDelete, setCourseToDelete] = useState(null)
+  const [saving, setSaving] = useState(false)
   const [editorKey, setEditorKey] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 })
+  const [courseForm, setCourseForm] = useState(() => ({ ...defaultCourseForm }))
 
   useEffect(() => {
     loadCourses()
@@ -72,6 +96,80 @@ export default function AdminCourses() {
     setShowDetailsModal(true)
   }
 
+  const handleCreateCourse = () => {
+    setCourseForm({ ...defaultCourseForm })
+    setShowCreateModal(true)
+  }
+
+  const handleDeleteCourse = (course) => {
+    setCourseToDelete(course)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!courseToDelete) return
+    
+    setSaving(true)
+    try {
+      const response = await adminAPI.deleteCourse(courseToDelete._id)
+      if (response.success) {
+        toast.success('Course deleted successfully!')
+        setShowDeleteConfirm(false)
+        setCourseToDelete(null)
+        loadCourses()
+      }
+    } catch (error) {
+      toast.error('Error deleting course: ' + (error.message || 'Unknown error'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveCourse = async (shouldPublish = false) => {
+    // Validate required fields
+    if (!courseForm.title || !courseForm.description || !courseForm.category || 
+        !courseForm.instructor || !courseForm.price || !courseForm.duration) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setSaving(true)
+    try {
+      // Map courseType to certificateIncluded
+      const certificateIncluded = courseForm.courseType === 'certified'
+      
+      const courseData = {
+        ...courseForm,
+        price: parseFloat(courseForm.price),
+        originalPrice: courseForm.originalPrice ? parseFloat(courseForm.originalPrice) : undefined,
+        certificateIncluded,
+        courseType: undefined
+      }
+
+      const response = await courseAPI.createCourse(courseData)
+      
+      // If it's a new course and should publish, publish it
+      if (shouldPublish && response.success) {
+        await courseAPI.publishCourse(response.data._id, 'publish')
+      }
+
+      if (response.success) {
+        toast.success(
+          shouldPublish 
+            ? 'Course created and published successfully!'
+            : 'Course created successfully!'
+        )
+        setShowCreateModal(false)
+        setCourseForm({ ...defaultCourseForm })
+        loadCourses()
+      }
+    } catch (error) {
+      toast.error('Error saving course: ' + (error.message || 'Unknown error'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (showSyllabusEditor && selectedCourse) {
     return (
       <AdminLayout>
@@ -95,12 +193,21 @@ export default function AdminCourses() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <BookIcon className="w-8 h-8 text-primary-600" />
-            Course Management
-          </h1>
-          <p className="text-gray-600 mt-1">Manage courses and syllabuses</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <BookIcon className="w-8 h-8 text-primary-600" />
+              Course Management
+            </h1>
+            <p className="text-gray-600 mt-1">Manage courses and syllabuses</p>
+          </div>
+          <button
+            onClick={handleCreateCourse}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Create Course
+          </button>
         </div>
 
         {/* Filters */}
@@ -248,6 +355,13 @@ export default function AdminCourses() {
                               <EditIcon className="w-4 h-4" />
                               Edit Syllabus
                             </button>
+                            <button
+                              onClick={() => handleDeleteCourse(course)}
+                              className="flex items-center gap-1 text-red-600 hover:text-red-900 font-medium"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -373,7 +487,352 @@ export default function AdminCourses() {
           </div>
         </div>
       )}
+
+      {/* Create Course Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] my-4 overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Create New Course</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close"
+                >
+                  <CloseIcon className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <CourseForm 
+                formData={courseForm} 
+                setFormData={setCourseForm}
+              />
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSaveCourse(false)}
+                disabled={saving}
+                className="px-6 py-2 border border-primary-600 text-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Saving...' : 'Save Draft'}
+              </button>
+              <button
+                onClick={() => handleSaveCourse(true)}
+                disabled={saving}
+                className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Saving & Publishing...' : 'Save & Publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && courseToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Delete Course</h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false)
+                    setCourseToDelete(null)
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close"
+                >
+                  <CloseIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to delete the course <strong>"{courseToDelete.title}"</strong>? 
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false)
+                  setCourseToDelete(null)
+                }}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={saving}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
+  )
+}
+
+// Course Form Component
+function CourseForm({ formData, setFormData }) {
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Title */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Course Title <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+          placeholder="Enter course title"
+          required
+        />
+      </div>
+
+      {/* Short Description */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Short Description
+        </label>
+        <input
+          type="text"
+          name="shortDescription"
+          value={formData.shortDescription}
+          onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+          placeholder="Brief description (max 200 characters)"
+          maxLength={200}
+        />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Full Description <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+          rows="4"
+          placeholder="Enter detailed course description"
+          required
+        />
+      </div>
+
+      {/* Category and Course Type */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            required
+          >
+            <option value="other">Regular Course</option>
+            <option value="certification">Certification</option>
+            <option value="placement_training">Placement Training</option>
+            <option value="workshop">Workshop</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Course Type <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="courseType"
+            value={formData.courseType}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            required
+          >
+            <option value="certified">Certified</option>
+            <option value="non-certified">Non-Certified</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Instructor and Duration */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Instructor Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="instructor"
+            value={formData.instructor}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            placeholder="Instructor name"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Duration <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="duration"
+            value={formData.duration}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            placeholder="e.g., 12 weeks"
+            required
+          />
+        </div>
+      </div>
+
+      {/* Thumbnail Image */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Thumbnail Image URL (Optional)
+        </label>
+        <input
+          type="url"
+          name="thumbnail"
+          value={formData.thumbnail}
+          onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+          placeholder="https://example.com/image.jpg"
+        />
+        {formData.thumbnail && (
+          <div className="mt-2">
+            <img
+              src={formData.thumbnail}
+              alt="Thumbnail preview"
+              className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+              onError={(e) => {
+                e.target.style.display = 'none'
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Price and Original Price */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Price (₹) <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Original Price (₹)
+          </label>
+          <input
+            type="number"
+            name="originalPrice"
+            value={formData.originalPrice}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      {/* Level */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Level
+        </label>
+        <select
+          name="level"
+          value={formData.level}
+          onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+        >
+          <option value="all">All Levels</option>
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
+
+      {/* Language */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Language
+        </label>
+        <input
+          type="text"
+          name="language"
+          value={formData.language}
+          onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+          placeholder="English"
+        />
+      </div>
+
+      {/* Checkboxes */}
+      <div className="flex gap-6">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="certificateIncluded"
+            checked={formData.certificateIncluded}
+            onChange={handleChange}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">Certificate Included</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="placementGuaranteed"
+            checked={formData.placementGuaranteed}
+            onChange={handleChange}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">Placement Guaranteed</span>
+        </label>
+      </div>
+    </div>
   )
 }
 
