@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { courseAPI } from '../utils/api.js'
 import SyllabusEditor from '../components/SyllabusEditor.jsx'
@@ -68,7 +68,17 @@ export default function ContentDashboard() {
     try {
       const response = await courseAPI.getMyCourses({ limit: 100 })
       if (response.success) {
-        setCourses(response.data.courses || [])
+        const courses = response.data.courses || []
+        // Debug: Log thumbnail data for first course
+        if (courses.length > 0) {
+          console.log('Loaded courses:', courses.length)
+          console.log('First course thumbnail:', {
+            hasThumbnail: !!courses[0].thumbnail,
+            thumbnailLength: courses[0].thumbnail?.length || 0,
+            thumbnailPreview: courses[0].thumbnail?.substring(0, 50) || 'none'
+          })
+        }
+        setCourses(courses)
       } else {
         console.error('Failed to load courses:', response.message)
         toast.error('Failed to load courses: ' + (response.message || 'Unknown error'))
@@ -168,14 +178,41 @@ export default function ContentDashboard() {
       // Map courseType to certificateIncluded
       const certificateIncluded = courseForm.courseType === 'certified'
       
+      // Clean and prepare course data
       const courseData = {
-        ...courseForm,
+        title: courseForm.title,
+        description: courseForm.description,
+        shortDescription: courseForm.shortDescription || undefined,
+        category: courseForm.category,
+        instructor: courseForm.instructor,
         price: parseFloat(courseForm.price),
         originalPrice: courseForm.originalPrice ? parseFloat(courseForm.originalPrice) : undefined,
+        duration: courseForm.duration,
+        level: courseForm.level || 'all',
+        language: courseForm.language || 'English',
+        thumbnail: courseForm.thumbnail || undefined,
         certificateIncluded,
-        // Remove courseType from data sent to API
-        courseType: undefined
+        placementGuaranteed: courseForm.placementGuaranteed || false
       }
+      
+      // Remove only undefined values (keep empty strings and false values)
+      Object.keys(courseData).forEach(key => {
+        if (courseData[key] === undefined) {
+          delete courseData[key]
+        }
+      })
+
+      // Log thumbnail size for debugging
+      if (courseData.thumbnail) {
+        const thumbnailSize = courseData.thumbnail.length
+        console.log('Thumbnail size (base64 length):', thumbnailSize, 'bytes (~' + Math.round(thumbnailSize / 1024) + 'KB)')
+      }
+
+      console.log('Saving course data:', {
+        title: courseData.title,
+        hasThumbnail: !!courseData.thumbnail,
+        thumbnailLength: courseData.thumbnail?.length || 0
+      })
 
       let response
       if (showEditModal && selectedCourse) {
@@ -203,19 +240,34 @@ export default function ContentDashboard() {
         }
       }
 
-      if (response.success) {
+      console.log('Save response:', response)
+
+      if (response && response.success) {
         toast.success(
           shouldPublish 
             ? (showEditModal ? 'Course updated and published successfully!' : 'Course created and published successfully!')
             : (showEditModal ? 'Course updated successfully!' : 'Course created successfully!')
         )
+        // Reset form
+        setCourseForm({ ...defaultCourseForm })
         setShowCreateModal(false)
         setShowEditModal(false)
         setSelectedCourse(null)
         loadCourses()
+      } else {
+        const errorMsg = response?.message || response?.error || 'Failed to save course'
+        console.error('Save failed:', response)
+        toast.error('Error saving course: ' + errorMsg)
       }
     } catch (error) {
-      toast.error('Error saving course: ' + (error.message || 'Unknown error'))
+      console.error('Error saving course:', error)
+      const errorMessage = error.message || error.data?.message || error.data?.error || 'Unknown error occurred'
+      toast.error('Error saving course: ' + errorMessage)
+      
+      // Check if it's a payload size issue
+      if (errorMessage.includes('payload') || errorMessage.includes('too large') || errorMessage.includes('413')) {
+        toast.error('Image file is too large. Please use a smaller image or compress it.')
+      }
     } finally {
       setSaving(false)
     }
@@ -478,6 +530,9 @@ export default function ContentDashboard() {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Thumbnail
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Course Title
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -503,6 +558,36 @@ export default function ContentDashboard() {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {(isPlacementView ? placementCourses : filteredCourses).map((course) => (
                             <tr key={course._id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4">
+                                {course.thumbnail ? (
+                                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                    <img
+                                      src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
+                                      alt={course.title}
+                                      className="w-full h-full object-cover"
+                                      onLoad={() => {
+                                        console.log('Thumbnail loaded successfully for:', course.title)
+                                      }}
+                                      onError={(e) => {
+                                        console.error('Thumbnail failed to load for:', course.title, 'Thumbnail preview:', course.thumbnail?.substring(0, 100))
+                                        e.target.style.display = 'none'
+                                        if (!e.target.parentElement.querySelector('.error-message')) {
+                                          const errorDiv = document.createElement('div')
+                                          errorDiv.className = 'error-message text-gray-400 text-xs p-2 text-center'
+                                          errorDiv.textContent = 'No Image'
+                                          e.target.parentElement.appendChild(errorDiv)
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-20 h-20 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </td>
                               <td className="px-6 py-4">
                                 <div className="text-sm font-medium text-gray-900">{course.title}</div>
                                 {course.shortDescription && (
@@ -610,7 +695,35 @@ export default function ContentDashboard() {
                   <div className="md:hidden space-y-4">
                     {(isPlacementView ? placementCourses : filteredCourses).map((course) => (
                       <div key={course._id} className="bg-white rounded-lg shadow-lg p-4">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start gap-4 mb-3">
+                          {course.thumbnail ? (
+                            <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                              <img
+                                src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
+                                alt={course.title}
+                                className="w-full h-full object-cover"
+                                onLoad={() => {
+                                  console.log('Mobile thumbnail loaded for:', course.title)
+                                }}
+                                onError={(e) => {
+                                  console.error('Mobile thumbnail failed for:', course.title)
+                                  e.target.style.display = 'none'
+                                  if (!e.target.parentElement.querySelector('.error-message')) {
+                                    const errorDiv = document.createElement('div')
+                                    errorDiv.className = 'error-message text-gray-400 text-xs p-2 text-center h-full flex items-center justify-center'
+                                    errorDiv.textContent = 'No Image'
+                                    e.target.parentElement.appendChild(errorDiv)
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-24 h-24 shrink-0 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
                           <div className="flex-1">
                             <h3 className="text-lg font-semibold text-gray-900 mb-1">{course.title}</h3>
                             {course.shortDescription && (
@@ -724,6 +837,7 @@ export default function ContentDashboard() {
               </div>
               <div className="p-6">
                 <CourseForm 
+                  key={`create-${showCreateModal}`}
                   formData={courseForm} 
                   setFormData={setCourseForm}
                 />
@@ -770,6 +884,7 @@ export default function ContentDashboard() {
               </div>
               <div className="p-6">
                 <CourseForm 
+                  key={`edit-${selectedCourse?._id}-${showEditModal}`}
                   formData={courseForm} 
                   setFormData={setCourseForm}
                 />
@@ -859,6 +974,10 @@ export default function ContentDashboard() {
 
 // Course Form Component
 function CourseForm({ formData, setFormData }) {
+  const [imagePreview, setImagePreview] = useState(null)
+  const [imageLoading, setImageLoading] = useState(false)
+  const fileInputRef = useRef(null)
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
@@ -866,6 +985,143 @@ function CourseForm({ formData, setFormData }) {
       [name]: type === 'checkbox' ? checked : value
     }))
   }
+
+  // Compress and resize image
+  const compressImage = (file, maxWidth = 800, maxHeight = 600, quality = 0.8) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          // Calculate new dimensions
+          let width = img.width
+          let height = img.height
+          
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width
+              width = maxWidth
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height
+              height = maxHeight
+            }
+          }
+          
+          // Create canvas and compress
+          const canvas = document.createElement('canvas')
+          canvas.width = width
+          canvas.height = height
+          
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0, width, height)
+          
+          // Convert to base64 with compression
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality)
+          resolve(compressedBase64)
+        }
+        img.onerror = reject
+        img.src = e.target.result
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      console.log('No file selected')
+      return
+    }
+
+    console.log('File selected:', file.name, file.type, file.size)
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image file (JPEG, PNG, or WebP)')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
+
+    // Validate file size (max 4MB)
+    const maxSize = 4 * 1024 * 1024 // 4MB in bytes
+    if (file.size > maxSize) {
+      toast.error('Image size should be less than 4MB')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
+
+    // Set loading state
+    setImageLoading(true)
+
+    try {
+      // Compress and resize image before converting to base64
+      const compressedBase64 = await compressImage(file, 800, 600, 0.8)
+      console.log('Image compressed, original size:', file.size, 'bytes, compressed size:', compressedBase64.length, 'bytes (~' + Math.round(compressedBase64.length / 1024) + 'KB)')
+      
+      if (compressedBase64) {
+        setFormData(prev => ({
+          ...prev,
+          thumbnail: compressedBase64
+        }))
+        setImageLoading(false)
+        toast.success('Image uploaded and compressed successfully')
+      } else {
+        setImageLoading(false)
+        toast.error('Failed to process image')
+      }
+    } catch (error) {
+      console.error('Error processing image:', error)
+      setImageLoading(false)
+      toast.error('Error processing image file. Please try again.')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      thumbnail: ''
+    }))
+    setImagePreview(null)
+    setImageLoading(false)
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // Set preview when formData.thumbnail changes (for editing existing courses)
+  useEffect(() => {
+    console.log('formData.thumbnail changed:', formData.thumbnail ? 'has value' : 'empty', formData.thumbnail?.substring(0, 50))
+    if (formData.thumbnail) {
+      // Handle both URL and base64 data URLs
+      if (formData.thumbnail.startsWith('data:image') || formData.thumbnail.startsWith('http://') || formData.thumbnail.startsWith('https://')) {
+        setImagePreview(formData.thumbnail)
+      } else {
+        // If it's just a base64 string without data URL prefix, add it
+        if (formData.thumbnail.length > 100) {
+          // Likely base64, check if it needs data URL prefix
+          const base64DataUrl = formData.thumbnail.startsWith('data:') ? formData.thumbnail : `data:image/jpeg;base64,${formData.thumbnail}`
+          setImagePreview(base64DataUrl)
+        } else {
+          // Might be a URL
+          setImagePreview(formData.thumbnail)
+        }
+      }
+    } else {
+      setImagePreview(null)
+    }
+  }, [formData.thumbnail])
 
   return (
     <div className="space-y-4">
@@ -988,26 +1244,65 @@ function CourseForm({ formData, setFormData }) {
       {/* Thumbnail Image */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Thumbnail Image URL (Optional)
+          Thumbnail Image (Optional)
         </label>
         <input
-          type="url"
+          ref={fileInputRef}
+          type="file"
           name="thumbnail"
-          value={formData.thumbnail}
-          onChange={handleChange}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-          placeholder="https://example.com/image.jpg"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          onChange={handleImageUpload}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
         />
-        {formData.thumbnail && (
-          <div className="mt-2">
-            <img
-              src={formData.thumbnail}
-              alt="Thumbnail preview"
-              className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-              onError={(e) => {
-                e.target.style.display = 'none'
-              }}
-            />
+        <p className="mt-1 text-xs text-gray-500">
+          Supported formats: JPEG, PNG, WebP (Max size: 4MB)
+        </p>
+        {imageLoading && (
+          <div className="mt-4">
+            <div className="w-[400px] h-[300px] border-2 border-gray-300 rounded-lg bg-gray-100 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Loading image...</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {imagePreview && !imageLoading && (
+          <div className="mt-4">
+            <div className="relative inline-block">
+              <div className="w-[400px] h-[300px] border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                <img
+                  src={imagePreview}
+                  alt="Thumbnail preview"
+                  className="w-full h-full object-cover"
+                  onLoad={() => {
+                    console.log('Image loaded successfully in preview')
+                  }}
+                  onError={(e) => {
+                    console.error('Image failed to load in preview:', imagePreview?.substring(0, 100))
+                    // Hide the broken image
+                    e.target.style.display = 'none'
+                    // Show error message
+                    if (!e.target.parentElement.querySelector('.error-message')) {
+                      const errorDiv = document.createElement('div')
+                      errorDiv.className = 'error-message text-gray-400 text-sm p-4 text-center'
+                      errorDiv.textContent = 'Failed to load image preview'
+                      e.target.parentElement.appendChild(errorDiv)
+                    }
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition-colors shadow-lg z-10"
+                title="Remove image"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
       </div>

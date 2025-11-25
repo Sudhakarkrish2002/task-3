@@ -72,12 +72,13 @@ export default function EmployerDashboard() {
 
   // Fetch internships/workshops when contentType changes
   useEffect(() => {
-    if (contentType === 'internships') {
+    if (contentType === 'internships' && user) {
+      // Only fetch if user is loaded
       fetchMyInternships()
-    } else {
+    } else if (contentType === 'workshops' && user) {
       fetchMyWorkshops()
     }
-  }, [contentType])
+  }, [contentType, user])
 
   // Fetch user data when profile tab is opened (but don't overwrite if already loaded)
   useEffect(() => {
@@ -109,6 +110,8 @@ export default function EmployerDashboard() {
         setProfileData(fetchedProfileData)
         console.log('User data fetched from MongoDB:', {
           name: response.user.name,
+          role: response.user.role,
+          isActive: response.user.isActive,
           companyName: employerDetails.companyName,
           industry: employerDetails.industry,
           companyWebsite: employerDetails.companyWebsite,
@@ -116,6 +119,16 @@ export default function EmployerDashboard() {
           fullEmployerDetails: employerDetails,
           fetchedProfileData: fetchedProfileData
         })
+        
+        // Check if user has correct role and is active
+        if (response.user.role !== 'employer' && response.user.role !== 'content_writer') {
+          console.warn('User role does not allow posting internships:', response.user.role)
+          toast.warning(`Your role (${response.user.role}) may not have permission to post internships.`)
+        }
+        if (response.user.isActive === false) {
+          console.warn('User account is inactive')
+          toast.error('Your account is inactive. Please contact support.')
+        }
       } else {
         throw new Error(response.message || 'Invalid response from server')
       }
@@ -127,17 +140,69 @@ export default function EmployerDashboard() {
     }
   }
 
-  const fetchMyInternships = async () => {
+  const fetchMyInternships = async (showLoading = true) => {
     try {
-      setLoading(true)
+      if (showLoading) {
+        setLoading(true)
+      }
+      console.log('[EmployerDashboard] Fetching my internships...')
+      console.log('[EmployerDashboard] Current user:', {
+        id: user?._id,
+        email: user?.email,
+        role: user?.role
+      })
+      
       const response = await internshipAPI.getMyInternships()
+      console.log('[EmployerDashboard] API Response:', {
+        success: response.success,
+        data: response.data,
+        internshipsCount: response.data?.internships?.length || 0
+      })
+      
       if (response.success) {
-        setInternships(response.data.internships || [])
+        // Handle both response.data.internships and response.data (for backward compatibility)
+        const internshipsList = response.data?.internships || response.data || []
+        console.log('[EmployerDashboard] Setting internships:', {
+          count: internshipsList.length,
+          internships: internshipsList.map(i => ({
+            id: i._id,
+            title: i.title,
+            company: i.company,
+            createdBy: i.createdBy
+          }))
+        })
+        
+        if (Array.isArray(internshipsList)) {
+          setInternships(internshipsList)
+          console.log('[EmployerDashboard] Internships set successfully, count:', internshipsList.length)
+        } else {
+          console.error('[EmployerDashboard] Response data is not an array:', internshipsList)
+          setInternships([])
+          if (showLoading) {
+            toast.error('Invalid response format from server')
+          }
+        }
+      } else {
+        console.error('[EmployerDashboard] Failed to fetch internships:', response)
+        setInternships([])
+        if (showLoading) {
+          toast.error(response.message || 'Failed to refresh internships list')
+        }
       }
     } catch (error) {
-      toast.error('Error fetching internships: ' + error.message)
+      console.error('[EmployerDashboard] Error fetching internships:', error)
+      console.error('[EmployerDashboard] Error details:', {
+        message: error.message,
+        status: error.status,
+        data: error.data
+      })
+      if (showLoading) {
+        toast.error('Error fetching internships: ' + (error.message || 'Unknown error'))
+      }
     } finally {
-      setLoading(false)
+      if (showLoading) {
+        setLoading(false)
+      }
     }
   }
 
@@ -252,43 +317,160 @@ export default function EmployerDashboard() {
     e.preventDefault()
     setLoading(true)
 
+    // Declare internshipData outside try block to make it accessible in catch block
+    let internshipData = null
+
     try {
-      const internshipData = {
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        duration: formData.duration,
+      // Validate required fields before submission
+      const requiredFields = {
+        title: formData.title?.trim(),
+        description: formData.description?.trim(),
+        location: formData.location?.trim(),
+        duration: formData.duration?.trim(),
         applicationDeadline: formData.applicationDeadline,
         positionsAvailable: formData.positionsAvailable,
-        category: formData.category,
+        category: formData.category?.trim()
+      }
+
+      const missingFields = []
+      for (const [field, value] of Object.entries(requiredFields)) {
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+          missingFields.push(field)
+        }
+      }
+
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`)
+        setLoading(false)
+        return
+      }
+
+      // Validate positionsAvailable is a valid number >= 1
+      const positionsNum = typeof formData.positionsAvailable === 'string' 
+        ? parseInt(formData.positionsAvailable, 10) 
+        : Number(formData.positionsAvailable)
+      
+      if (isNaN(positionsNum) || positionsNum < 1) {
+        toast.error('Positions available must be at least 1')
+        setLoading(false)
+        return
+      }
+
+      // Validate applicationDeadline is a valid date
+      if (formData.applicationDeadline) {
+        const deadlineDate = new Date(formData.applicationDeadline)
+        if (isNaN(deadlineDate.getTime())) {
+          toast.error('Please select a valid application deadline date')
+          setLoading(false)
+          return
+        }
+      }
+
+      // Process stipend data - ensure proper structure
+      // Only include stipend if amount has a valid value (including "Negotiable")
+      const stipendAmount = formData.stipend?.amount?.trim()
+      const processedStipend = (stipendAmount && stipendAmount !== '') ? {
+        amount: stipendAmount,
+        currency: formData.stipend.currency || 'INR',
+        type: formData.stipend.type || 'fixed'
+      } : undefined
+
+      internshipData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        location: formData.location.trim(),
+        duration: formData.duration.trim(),
+        applicationDeadline: formData.applicationDeadline,
+        positionsAvailable: positionsNum,
+        category: formData.category.trim(),
         type: formData.type,
         isRemote: formData.isRemote,
-        stipend: formData.stipend.amount ? {
-          amount: parseFloat(formData.stipend.amount),
-          currency: formData.stipend.currency,
-          type: formData.stipend.type
-        } : {},
-        skillsRequired: formData.skillsRequired ? formData.skillsRequired.split(',').map(s => s.trim()) : [],
+        ...(processedStipend !== undefined && { stipend: processedStipend }),
+        skillsRequired: formData.skillsRequired ? formData.skillsRequired.split(',').map(s => s.trim()).filter(s => s) : [],
         qualifications: formData.qualifications ? formData.qualifications.split('\n').filter(q => q.trim()) : [],
         responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').filter(r => r.trim()) : [],
         benefits: formData.benefits ? formData.benefits.split('\n').filter(b => b.trim()) : [],
         startDate: formData.startDate || undefined,
-        isPublished: false
+        isPublished: true  // Publish immediately when created - no admin approval needed
       }
 
+      console.log('========== SUBMITTING INTERNSHIP ==========')
+      console.log('Form Data:', formData)
+      console.log('Processed Internship Data:', internshipData)
+      console.log('===========================================')
+
+      let response
       if (editingInternship) {
-        await internshipAPI.updateInternship(editingInternship._id, internshipData)
+        response = await internshipAPI.updateInternship(editingInternship._id, internshipData)
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to update internship')
+        }
         toast.success('Internship updated successfully!')
       } else {
-        await internshipAPI.createInternship(internshipData)
+        response = await internshipAPI.createInternship(internshipData)
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to create internship')
+        }
         toast.success('Internship created successfully!')
       }
 
+      // Reset form
       resetForm()
-      fetchMyInternships()
-      setActiveTab('my-internships')
+      
+      // Wait a moment for backend to save, then fetch internships
+      // Pass false to showLoading to avoid double loading state
+      setTimeout(async () => {
+        await fetchMyInternships(false)
+        // Switch to my-internships tab to show the new/updated internship
+        setActiveTab('my-internships')
+      }, 500)
     } catch (error) {
-      toast.error('Error saving internship: ' + error.message)
+      console.error('========== ERROR SAVING INTERNSHIP ==========')
+      console.error('Error:', error)
+      console.error('Error Message:', error.message)
+      console.error('Error Data:', error.data)
+      console.error('Error Status:', error.status)
+      console.error('Error Name:', error.data?.errorName)
+      console.error('Form Data:', formData)
+      if (internshipData) {
+        console.error('Processed Internship Data:', internshipData)
+      } else {
+        console.error('Processed Internship Data: Not available (error occurred before data processing)')
+      }
+      console.error('============================================')
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to save internship. Please try again.'
+      
+      // Check for detailed error information
+      if (error.data) {
+        // Validation errors
+        if (error.data.errors && Array.isArray(error.data.errors)) {
+          const errorDetails = error.data.errors.map(e => `${e.field}: ${e.message}`).join(', ')
+          errorMessage = `Validation errors: ${errorDetails}`
+        }
+        // Missing fields
+        else if (error.data.missingFields && Array.isArray(error.data.missingFields)) {
+          errorMessage = `Missing required fields: ${error.data.missingFields.join(', ')}`
+        }
+        // Error message from backend
+        else if (error.data.message) {
+          errorMessage = error.data.message
+        }
+        // Error field from backend
+        else if (error.data.error) {
+          errorMessage = error.data.error
+        }
+      }
+      // Fallback to error message
+      else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      // Show full error details in console for debugging
+      console.error('Full error response:', JSON.stringify(error.data || error, null, 2))
+      
+      toast.error('Error saving internship: ' + errorMessage)
     } finally {
       setLoading(false)
     }
@@ -419,7 +601,7 @@ export default function EmployerDashboard() {
         instructor: workshopFormData.instructor,
         instructorEmail: workshopFormData.instructorEmail || undefined,
         instructorBio: workshopFormData.instructorBio || undefined,
-        price: parseFloat(workshopFormData.price),
+        price: workshopFormData.price,
         duration: workshopFormData.duration,
         level: workshopFormData.level,
         language: workshopFormData.language,
@@ -937,7 +1119,7 @@ export default function EmployerDashboard() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Stipend Amount</label>
                       <input
-                        type="number"
+                        type="text"
                         name="stipend.amount"
                         value={formData.stipend.amount}
                         onChange={handleFormChange}
@@ -1259,12 +1441,10 @@ export default function EmployerDashboard() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹) *</label>
                       <input
-                        type="number"
+                        type="text"
                         name="price"
                         value={workshopFormData.price}
                         onChange={handleWorkshopFormChange}
-                        min="0"
-                        step="0.01"
                         className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         required
                       />

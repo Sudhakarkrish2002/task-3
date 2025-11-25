@@ -75,22 +75,43 @@ export default function AdminEmployers() {
     }
 
     try {
+      console.log('Approving employer:', {
+        employerId: selectedEmployer._id,
+        action,
+        rejectionReason,
+        currentStatus: getApprovalStatus(selectedEmployer)
+      })
+      
       const response = await adminAPI.approveEmployer(
         selectedEmployer._id,
         action,
         rejectionReason
       )
+      
+      console.log('Approval response:', response)
+      
       if (response.success) {
         toast.success(`Employer ${action}d successfully`)
         setShowApprovalModal(false)
         setShowModal(false)
         setSelectedEmployer(null)
         setRejectionReason('')
-        loadEmployers()
+        
+        // Force refresh the employers list
+        await loadEmployers()
+        
+        console.log('Employers list refreshed after approval')
+      } else {
+        throw new Error(response.message || 'Failed to update employer status')
       }
     } catch (error) {
       console.error('Error approving employer:', error)
-      toast.error(`Error ${action === 'approve' ? 'approving' : 'rejecting'} employer`)
+      console.error('Error details:', {
+        message: error.message,
+        data: error.data,
+        status: error.status
+      })
+      toast.error(`Error ${action === 'approve' ? 'approving' : 'rejecting'} employer: ${error.message || 'Unknown error'}`)
     }
   }
 

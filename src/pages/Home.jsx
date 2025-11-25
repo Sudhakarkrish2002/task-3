@@ -157,7 +157,7 @@ const skillsAndTools = [
   { name: 'Redis', category: 'Database', logo: 'https://cdn.simpleicons.org/redis/DC382D' },
   
   // Cloud & DevOps
-  { name: 'AWS', category: 'Cloud Platform', logo: 'https://cdn.simpleicons.org/amazonaws/232F3E' },
+  { name: 'AWS', category: 'Cloud Platform', logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg' },
   { name: 'Docker', category: 'DevOps Tool', logo: 'https://cdn.simpleicons.org/docker/2496ED' },
   { name: 'Kubernetes', category: 'DevOps Tool', logo: 'https://cdn.simpleicons.org/kubernetes/326CE5' },
   { name: 'Git & GitHub', category: 'Version Control', logo: 'https://cdn.simpleicons.org/git/F05032' },

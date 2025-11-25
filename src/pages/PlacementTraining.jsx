@@ -310,16 +310,40 @@ export default function PlacementTraining() {
                 return (
                   <div
                     key={courseId}
-                    className="bg-white rounded-xl border-2 border-primary-200 p-6 hover:shadow-lg transition-shadow"
+                    className="bg-white rounded-xl border-2 border-primary-200 overflow-hidden hover:shadow-lg transition-shadow"
                   >
-                    {/* Course Header */}
-                    <div className="mb-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                          Placement Guaranteed
-                        </span>
+                    {/* Course Thumbnail */}
+                    {course.thumbnail ? (
+                      <div className="w-full bg-gray-100 overflow-hidden flex items-center justify-center" style={{ maxHeight: '300px' }}>
+                        <img
+                          src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
+                          alt={course.title}
+                          className="w-full h-auto object-contain"
+                          style={{ maxHeight: '300px' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.parentElement.className = 'w-full h-48 bg-gray-100 flex items-center justify-center'
+                            e.target.parentElement.innerHTML = '<svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>'
+                          }}
+                        />
                       </div>
+                    ) : (
+                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                        <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+
+                    <div className="p-6">
+                      {/* Course Header */}
+                      <div className="mb-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                            Placement Guaranteed
+                          </span>
+                        </div>
                       <div className="mt-2 p-3 rounded-lg bg-primary-50 border border-primary-200">
                         <div className="text-sm font-semibold text-primary-900">{tagline}</div>
                       </div>
@@ -381,6 +405,7 @@ export default function PlacementTraining() {
                         <span className="relative z-10">Enroll Now</span>
                         <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                       </button>
+                    </div>
                     </div>
                   </div>
                 )
