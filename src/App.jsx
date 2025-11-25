@@ -19,6 +19,7 @@ import Contact from './pages/Contact.jsx'
 import Auth from './pages/Auth.jsx'
 import SearchResults from './pages/SearchResults.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
+import StudentInternshipApplicationDetails from './pages/StudentInternshipApplicationDetails.jsx'
 import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import CollegeDashboard from './pages/CollegeDashboard.jsx'
 import AdminCourseManagement from './pages/AdminCourseManagement.jsx'
@@ -55,6 +56,11 @@ const routes = {
   '#/contact': <Contact />,
   '#/search': <SearchResults />,
   '#/dashboard/student': <ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>,
+  '#/student-internship-application-details': (
+    <ProtectedRoute requiredRole="student">
+      <StudentInternshipApplicationDetails />
+    </ProtectedRoute>
+  ),
   '#/dashboard/employer': <ProtectedRoute requiredRole="employer"><EmployerDashboard /></ProtectedRoute>,
   '#/dashboard/college': <ProtectedRoute requiredRole="college"><CollegeDashboard /></ProtectedRoute>,
   '#/dashboard/content': <ProtectedRoute requiredRole="content_writer"><ContentDashboard /></ProtectedRoute>,

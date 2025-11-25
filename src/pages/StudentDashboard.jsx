@@ -395,7 +395,8 @@ ${resume.projects.map(proj => `${proj.name}: ${proj.description}`).join('\n')}
   }
 
   const handleViewInternshipDetails = (internshipId) => {
-    window.location.hash = `#/internships/${internshipId}`
+    if (!internshipId) return
+    window.location.hash = `#/student-internship-application-details?id=${internshipId}`
   }
 
   const getUserInitials = () => {
