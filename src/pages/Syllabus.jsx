@@ -444,24 +444,7 @@ export default function Syllabus() {
         
         <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-12 sm:py-16 lg:py-20">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
-            {/* Course Thumbnail - Right Side */}
-            {course.thumbnail && (
-              <div className="w-full lg:w-96 shrink-0">
-                <div className="w-full h-64 lg:h-80 rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl bg-white/10 backdrop-blur-sm">
-                  <img
-                    src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
-                    alt={course.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.parentElement.className = 'w-full h-64 lg:h-80 rounded-2xl flex items-center justify-center bg-white/10 backdrop-blur-sm'
-                      e.target.parentElement.innerHTML = '<svg class="w-24 h-24 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>'
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-            {/* Left Content - Course Info */}
+            {/* Left Content - Course Info (thumbnail removed as per requirement) */}
             <div className="flex-1 text-white">
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-3 mb-6">

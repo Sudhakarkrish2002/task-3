@@ -1,90 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
-
-const featuredCourses = [
-  {
-    title: 'Full-Stack Web Development',
-    tag: 'Certification',
-    description: 'Hands-on MERN training with real-world projects and mentoring.',
-  },
-  {
-    title: 'Data Science Foundations',
-    tag: 'Certification',
-    description: 'Python, statistics, ML, and dashboards to kickstart your career.',
-  },
-  {
-    title: 'Placement Accelerator',
-    tag: 'Placement-Guaranteed',
-    description: 'Structured interview prep, mock interviews, and referral support.',
-  },
-]
-
-const trendingCourses = [
-  {
-    id: 1,
-    title: 'Full-Stack Web Development',
-    tag: 'Certification',
-    description: 'Master MERN stack with real-world projects',
-    students: '2.5K+',
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    title: 'Data Science & Analytics',
-    tag: 'Certification',
-    description: 'Python, ML, and AI fundamentals',
-    students: '1.8K+',
-    rating: 4.9,
-  },
-  {
-    id: 3,
-    title: 'Cloud Computing & AWS',
-    tag: 'Certification',
-    description: 'Deploy scalable applications on cloud',
-    students: '1.2K+',
-    rating: 4.7,
-  },
-  {
-    id: 4,
-    title: 'DevOps & CI/CD',
-    tag: 'Certification',
-    description: 'Master deployment and automation',
-    students: '950+',
-    rating: 4.8,
-  },
-  {
-    id: 5,
-    title: 'UI/UX Design Mastery',
-    tag: 'Certification',
-    description: 'Design beautiful and functional interfaces',
-    students: '1.5K+',
-    rating: 4.6,
-  },
-  {
-    id: 6,
-    title: 'Mobile App Development',
-    tag: 'Certification',
-    description: 'Build iOS and Android applications',
-    students: '1.1K+',
-    rating: 4.7,
-  },
-  {
-    id: 7,
-    title: 'Cyber Security Fundamentals',
-    tag: 'Certification',
-    description: 'Protect systems from threats',
-    students: '800+',
-    rating: 4.9,
-  },
-  {
-    id: 8,
-    title: 'Machine Learning & AI',
-    tag: 'Certification',
-    description: 'Advanced ML algorithms and models',
-    students: '1.3K+',
-    rating: 4.8,
-  },
-]
+import { courseAPI } from '../utils/api.js'
 
 const partnerColleges = [
   // Central Government Colleges
@@ -182,17 +98,67 @@ export default function Home() {
   const cardWidthRef = useRef(0)
   const trendingSectionRef = useRef(null)
   const [currentCourseIndex, setCurrentCourseIndex] = useState(0)
+  const [featuredCourses, setFeaturedCourses] = useState([])
+  const [trendingCourses, setTrendingCourses] = useState([])
+  const [loadingFeatured, setLoadingFeatured] = useState(true)
+  const [loadingTrending, setLoadingTrending] = useState(true)
+
+  // Fetch featured courses
+  useEffect(() => {
+    const fetchFeaturedCourses = async () => {
+      try {
+        setLoadingFeatured(true)
+        const response = await courseAPI.getAllCourses({
+          category: 'certification',
+          featuredOnHome: true,
+          limit: 3
+        })
+        if (response.success && response.data.courses) {
+          setFeaturedCourses(response.data.courses)
+        }
+      } catch (error) {
+        console.error('Error fetching featured courses:', error)
+        setFeaturedCourses([])
+      } finally {
+        setLoadingFeatured(false)
+      }
+    }
+    fetchFeaturedCourses()
+  }, [])
+
+  // Fetch trending courses
+  useEffect(() => {
+    const fetchTrendingCourses = async () => {
+      try {
+        setLoadingTrending(true)
+        const response = await courseAPI.getAllCourses({
+          category: 'certification',
+          trendingOnHome: true,
+          limit: 8
+        })
+        if (response.success && response.data.courses) {
+          setTrendingCourses(response.data.courses)
+        }
+      } catch (error) {
+        console.error('Error fetching trending courses:', error)
+        setTrendingCourses([])
+      } finally {
+        setLoadingTrending(false)
+      }
+    }
+    fetchTrendingCourses()
+  }, [])
 
   const scrollToIndex = useCallback((index, behavior = 'smooth') => {
     const container = trendingScrollRef.current
     const cardWidth = cardWidthRef.current
-    if (!container || cardWidth === 0) return
+    if (!container || cardWidth === 0 || trendingCourses.length === 0) return
     const clampedIndex = Math.max(0, Math.min(trendingCourses.length - 1, index))
     container.scrollTo({
       left: clampedIndex * cardWidth,
       behavior,
     })
-  }, [])
+  }, [trendingCourses.length])
 
   const measureCardWidth = useCallback(() => {
     const contentEl = trendingContentRef.current
@@ -283,23 +249,34 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCourses.map((course) => (
-              <div key={course.title} className="rounded-xl border border-gray-200 p-5 hover:shadow-xl hover:shadow-gray-400/50 transition-shadow bg-white">
-                <div className="text-xs font-medium text-primary-700 inline-flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-primary-600" />
-                  {course.tag}
+          {loadingFeatured ? (
+            <div className="mt-8 text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading featured courses...</p>
+            </div>
+          ) : featuredCourses.length === 0 ? (
+            <div className="mt-8 text-center py-8">
+              <p className="text-gray-600">No featured courses available at the moment.</p>
+            </div>
+          ) : (
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCourses.map((course) => (
+                <div key={course._id} className="rounded-xl border border-gray-200 p-5 hover:shadow-xl hover:shadow-gray-400/50 transition-shadow bg-white">
+                  <div className="text-xs font-medium text-primary-700 inline-flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary-600" />
+                    {course.placementGuaranteed ? 'Placement-Guaranteed' : 'Certification'}
+                  </div>
+                  <h3 className="mt-3 text-lg font-semibold text-gray-900">{course.title}</h3>
+                  <p className="mt-2 text-sm text-gray-600">{course.shortDescription || course.description}</p>
+                  <div className="mt-4 flex gap-2">
+                    <a href={`#/courses/syllabus?title=${encodeURIComponent(course.title)}`} className="text-sm text-primary-700 font-medium transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-flex items-center gap-1 hover:gap-2">
+                      Learn more →
+                    </a>
+                  </div>
                 </div>
-                <h3 className="mt-3 text-lg font-semibold text-gray-900">{course.title}</h3>
-                <p className="mt-2 text-sm text-gray-600">{course.description}</p>
-                <div className="mt-4 flex gap-2">
-                  <a href="#/courses/certifications" className="text-sm text-primary-700 font-medium transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-flex items-center gap-1 hover:gap-2">
-                    Learn more →
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -332,48 +309,66 @@ export default function Home() {
               }}
             >
               <div ref={trendingContentRef} className="trending-courses-scroll-content">
-                {trendingCourses.map((course, index) => {
-                  const isActive = currentCourseIndex === index
-                  return (
-                    <div
-                      key={`trending-${course.id}`}
-                      className={`group shrink-0 w-80 sm:w-96 mx-3 rounded-2xl border bg-white/95 p-6 transition-all duration-300 ease-in-out shadow-lg hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-primary-500/70 ${isActive ? 'border-primary-200/80 shadow-primary-200/80 scale-[1.02]' : 'border-gray-100 hover:border-transparent'}`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-xs font-semibold text-primary-700 bg-primary-50/80 px-3 py-1 rounded-full uppercase tracking-wide">
-                          {course.tag}
-                        </span>
-                        <div className="flex items-center gap-1 text-primary-600">
-                          <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                          </svg>
-                          <span className="text-sm font-semibold text-gray-800">{course.rating}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-900">{course.title}</h3>
-                        <p className="text-sm text-gray-600 leading-relaxed">{course.description}</p>
-                      </div>
-                      <div className="flex items-center justify-between pt-5 mt-5 border-t border-gray-100">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                          </svg>
-                          <span>{course.students} enrolled</span>
-                        </div>
-                        <a 
-                          href="#/courses" 
-                          className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors group-hover:text-primary-700"
-                        >
-                          Learn more
-                          <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                          </svg>
-                        </a>
-                      </div>
+                {loadingTrending ? (
+                  <div className="shrink-0 w-80 sm:w-96 mx-3 flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                      <p className="text-gray-600 mt-4 text-sm">Loading trending courses...</p>
                     </div>
-                  )
-                })}
+                  </div>
+                ) : trendingCourses.length === 0 ? (
+                  <div className="shrink-0 w-80 sm:w-96 mx-3 flex items-center justify-center py-12">
+                    <p className="text-gray-600 text-sm">No trending courses available at the moment.</p>
+                  </div>
+                ) : (
+                  trendingCourses.map((course, index) => {
+                    const isActive = currentCourseIndex === index
+                    const enrolledCount = course.enrolledCount || 0
+                    const enrolledText = enrolledCount >= 1000 
+                      ? `${(enrolledCount / 1000).toFixed(1)}K+` 
+                      : `${enrolledCount}+`
+                    const rating = course.rating || 4.5
+                    return (
+                      <div
+                        key={`trending-${course._id}`}
+                        className={`group shrink-0 w-80 sm:w-96 mx-3 rounded-2xl border bg-white/95 p-6 transition-all duration-300 ease-in-out shadow-lg hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-primary-500/70 ${isActive ? 'border-primary-200/80 shadow-primary-200/80 scale-[1.02]' : 'border-gray-100 hover:border-transparent'}`}
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-semibold text-primary-700 bg-primary-50/80 px-3 py-1 rounded-full uppercase tracking-wide">
+                            {course.placementGuaranteed ? 'Placement-Guaranteed' : 'Certification'}
+                          </span>
+                          <div className="flex items-center gap-1 text-primary-600">
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                              <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                            </svg>
+                            <span className="text-sm font-semibold text-gray-800">{rating.toFixed(1)}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-semibold text-gray-900">{course.title}</h3>
+                          <p className="text-sm text-gray-600 leading-relaxed">{course.shortDescription || course.description}</p>
+                        </div>
+                        <div className="flex items-center justify-between pt-5 mt-5 border-t border-gray-100">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span>{enrolledText} enrolled</span>
+                          </div>
+                          <a 
+                            href={`#/courses/syllabus?title=${encodeURIComponent(course.title)}`}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors group-hover:text-primary-700"
+                          >
+                            Learn more
+                            <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
               </div>
             </div>
           </div>

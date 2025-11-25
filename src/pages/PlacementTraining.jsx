@@ -310,15 +310,15 @@ export default function PlacementTraining() {
                 return (
                   <div
                     key={courseId}
-                    className="bg-white rounded-xl border-2 border-primary-200 overflow-hidden hover:shadow-lg transition-shadow"
+                    className="bg-white rounded-xl border-2 border-primary-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
                     {/* Course Thumbnail */}
                     {course.thumbnail ? (
-                      <div className="w-full bg-gray-100 overflow-hidden flex items-center justify-center" style={{ maxHeight: '300px' }}>
+                      <div className="w-full bg-gray-100 flex items-center justify-center py-3" style={{ maxHeight: '300px' }}>
                         <img
                           src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
                           alt={course.title}
-                          className="w-full h-auto object-contain"
+                          className="h-auto w-auto max-h-72 object-contain"
                           style={{ maxHeight: '300px' }}
                           onError={(e) => {
                             e.target.style.display = 'none'
@@ -335,77 +335,79 @@ export default function PlacementTraining() {
                       </div>
                     )}
 
-                    <div className="p-6">
-                      {/* Course Header */}
-                      <div className="mb-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                            Placement Guaranteed
-                          </span>
+                    <div className="p-6 flex flex-col h-full">
+                      <div className="flex-1 flex flex-col">
+                        {/* Course Header */}
+                        <div className="mb-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                              Placement Guaranteed
+                            </span>
+                          </div>
+                          <div className="mt-2 p-3 rounded-lg bg-primary-50 border border-primary-200">
+                            <div className="text-sm font-semibold text-primary-900">{tagline}</div>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-3">{course.description || 'Program details coming soon.'}</p>
                         </div>
-                      <div className="mt-2 p-3 rounded-lg bg-primary-50 border border-primary-200">
-                        <div className="text-sm font-semibold text-primary-900">{tagline}</div>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-3">{course.description || 'Program details coming soon.'}</p>
-                    </div>
 
-                    {/* Course Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Duration</div>
-                        <div className="text-sm font-semibold text-gray-900">{course.duration || 'Flexible'}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Placement Rate</div>
-                        <div className="text-sm font-semibold text-green-700">{placementRate}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Average Salary</div>
-                        <div className="text-sm font-semibold text-gray-900">{avgSalary}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Program Type</div>
-                        <div className="text-sm font-semibold text-gray-900">Guaranteed</div>
-                      </div>
-                    </div>
+                        {/* Course Stats */}
+                        <div className="grid grid-cols-2 gap-4 mb-3 pb-3 border-b border-gray-200">
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">Duration</div>
+                            <div className="text-sm font-semibold text-gray-900">{course.duration || 'Flexible'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">Placement Rate</div>
+                            <div className="text-sm font-semibold text-green-700">{placementRate}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">Average Salary</div>
+                            <div className="text-sm font-semibold text-gray-900">{avgSalary}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">Program Type</div>
+                            <div className="text-sm font-semibold text-gray-900">Guaranteed</div>
+                          </div>
+                        </div>
 
-                    {/* Course Features */}
-                    {features.length > 0 && (
-                      <div className="mb-6">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Program Features:</h4>
-                        <ul className="space-y-2">
-                          {features.map((feature, idx) => (
-                            <li key={`${courseId}-feature-${idx}`} className="flex items-start gap-2 text-sm text-gray-600">
-                              <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                              <span>{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        {/* Course Features */}
+                        {features.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3">Program Features:</h4>
+                            <ul className="space-y-2">
+                              {features.map((feature, idx) => (
+                                <li key={`${courseId}-feature-${idx}`} className="flex items-start gap-2 text-sm text-gray-600">
+                                  <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleViewSyllabus(course)}
-                        className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
-                      >
-                        <span className="relative z-10 flex items-center justify-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          View More
-                        </span>
-                        <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                      </button>
-                      <button className="flex-1 rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
-                        <span className="relative z-10">Enroll Now</span>
-                        <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                      </button>
-                    </div>
+                      {/* Action Buttons - pinned to bottom */}
+                      <div className="mt-2 flex gap-3">
+                        <button
+                          onClick={() => handleViewSyllabus(course)}
+                          className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
+                        >
+                          <span className="relative z-10 flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            View More
+                          </span>
+                          <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                        </button>
+                        <button className="flex-1 rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
+                          <span className="relative z-10">Enroll Now</span>
+                          <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )

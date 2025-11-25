@@ -17,7 +17,9 @@ const defaultCourseForm = {
   language: 'English',
   thumbnail: '',
   certificateIncluded: false,
-  placementGuaranteed: false
+  placementGuaranteed: false,
+  featuredOnHome: false,
+  trendingOnHome: false
 }
 
 
@@ -135,7 +137,9 @@ export default function ContentDashboard() {
       language: course.language || 'English',
       thumbnail: course.thumbnail || '',
       certificateIncluded: course.certificateIncluded || false,
-      placementGuaranteed: course.placementGuaranteed || false
+      placementGuaranteed: course.placementGuaranteed || false,
+      featuredOnHome: course.featuredOnHome || false,
+      trendingOnHome: course.trendingOnHome || false
     })
     setSelectedCourse(course)
     setShowEditModal(true)
@@ -144,6 +148,54 @@ export default function ContentDashboard() {
   const handleDeleteCourse = (course) => {
     setCourseToDelete(course)
     setShowDeleteConfirm(true)
+  }
+
+  const handleToggleFeatured = async (course) => {
+    setSaving(true)
+    try {
+      const courseData = {
+        featuredOnHome: !course.featuredOnHome
+      }
+      const response = await courseAPI.updateCourse(course._id, courseData)
+      if (response.success) {
+        toast.success(
+          courseData.featuredOnHome 
+            ? 'Course added to Featured Certification Courses'
+            : 'Course removed from Featured Certification Courses'
+        )
+        loadCourses()
+      } else {
+        toast.error('Error updating course: ' + (response.message || 'Unknown error'))
+      }
+    } catch (error) {
+      toast.error('Error updating course: ' + (error.message || 'Unknown error'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleToggleTrending = async (course) => {
+    setSaving(true)
+    try {
+      const courseData = {
+        trendingOnHome: !course.trendingOnHome
+      }
+      const response = await courseAPI.updateCourse(course._id, courseData)
+      if (response.success) {
+        toast.success(
+          courseData.trendingOnHome 
+            ? 'Course added to Trending Courses'
+            : 'Course removed from Trending Courses'
+        )
+        loadCourses()
+      } else {
+        toast.error('Error updating course: ' + (response.message || 'Unknown error'))
+      }
+    } catch (error) {
+      toast.error('Error updating course: ' + (error.message || 'Unknown error'))
+    } finally {
+      setSaving(false)
+    }
   }
 
   const confirmDelete = async () => {
@@ -192,7 +244,10 @@ export default function ContentDashboard() {
         language: courseForm.language || 'English',
         thumbnail: courseForm.thumbnail || undefined,
         certificateIncluded,
-        placementGuaranteed: courseForm.placementGuaranteed || false
+        // Explicitly set boolean values to ensure false values are sent to backend
+        placementGuaranteed: courseForm.placementGuaranteed === true,
+        featuredOnHome: courseForm.featuredOnHome === true,
+        trendingOnHome: courseForm.trendingOnHome === true
       }
       
       // Remove only undefined values (keep empty strings and false values)
@@ -211,7 +266,9 @@ export default function ContentDashboard() {
       console.log('Saving course data:', {
         title: courseData.title,
         hasThumbnail: !!courseData.thumbnail,
-        thumbnailLength: courseData.thumbnail?.length || 0
+        thumbnailLength: courseData.thumbnail?.length || 0,
+        featuredOnHome: courseData.featuredOnHome,
+        trendingOnHome: courseData.trendingOnHome
       })
 
       let response
@@ -639,50 +696,79 @@ export default function ContentDashboard() {
                                 })()}
                               </td>
                               <td className="px-6 py-4 text-sm font-medium">
-                                <div className="flex items-center gap-3">
-                                  <button
-                                    onClick={() => handleEditCourse(course)}
-                                    className="text-blue-600 hover:text-blue-900 font-semibold whitespace-nowrap"
-                                    title="Edit course"
-                                  >
-                                    Edit
-                                  </button>
-                                  <span className="text-gray-300">|</span>
-                                  <button
-                                    onClick={() => handleEditSyllabus(course)}
-                                    className="text-primary-600 hover:text-primary-900 font-semibold whitespace-nowrap"
-                                    title="Edit syllabus"
-                                  >
-                                    Edit Syllabus
-                                  </button>
-                                  <span className="text-gray-300">|</span>
-                                  {course.isPublished ? (
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-3">
                                     <button
-                                      onClick={() => handlePublishCourse(course, 'unpublish')}
-                                      className="text-orange-600 hover:text-orange-900 font-semibold whitespace-nowrap disabled:opacity-50"
-                                      title="Unpublish course"
+                                      onClick={() => handleEditCourse(course)}
+                                      className="text-blue-600 hover:text-blue-900 font-semibold whitespace-nowrap"
+                                      title="Edit course"
+                                    >
+                                      Edit
+                                    </button>
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                      onClick={() => handleEditSyllabus(course)}
+                                      className="text-primary-600 hover:text-primary-900 font-semibold whitespace-nowrap"
+                                      title="Edit syllabus"
+                                    >
+                                      Edit Syllabus
+                                    </button>
+                                    <span className="text-gray-300">|</span>
+                                    {course.isPublished ? (
+                                      <button
+                                        onClick={() => handlePublishCourse(course, 'unpublish')}
+                                        className="text-orange-600 hover:text-orange-900 font-semibold whitespace-nowrap disabled:opacity-50"
+                                        title="Unpublish course"
+                                        disabled={saving}
+                                      >
+                                        Unpublish
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handlePublishCourse(course, 'publish')}
+                                        className="text-green-600 hover:text-green-900 font-semibold whitespace-nowrap disabled:opacity-50"
+                                        title="Publish course"
+                                        disabled={saving}
+                                      >
+                                        Publish
+                                      </button>
+                                    )}
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                      onClick={() => handleDeleteCourse(course)}
+                                      className="text-red-600 hover:text-red-900 font-semibold whitespace-nowrap"
+                                      title="Delete course"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center gap-2 pt-1 border-t border-gray-200">
+                                    <button
+                                      onClick={() => handleToggleFeatured(course)}
+                                      className={`text-xs font-semibold disabled:opacity-50 ${
+                                        course.featuredOnHome 
+                                          ? 'text-purple-600 hover:text-purple-900' 
+                                          : 'text-green-600 hover:text-green-900'
+                                      }`}
+                                      title={course.featuredOnHome ? "Remove from Featured" : "Add to Featured"}
                                       disabled={saving}
                                     >
-                                      Unpublish
+                                      {course.featuredOnHome ? 'Remove from Featured' : 'Add to Featured'}
                                     </button>
-                                  ) : (
+                                    <span className="text-gray-300">|</span>
                                     <button
-                                      onClick={() => handlePublishCourse(course, 'publish')}
-                                      className="text-green-600 hover:text-green-900 font-semibold whitespace-nowrap disabled:opacity-50"
-                                      title="Publish course"
+                                      onClick={() => handleToggleTrending(course)}
+                                      className={`text-xs font-semibold disabled:opacity-50 ${
+                                        course.trendingOnHome 
+                                          ? 'text-purple-600 hover:text-purple-900' 
+                                          : 'text-green-600 hover:text-green-900'
+                                      }`}
+                                      title={course.trendingOnHome ? "Remove from Trending" : "Add to Trending"}
                                       disabled={saving}
                                     >
-                                      Publish
+                                      {course.trendingOnHome ? 'Remove from Trending' : 'Add to Trending'}
                                     </button>
-                                  )}
-                                  <span className="text-gray-300">|</span>
-                                  <button
-                                    onClick={() => handleDeleteCourse(course)}
-                                    className="text-red-600 hover:text-red-900 font-semibold whitespace-nowrap"
-                                    title="Delete course"
-                                  >
-                                    Delete
-                                  </button>
+                                  </div>
                                 </div>
                               </td>
                             </tr>
@@ -804,6 +890,30 @@ export default function ContentDashboard() {
                             className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
                           >
                             Delete
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                          <button
+                            onClick={() => handleToggleFeatured(course)}
+                            className={`flex-1 px-4 py-2 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
+                              course.featuredOnHome 
+                                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}
+                            disabled={saving}
+                          >
+                            {course.featuredOnHome ? 'Remove from Featured' : 'Add to Featured'}
+                          </button>
+                          <button
+                            onClick={() => handleToggleTrending(course)}
+                            className={`flex-1 px-4 py-2 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
+                              course.trendingOnHome 
+                                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}
+                            disabled={saving}
+                          >
+                            {course.trendingOnHome ? 'Remove from Trending' : 'Add to Trending'}
                           </button>
                         </div>
                       </div>
@@ -1376,7 +1486,7 @@ function CourseForm({ formData, setFormData }) {
       </div>
 
       {/* Checkboxes */}
-      <div className="flex gap-6">
+      <div className="grid grid-cols-2 gap-4">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -1396,6 +1506,26 @@ function CourseForm({ formData, setFormData }) {
             className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
           />
           <span className="text-sm text-gray-700">Placement Guaranteed</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="featuredOnHome"
+            checked={formData.featuredOnHome}
+            onChange={handleChange}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">Show in Featured Certification Courses</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="trendingOnHome"
+            checked={formData.trendingOnHome}
+            onChange={handleChange}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">Show in Trending Courses</span>
         </label>
       </div>
     </div>

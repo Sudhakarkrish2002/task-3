@@ -269,15 +269,15 @@ export default function Courses() {
                 return (
                   <div
                     key={course._id}
-                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-2xl hover:shadow-gray-400/50 transition-shadow"
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-2xl hover:shadow-gray-400/50 transition-shadow flex flex-col h-full"
                   >
                     {/* Course Thumbnail */}
                     {course.thumbnail ? (
-                      <div className="w-full bg-gray-100 overflow-hidden flex items-center justify-center" style={{ maxHeight: '300px' }}>
+                      <div className="w-full bg-gray-100 flex items-center justify-center py-3" style={{ maxHeight: '300px' }}>
                         <img
                           src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
                           alt={course.title}
-                          className="w-full h-auto object-contain"
+                          className="h-auto w-auto max-h-72 object-contain"
                           style={{ maxHeight: '300px' }}
                           onError={(e) => {
                             e.target.style.display = 'none'
@@ -294,78 +294,82 @@ export default function Courses() {
                       </div>
                     )}
 
-                    <div className="p-6">
-                      {/* Tag */}
-                      {tag && (
-                        <div className="mb-3">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${tag.color}`}>
-                            {tag.text}
-                          </span>
-                        </div>
-                      )}
+                    <div className="p-6 flex flex-col h-full">
+                      <div className="flex-1 flex flex-col">
+                        {/* Tag */}
+                        {tag && (
+                          <div className="mb-3">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${tag.color}`}>
+                              {tag.text}
+                            </span>
+                          </div>
+                        )}
 
-                      {/* Course Title */}
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
+                        {/* Course Title */}
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                      {course.shortDescription || course.description}
-                    </p>
+                        {/* Description */}
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {course.shortDescription || course.description}
+                        </p>
 
-                    {/* Course Details */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{course.duration}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900">{formatPrice(course.price)}</span>
-                            {course.originalPrice && (
-                              <span className="text-xs text-gray-500 line-through">{formatPrice(course.originalPrice)}</span>
-                            )}
+                        {/* Course Details */}
+                        <div className="space-y-2 mb-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{course.duration}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm">
+                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="font-semibold text-gray-900">{formatPrice(course.price)}</span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              {course.originalPrice && (
+                                <span className="text-xs text-gray-500 line-through">
+                                  {formatPrice(course.originalPrice)}
+                                </span>
+                              )}
+                              {course.price && course.price > 0 ? (
+                                <span className="mt-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                                  PAID
+                                </span>
+                              ) : (
+                                <span className="mt-1 px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                  FREE
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        {course.price && course.price > 0 ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                            PAID
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                            FREE
-                          </span>
-                        )}
                       </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleViewSyllabus(course)}
-                        className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
-                      >
-                        <span className="relative z-10 flex items-center justify-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          View More
-                        </span>
-                        <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                      </button>
-                      <button 
-                        onClick={() => handleEnroll(course)}
-                        className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
-                      >
-                        <span className="relative z-10">Enroll Now</span>
-                        <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                      </button>
-                    </div>
+                      {/* Action Buttons - pinned to bottom */}
+                      <div className="mt-2 flex gap-3">
+                        <button
+                          onClick={() => handleViewSyllabus(course)}
+                          className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
+                        >
+                          <span className="relative z-10 flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            View More
+                          </span>
+                          <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                        </button>
+                        <button 
+                          onClick={() => handleEnroll(course)}
+                          className="flex-1 rounded-lg bg-primary-600 px-6 py-3 text-white text-sm font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
+                        >
+                          <span className="relative z-10">Enroll Now</span>
+                          <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )

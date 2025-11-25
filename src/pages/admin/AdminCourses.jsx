@@ -30,7 +30,9 @@ const defaultCourseForm = {
   language: 'English',
   thumbnail: '',
   certificateIncluded: false,
-  placementGuaranteed: false
+  placementGuaranteed: false,
+  featuredOnHome: false,
+  trendingOnHome: false
 }
 
 export default function AdminCourses() {
@@ -810,7 +812,7 @@ function CourseForm({ formData, setFormData }) {
       </div>
 
       {/* Checkboxes */}
-      <div className="flex gap-6">
+      <div className="grid grid-cols-2 gap-4">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -830,6 +832,26 @@ function CourseForm({ formData, setFormData }) {
             className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
           />
           <span className="text-sm text-gray-700">Placement Guaranteed</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="featuredOnHome"
+            checked={formData.featuredOnHome}
+            onChange={handleChange}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">Show in Featured Certification Courses</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="trendingOnHome"
+            checked={formData.trendingOnHome}
+            onChange={handleChange}
+            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">Show in Trending Courses</span>
         </label>
       </div>
     </div>
