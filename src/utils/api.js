@@ -292,6 +292,22 @@ export const internshipAPI = {
       method: 'DELETE',
     });
   },
+
+  // Apply to internship (student)
+  applyToInternship: async (internshipId, applicationData) => {
+    return apiRequest(`/internships/${internshipId}/apply`, {
+      method: 'POST',
+      body: JSON.stringify(applicationData),
+    });
+  },
+
+  // Update application status (admin/employer)
+  updateApplicationStatus: async (internshipId, applicationId, status) => {
+    return apiRequest(`/internships/${internshipId}/applications/${applicationId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
 };
 
 // Workshop API functions
@@ -528,6 +544,11 @@ export const adminAPI = {
 
   getInternshipById: async (internshipId) => {
     return apiRequest(`/admin/internships/${internshipId}`);
+  },
+
+  getAllInternshipApplications: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/internships/applications${queryParams ? `?${queryParams}` : ''}`);
   },
 
   approveInternship: async (internshipId, action, rejectionReason = '') => {

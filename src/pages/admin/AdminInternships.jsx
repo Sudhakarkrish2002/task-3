@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { adminAPI } from '../../utils/api.js'
+import { adminAPI, internshipAPI } from '../../utils/api.js'
 import AdminLayout from '../../components/admin/AdminLayout.jsx'
 import {
   BriefcaseIcon,
@@ -25,6 +25,8 @@ export default function AdminInternships() {
   const [approvalStatusFilter, setApprovalStatusFilter] = useState('all')
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 })
   const [rejectionReason, setRejectionReason] = useState('')
+  const [expandedApplications, setExpandedApplications] = useState({})
+  const [updatingStatus, setUpdatingStatus] = useState(null)
 
   useEffect(() => {
     loadInternships()
@@ -60,10 +62,55 @@ export default function AdminInternships() {
       if (response.success) {
         setSelectedInternship(response.data)
         setShowModal(true)
+        setExpandedApplications({})
       }
     } catch (error) {
       console.error('Error loading internship:', error)
       toast.error('Error loading internship details')
+    }
+  }
+
+  const toggleApplicationExpansion = (applicationId) => {
+    setExpandedApplications(prev => ({
+      ...prev,
+      [applicationId]: !prev[applicationId]
+    }))
+  }
+
+  const handleUpdateApplicationStatus = async (applicationId, newStatus) => {
+    if (!selectedInternship) return
+
+    setUpdatingStatus(applicationId)
+    try {
+      const response = await internshipAPI.updateApplicationStatus(
+        selectedInternship._id,
+        applicationId,
+        newStatus
+      )
+      if (response.success) {
+        toast.success(`Application ${newStatus} successfully`)
+        // Reload internship to get updated data
+        await handleViewInternship(selectedInternship._id)
+      }
+    } catch (error) {
+      console.error('Error updating application status:', error)
+      toast.error(error.message || 'Error updating application status')
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
+  const getApplicationStatusColor = (status) => {
+    switch (status) {
+      case 'accepted':
+        return 'bg-green-100 text-green-800'
+      case 'shortlisted':
+        return 'bg-blue-100 text-blue-800'
+      case 'rejected':
+        return 'bg-red-100 text-red-800'
+      case 'applied':
+      default:
+        return 'bg-yellow-100 text-yellow-800'
     }
   }
 
@@ -440,15 +487,120 @@ export default function AdminInternships() {
               )}
               {selectedInternship.applications && selectedInternship.applications.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Applications</h3>
-                  <div className="space-y-2">
-                    {selectedInternship.applications.map((application, index) => (
-                      <div key={index} className="p-3 bg-gray-50 rounded-lg text-sm">
-                        {application.studentId?.name || 'Student ' + (index + 1)} -{' '}
-                        {application.studentId?.email || 'N/A'} - Status:{' '}
-                        {application.status || 'pending'}
-                      </div>
-                    ))}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Applications ({selectedInternship.applications.length})</h3>
+                  <div className="space-y-4">
+                    {selectedInternship.applications.map((application, index) => {
+                      const applicationId = application._id ? String(application._id) : (application.id ? String(application.id) : String(index))
+                      const isExpanded = expandedApplications[applicationId]
+                      const isUpdating = updatingStatus === applicationId
+                      return (
+                        <div key={applicationId} className="border border-gray-200 rounded-lg p-4 bg-white">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="font-semibold text-gray-900">
+                                  {application.studentName || application.studentId?.name || `Student ${index + 1}`}
+                                </h4>
+                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getApplicationStatusColor(application.status)}`}>
+                                  {application.status || 'applied'}
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <p>
+                                  <span className="font-medium">Email:</span> {application.studentEmail || application.studentId?.email || 'N/A'}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Phone:</span> {application.phone || application.studentId?.phone || 'N/A'}
+                                </p>
+                                <p>
+                                  <span className="font-medium">College:</span> {application.collegeName || application.studentId?.studentDetails?.collegeName || 'N/A'}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Course:</span> {application.course || application.studentId?.studentDetails?.course || 'N/A'}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Year:</span> {application.year || application.studentId?.studentDetails?.year || 'N/A'}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Applied:</span>{' '}
+                                  {application.appliedAt
+                                    ? new Date(application.appliedAt).toLocaleDateString('en-IN', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })
+                                    : 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2 ml-4">
+                              {application.coverLetter && (
+                                <button
+                                  onClick={() => toggleApplicationExpansion(applicationId)}
+                                  className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                                >
+                                  {isExpanded ? 'Hide' : 'View'} Cover Letter
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {isExpanded && application.coverLetter && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Cover Letter</label>
+                              <p className="text-sm text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg">
+                                {application.coverLetter}
+                              </p>
+                            </div>
+                          )}
+
+                          {application.resumeUrl && (
+                            <div className="mt-3">
+                              <a
+                                href={application.resumeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary-600 hover:text-primary-800 font-medium"
+                              >
+                                Download Resume →
+                              </a>
+                            </div>
+                          )}
+
+                          <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-2">
+                            {application.status !== 'shortlisted' && (
+                              <button
+                                onClick={() => handleUpdateApplicationStatus(applicationId, 'shortlisted')}
+                                disabled={isUpdating}
+                                className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isUpdating ? 'Updating...' : 'Shortlist'}
+                              </button>
+                            )}
+                            {application.status !== 'accepted' && (
+                              <button
+                                onClick={() => handleUpdateApplicationStatus(applicationId, 'accepted')}
+                                disabled={isUpdating}
+                                className="px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isUpdating ? 'Updating...' : 'Accept'}
+                              </button>
+                            )}
+                            {application.status !== 'rejected' && (
+                              <button
+                                onClick={() => handleUpdateApplicationStatus(applicationId, 'rejected')}
+                                disabled={isUpdating}
+                                className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isUpdating ? 'Updating...' : 'Reject'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}

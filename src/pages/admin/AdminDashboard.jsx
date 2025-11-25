@@ -11,6 +11,7 @@ import {
   RevenueIcon,
   ChartIcon,
   ArrowRightIcon,
+  ArrowLeftIcon,
   CalendarIcon,
   CheckIcon,
 } from '../../components/admin/Icons.jsx'
@@ -21,6 +22,11 @@ export default function AdminDashboard() {
   const [unverifiedUsers, setUnverifiedUsers] = useState([])
   const [loadingUnverified, setLoadingUnverified] = useState(false)
   const [roleFilter, setRoleFilter] = useState('all')
+  const [internshipApplications, setInternshipApplications] = useState([])
+  const [loadingApplications, setLoadingApplications] = useState(false)
+  const [applicationSearch, setApplicationSearch] = useState('')
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState('all')
+  const [applicationPagination, setApplicationPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 })
 
   useEffect(() => {
     loadDashboardStats()
@@ -29,6 +35,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadUnverifiedUsers()
   }, [roleFilter])
+
+  useEffect(() => {
+    loadInternshipApplications()
+  }, [applicationPagination.page, applicationSearch, applicationStatusFilter])
 
   const loadDashboardStats = async () => {
     setLoading(true)
@@ -115,6 +125,46 @@ export default function AdminDashboard() {
       content_writer: '#/admin/students'
     }
     return linkMap[role] || '#/admin/students'
+  }
+
+  const loadInternshipApplications = async () => {
+    setLoadingApplications(true)
+    try {
+      const params = {
+        page: applicationPagination.page,
+        limit: applicationPagination.limit
+      }
+      if (applicationSearch) params.search = applicationSearch
+      if (applicationStatusFilter !== 'all') params.status = applicationStatusFilter
+
+      const response = await adminAPI.getAllInternshipApplications(params)
+      if (response.success) {
+        setInternshipApplications(response.data.applications || [])
+        setApplicationPagination(response.data.pagination || applicationPagination)
+      }
+    } catch (error) {
+      console.error('Error loading internship applications:', error)
+      if (error.status !== 404) {
+        toast.error('Error loading internship applications')
+      }
+      setInternshipApplications([])
+    } finally {
+      setLoadingApplications(false)
+    }
+  }
+
+  const getApplicationStatusColor = (status) => {
+    switch (status) {
+      case 'accepted':
+        return 'bg-green-100 text-green-800'
+      case 'shortlisted':
+        return 'bg-blue-100 text-blue-800'
+      case 'rejected':
+        return 'bg-red-100 text-red-800'
+      case 'applied':
+      default:
+        return 'bg-yellow-100 text-yellow-800'
+    }
   }
 
   const statCards = stats
@@ -479,6 +529,167 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* Registered Students for Internships */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <UsersIcon className="w-5 h-5 text-primary-600" />
+                Registered Students for Internships
+              </h2>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={applicationSearch}
+                  onChange={(e) => {
+                    setApplicationSearch(e.target.value)
+                    setApplicationPagination({ ...applicationPagination, page: 1 })
+                  }}
+                  placeholder="Search students..."
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                />
+                <select
+                  value={applicationStatusFilter}
+                  onChange={(e) => {
+                    setApplicationStatusFilter(e.target.value)
+                    setApplicationPagination({ ...applicationPagination, page: 1 })
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="applied">Applied</option>
+                  <option value="shortlisted">Shortlisted</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            {loadingApplications ? (
+              <div className="p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-4 text-gray-600">Loading applications...</p>
+              </div>
+            ) : internshipApplications.length === 0 ? (
+              <div className="p-12 text-center">
+                <BriefcaseIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No applications found</p>
+                <p className="text-gray-400 text-sm mt-1">Students who apply for internships will appear here</p>
+              </div>
+            ) : (
+              <>
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Student Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        College
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Course
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Year
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Internship
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Applied Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {internshipApplications.map((application, index) => (
+                      <tr key={application._id || `${application.internshipId}-${application.studentId}-${index}`} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {application.studentName || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{application.studentEmail || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{application.phone || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500">{application.collegeName || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500">{application.course || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{application.year || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900">{application.internshipTitle || 'N/A'}</div>
+                          <div className="text-xs text-gray-400">{application.companyName || ''}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getApplicationStatusColor(application.status)}`}>
+                            {application.status || 'applied'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center gap-1">
+                          <CalendarIcon className="w-4 h-4" />
+                          {application.appliedAt
+                            ? new Date(application.appliedAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {/* Pagination */}
+                {applicationPagination.pages > 1 && (
+                  <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div className="text-sm text-gray-700">
+                      Showing {((applicationPagination.page - 1) * applicationPagination.limit) + 1} to{' '}
+                      {Math.min(applicationPagination.page * applicationPagination.limit, applicationPagination.total)} of{' '}
+                      {applicationPagination.total} results
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setApplicationPagination({ ...applicationPagination, page: applicationPagination.page - 1 })}
+                        disabled={applicationPagination.page === 1}
+                        className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        <ArrowLeftIcon className="w-4 h-4" />
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => setApplicationPagination({ ...applicationPagination, page: applicationPagination.page + 1 })}
+                        disabled={applicationPagination.page >= applicationPagination.pages}
+                        className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        Next
+                        <ArrowRightIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Recent Payments */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

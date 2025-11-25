@@ -53,15 +53,34 @@ export default function CertificationCourses() {
     try {
       // Check if user is logged in
       const token = localStorage.getItem('token')
-      const userData = localStorage.getItem('user')
       
-      if (!token || !userData) {
-        toast.info('Please login to enroll in courses')
-        window.location.hash = '#/auth'
+      if (!token) {
+        toast.info('Please sign in to enroll in courses')
+        // Preserve current page for redirect after login
+        const currentHash = window.location.hash || '#/courses/certifications'
+        window.location.href = `/#/auth?redirect=${encodeURIComponent(currentHash)}`
         return
       }
 
-      const user = JSON.parse(userData)
+      // Verify user data exists
+      const userData = localStorage.getItem('user')
+      if (!userData) {
+        toast.info('Please sign in to enroll in courses')
+        const currentHash = window.location.hash || '#/courses/certifications'
+        window.location.href = `/#/auth?redirect=${encodeURIComponent(currentHash)}`
+        return
+      }
+
+      let user
+      try {
+        user = JSON.parse(userData)
+      } catch (err) {
+        console.error('Error parsing user data:', err)
+        toast.info('Please sign in to enroll in courses')
+        const currentHash = window.location.hash || '#/courses/certifications'
+        window.location.href = `/#/auth?redirect=${encodeURIComponent(currentHash)}`
+        return
+      }
       
       // Check if user is a student
       if (user.role !== 'student') {

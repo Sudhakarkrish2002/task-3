@@ -147,6 +147,49 @@ export default function Auth() {
         toast.success(`Welcome back! ${role.charAt(0).toUpperCase() + role.slice(1)} login successful.`)
 
         const redirectAfterLogin = () => {
+          // Check for redirect parameter in URL
+          const hash = window.location.hash || ''
+          const search = window.location.search || ''
+          let redirectUrl = null
+          
+          // Try to get redirect from hash query params first
+          if (hash && hash.includes('?')) {
+            try {
+              const hashParts = hash.split('?')
+              if (hashParts.length > 1) {
+                const hashParams = new URLSearchParams(hashParts[1])
+                redirectUrl = hashParams.get('redirect')
+              }
+            } catch (e) {
+              console.error('Error parsing redirect from hash:', e)
+            }
+          }
+          
+          // Fallback to regular query params
+          if (!redirectUrl && search) {
+            try {
+              const urlParams = new URLSearchParams(search)
+              redirectUrl = urlParams.get('redirect')
+            } catch (e) {
+              console.error('Error parsing redirect from search:', e)
+            }
+          }
+          
+          // If redirect URL exists and is valid, use it
+          if (redirectUrl) {
+            try {
+              const decodedUrl = decodeURIComponent(redirectUrl)
+              // Validate it's a relative URL (security check)
+              if (decodedUrl.startsWith('#/') || decodedUrl.startsWith('/')) {
+                window.location.href = decodedUrl
+                return
+              }
+            } catch (e) {
+              console.error('Error decoding redirect URL:', e)
+            }
+          }
+          
+          // Default redirect based on role
           if (role === 'student') {
             window.location.hash = '#/dashboard/student'
           } else if (role === 'employer') {
@@ -262,6 +305,49 @@ export default function Auth() {
 
         const role = response.user.role
         const redirectAfterRegister = () => {
+          // Check for redirect parameter in URL
+          const hash = window.location.hash || ''
+          const search = window.location.search || ''
+          let redirectUrl = null
+          
+          // Try to get redirect from hash query params first
+          if (hash && hash.includes('?')) {
+            try {
+              const hashParts = hash.split('?')
+              if (hashParts.length > 1) {
+                const hashParams = new URLSearchParams(hashParts[1])
+                redirectUrl = hashParams.get('redirect')
+              }
+            } catch (e) {
+              console.error('Error parsing redirect from hash:', e)
+            }
+          }
+          
+          // Fallback to regular query params
+          if (!redirectUrl && search) {
+            try {
+              const urlParams = new URLSearchParams(search)
+              redirectUrl = urlParams.get('redirect')
+            } catch (e) {
+              console.error('Error parsing redirect from search:', e)
+            }
+          }
+          
+          // If redirect URL exists and is valid, use it
+          if (redirectUrl) {
+            try {
+              const decodedUrl = decodeURIComponent(redirectUrl)
+              // Validate it's a relative URL (security check)
+              if (decodedUrl.startsWith('#/') || decodedUrl.startsWith('/')) {
+                window.location.href = decodedUrl
+                return
+              }
+            } catch (e) {
+              console.error('Error decoding redirect URL:', e)
+            }
+          }
+          
+          // Default redirect based on role
           if (role === 'student') {
             window.location.hash = '#/dashboard/student'
           } else if (role === 'employer') {

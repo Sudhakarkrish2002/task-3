@@ -9,6 +9,7 @@ import CertificationCourses from './pages/CertificationCourses.jsx'
 import PlacementTraining from './pages/PlacementTraining.jsx'
 import Workshops from './pages/Workshops.jsx'
 import Internships from './pages/Internships.jsx'
+import InternshipApplication from './pages/InternshipApplication.jsx'
 import Employers from './pages/Employers.jsx'
 import CollegeRegistration from './pages/CollegeRegistration.jsx'
 import StudentMembership from './pages/StudentMembership.jsx'
@@ -44,6 +45,7 @@ const routes = {
   '#/courses/placement': <PlacementTraining />,
   '#/courses/workshops': <Workshops />,
   '#/internships': <Internships />,
+  '#/internship-application': <InternshipApplication />,
   '#/employers': <Employers />,
   '#/auth': <Auth />,
   '#/college-registration': <CollegeRegistration />,

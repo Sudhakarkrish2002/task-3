@@ -319,7 +319,6 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
               }`}
               style={{ top: `${bannerHeight + navHeight}px` }}
               onClick={(e) => e.stopPropagation()}
-              aria-hidden={!isMobileMenuOpen}
             >
               <a
                 href="#/search"

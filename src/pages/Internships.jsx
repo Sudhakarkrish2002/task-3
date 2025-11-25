@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { internshipAPI } from '../utils/api.js'
+import { internshipAPI, authAPI } from '../utils/api.js'
+import { toast } from 'react-toastify'
 
 const formatPostedLabel = (isoDate) => {
   if (!isoDate) return 'Recently'
@@ -18,10 +19,28 @@ export default function Internships() {
   const [internships, setInternships] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedInternship, setSelectedInternship] = useState(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
 
   useEffect(() => {
     loadInternships()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        const response = await authAPI.getMe()
+        if (response.success && response.data) {
+          setCurrentUser(response.data)
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err)
+      }
+    }
+  }
 
   const loadInternships = async () => {
     setLoading(true)
@@ -55,6 +74,52 @@ export default function Internships() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleViewMore = (internship) => {
+    // Use the existing internship data directly - no need for API call
+    // since we already have all the details from the list
+    setSelectedInternship(internship)
+    setShowDetailsModal(true)
+  }
+
+  const handleApplyClick = (internship) => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.info('Please sign in to apply for internships')
+      const redirectUrl = `/#/internship-application?id=${internship._id || internship.id}`
+      window.location.href = `/#/auth?redirect=${encodeURIComponent(redirectUrl)}`
+      return
+    }
+    
+    // Verify user data exists
+    const userData = localStorage.getItem('user')
+    if (!userData) {
+      toast.info('Please sign in to apply for internships')
+      const redirectUrl = `/#/internship-application?id=${internship._id || internship.id}`
+      window.location.href = `/#/auth?redirect=${encodeURIComponent(redirectUrl)}`
+      return
+    }
+
+    // Redirect to application page with internship ID
+    window.location.href = `/#/internship-application?id=${internship._id || internship.id}`
+  }
+
+
+  const formatStipend = (stipend) => {
+    if (!stipend) return 'Stipend info on selection'
+    if (typeof stipend === 'object' && stipend.amount) {
+      const currency = stipend.currency || 'INR'
+      const amount = stipend.amount
+      if (stipend.type === 'unpaid') {
+        return 'Unpaid'
+      } else if (stipend.type === 'performance-based') {
+        return `Performance-based (${currency === 'INR' ? '₹' : currency} ${amount})`
+      } else {
+        return `${currency === 'INR' ? '₹' : currency} ${amount}/month`
+      }
+    }
+    return 'Stipend info on selection'
   }
 
   return (
@@ -265,10 +330,21 @@ export default function Internships() {
                   <div className="text-xs text-gray-500">
                     {internship.applicationsReceived ? `${internship.applicationsReceived} applicants` : 'Be the first to apply'}
                   </div>
-                  <button className="rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
-                    <span className="relative z-10">Apply Now</span>
-                    <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleViewMore(internship)}
+                      className="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
+                    >
+                      View More
+                    </button>
+                    <button
+                      onClick={() => handleApplyClick(internship)}
+                      className="rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden"
+                    >
+                      <span className="relative z-10">Apply Now</span>
+                      <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -277,6 +353,182 @@ export default function Internships() {
           )}
         </div>
       </section>
+
+      {/* Internship Details Modal */}
+      {showDetailsModal && selectedInternship && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b border-gray-200 bg-gray-50 sticky top-0">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedInternship.title}</h2>
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false)
+                    setSelectedInternship(null)
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-lg font-semibold text-primary-700 mt-2">
+                {typeof selectedInternship.company === 'object' && selectedInternship.company
+                  ? (selectedInternship.company.employerDetails?.companyName || selectedInternship.company.name || selectedInternship.companyName)
+                  : (selectedInternship.companyName || 'Company')}
+              </p>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.location || 'N/A'}</p>
+                  {selectedInternship.isRemote && (
+                    <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">Remote</span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Type</label>
+                  <p className="mt-1 text-sm text-gray-900 capitalize">{selectedInternship.type || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Duration</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.duration || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Stipend</label>
+                  <p className="mt-1 text-sm text-gray-900">{formatStipend(selectedInternship.stipend)}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Application Deadline</label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {selectedInternship.applicationDeadline
+                      ? new Date(selectedInternship.applicationDeadline).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {selectedInternship.startDate
+                      ? new Date(selectedInternship.startDate).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : 'To be discussed'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Positions Available</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.positionsAvailable || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Applications Received</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.applicationsReceived || 0}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Category</label>
+                  <p className="mt-1 text-sm text-gray-900 capitalize">{selectedInternship.category || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Full Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedInternship.description || 'No description provided.'}</p>
+              </div>
+
+              {/* Qualifications */}
+              {selectedInternship.qualifications && selectedInternship.qualifications.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Qualifications</label>
+                  <ul className="list-disc list-inside space-y-1">
+                    {selectedInternship.qualifications.map((qual, idx) => (
+                      <li key={idx} className="text-sm text-gray-900">{qual}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Responsibilities */}
+              {selectedInternship.responsibilities && selectedInternship.responsibilities.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Responsibilities</label>
+                  <ul className="list-disc list-inside space-y-1">
+                    {selectedInternship.responsibilities.map((resp, idx) => (
+                      <li key={idx} className="text-sm text-gray-900">{resp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Benefits */}
+              {selectedInternship.benefits && selectedInternship.benefits.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Benefits</label>
+                  <ul className="list-disc list-inside space-y-1">
+                    {selectedInternship.benefits.map((benefit, idx) => (
+                      <li key={idx} className="text-sm text-gray-900">{benefit}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Skills Required */}
+              {selectedInternship.skillsRequired && selectedInternship.skillsRequired.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Skills Required</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedInternship.skillsRequired.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags */}
+              {selectedInternship.tags && selectedInternship.tags.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedInternship.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Apply Button */}
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => handleApplyClick(selectedInternship)}
+                  className="w-full rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-lg hover:bg-primary-700 hover:shadow-xl"
+                >
+                  Apply Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   )
 }
