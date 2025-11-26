@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { workshopAPI } from '../utils/api.js'
 
 const formatDate = (dateString) => {
@@ -9,6 +10,7 @@ const formatDate = (dateString) => {
 }
 
 export default function Workshops() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [workshops, setWorkshops] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -24,6 +26,45 @@ export default function Workshops() {
   useEffect(() => {
     loadWorkshops()
   }, [])
+
+  // Check for workshop ID in URL after redirect from auth
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user && workshops.length > 0) {
+      const hash = window.location.hash || ''
+      // Parse workshopId from URL (format: #/courses/workshops?workshopId=xxx)
+      const hashParts = hash.split('?')
+      if (hashParts.length > 1) {
+        const urlParams = new URLSearchParams(hashParts[1])
+        const workshopId = urlParams.get('workshopId')
+        
+        if (workshopId) {
+          const workshop = workshops.find(w => {
+            const id = w._id || w.id
+            return id && id.toString() === workshopId.toString()
+          })
+          
+          if (workshop && !selectedWorkshop) {
+            setSelectedWorkshop(workshop)
+            // Pre-fill form with user data
+            setFormData({
+              name: user.name || '',
+              email: user.email || '',
+              phone: user.phone || '+91',
+              company: user.company || user.employerDetails?.companyName || ''
+            })
+            // Scroll to form
+            setTimeout(() => {
+              if (formRef.current) {
+                formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            }, 100)
+            // Clean up URL
+            window.history.replaceState(null, '', '#/courses/workshops')
+          }
+        }
+      }
+    }
+  }, [authLoading, isAuthenticated, user, workshops, selectedWorkshop])
 
   const loadWorkshops = async () => {
     setLoading(true)
@@ -60,8 +101,24 @@ export default function Workshops() {
   }
 
   const handleWorkshopSelect = (workshop) => {
+    // Check if user is authenticated before allowing workshop selection
+    if (!isAuthenticated || !user) {
+      toast.info('Please sign in to register for workshops')
+      const workshopId = workshop._id || workshop.id
+      const redirectUrl = `/#/courses/workshops?workshopId=${workshopId}`
+      window.location.href = `/#/auth?redirect=${encodeURIComponent(redirectUrl)}`
+      return
+    }
+
+    // User is authenticated, proceed with selection
     setSelectedWorkshop(workshop)
-    setFormData({ name: '', email: '', phone: '+91', company: '' })
+    // Pre-fill form with user data
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '+91',
+      company: user.company || user.employerDetails?.companyName || ''
+    })
     if (formRef.current) {
       formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -71,12 +128,58 @@ export default function Workshops() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (selectedWorkshop) {
-      toast.success(`Registration successful! You've registered for "${selectedWorkshop.title}". Check your email for confirmation.`)
-      setFormData({ name: '', email: '', phone: '+91', company: '' })
-      setSelectedWorkshop(null)
+    
+    if (!selectedWorkshop) {
+      toast.error('Please select a workshop first')
+      return
+    }
+
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      toast.info('Please sign in to register for workshops')
+      const workshopId = selectedWorkshop._id || selectedWorkshop.id
+      const redirectUrl = `/#/courses/workshops?workshopId=${workshopId}`
+      window.location.href = `/#/auth?redirect=${encodeURIComponent(redirectUrl)}`
+      return
+    }
+
+    // Validate form fields
+    if (!formData.name || !formData.email || !formData.phone) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    try {
+      const workshopId = selectedWorkshop._id || selectedWorkshop.id
+      const response = await workshopAPI.registerForWorkshop(workshopId, {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        company: formData.company.trim() || ''
+      })
+
+      if (response.success) {
+        toast.success(`Registration successful! You've registered for "${selectedWorkshop.title}".`)
+        setFormData({ name: '', email: '', phone: '+91', company: '' })
+        setSelectedWorkshop(null)
+        // Reload workshops to update participant count
+        loadWorkshops()
+      } else {
+        throw new Error(response.message || 'Registration failed')
+      }
+    } catch (error) {
+      console.error('Error registering for workshop:', error)
+      const errorMessage = error.message || error.data?.message || 'Failed to register for workshop. Please try again.'
+      toast.error(errorMessage)
     }
   }
 

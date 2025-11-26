@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { AuthProvider } from './contexts/AuthContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -149,9 +150,10 @@ export default function App() {
   const Content = routes[routeHash] || <Home />
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Discount Banner - Only shows on home page */}
-      {showBanner && (
+    <AuthProvider>
+      <div className="min-h-screen flex flex-col bg-white">
+        {/* Discount Banner - Only shows on home page */}
+        {showBanner && (
         <div
           id="promo-banner"
           className="fixed top-0 left-0 right-0 z-100 bg-black text-white py-2 sm:py-3 px-2 sm:px-4 flex items-center justify-center w-full overflow-x-hidden"
@@ -189,7 +191,8 @@ export default function App() {
         </PageTransition>
       </div>
       <Footer />
-    </div>
+      </div>
+    </AuthProvider>
   )
 }
 

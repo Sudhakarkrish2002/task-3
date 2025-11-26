@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
 const mainMenuItems = [
   { label: 'Home', hash: '#/' },
@@ -24,8 +25,7 @@ const flatMenuItems = mainMenuItems.flatMap((item) =>
 )
 
 export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHeight = 80 }) {
-  const [user, setUser] = useState(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { user, isAuthenticated, logout } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState(null)
   const mobileMenuRef = useRef(null)
@@ -33,23 +33,9 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
   const desktopNavRef = useRef(null)
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('token')
-      const userData = localStorage.getItem('user')
-      if (token && userData) {
-        setIsLoggedIn(true)
-        setUser(JSON.parse(userData))
-      } else {
-        setIsLoggedIn(false)
-        setUser(null)
-      }
-    }
-
-    checkAuth()
-    // Check auth on hash change (when user logs in/out)
+    // Close menu on navigation
     const handleHashChange = () => {
-      checkAuth()
-      setIsMobileMenuOpen(false) // Close menu on navigation
+      setIsMobileMenuOpen(false)
     }
     window.addEventListener('hashchange', handleHashChange)
     
@@ -117,7 +103,7 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
   // Check if we should show Dashboard/Logout buttons
   // Only show on public pages for students, or on dashboard pages for any role
   const shouldShowAuthButtons = () => {
-    if (!isLoggedIn || !user) return false
+    if (!isAuthenticated || !user) return false
     
     const currentHash = window.location.hash || '#/'
     const isOnDashboardPage = currentHash.includes('/dashboard/') || currentHash.includes('/admin/')
@@ -132,10 +118,7 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setIsLoggedIn(false)
-    setUser(null)
+    logout()
     window.location.hash = '#/'
   }
 

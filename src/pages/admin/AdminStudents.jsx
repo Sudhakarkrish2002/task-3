@@ -144,7 +144,7 @@ export default function AdminStudents() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
                 <SearchIcon className="w-4 h-4" />
                 Search
               </label>
@@ -172,6 +172,7 @@ export default function AdminStudents() {
                 <option value="all">All</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
+                <option value="unverified">Unverified</option>
               </select>
             </div>
             <div>

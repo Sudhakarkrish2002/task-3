@@ -69,6 +69,15 @@ const apiRequest = async (endpoint, options = {}) => {
     });
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401) {
+        // Clear auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Dispatch custom event to notify AuthContext
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+      }
+      
       // Create an error with more details
       const error = new Error(data.message || data.error || 'An error occurred');
       error.status = response.status;
@@ -339,13 +348,13 @@ export const workshopAPI = {
     return apiRequest(`/workshops/${workshopId}`);
   },
 
-  // Get my workshops (employer/content_writer/admin)
+  // Get my workshops (employer/admin)
   getMyWorkshops: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
     return apiRequest(`/workshops/my-workshops/list${queryParams ? `?${queryParams}` : ''}`);
   },
 
-  // Create workshop (admin)
+  // Create workshop (admin/employer)
   createWorkshop: async (workshopData) => {
     return apiRequest('/workshops', {
       method: 'POST',
@@ -353,11 +362,19 @@ export const workshopAPI = {
     });
   },
 
-  // Update workshop (admin)
+  // Update workshop (admin/employer)
   updateWorkshop: async (workshopId, workshopData) => {
     return apiRequest(`/workshops/${workshopId}`, {
       method: 'PUT',
       body: JSON.stringify(workshopData),
+    });
+  },
+
+  // Register for workshop (authenticated users)
+  registerForWorkshop: async (workshopId, registrationData) => {
+    return apiRequest(`/workshops/${workshopId}/register`, {
+      method: 'POST',
+      body: JSON.stringify(registrationData),
     });
   },
 
@@ -372,6 +389,14 @@ export const workshopAPI = {
   publishWorkshop: async (workshopId) => {
     return apiRequest(`/workshops/${workshopId}/publish`, {
       method: 'PUT',
+    });
+  },
+
+  // Update workshop registration status (admin)
+  updateRegistrationStatus: async (workshopId, registrationId, status) => {
+    return apiRequest(`/admin/workshops/${workshopId}/registrations/${registrationId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
     });
   },
 };
@@ -572,6 +597,12 @@ export const adminAPI = {
       method: 'PUT',
       body: JSON.stringify({ action, rejectionReason }),
     });
+  },
+
+  // Workshop Registration Management
+  getAllWorkshopRegistrations: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/workshops/registrations${queryParams ? `?${queryParams}` : ''}`);
   },
 
   // User Verification

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { authAPI } from '../utils/api.js'
 
 export default function Auth() {
+  const { login } = useAuth()
+  
   // Get tab from URL parameter (supports both hash query params and regular query params)
   const getTabFromURL = () => {
     try {
@@ -139,9 +142,8 @@ export default function Auth() {
           return
         }
         
-        // Store token and user data
-        localStorage.setItem('token', response.token)
-        localStorage.setItem('user', JSON.stringify(response.user))
+        // Use AuthContext login function to store token and user data
+        login(response.token, response.user)
         
         // Show success message
         toast.success(`Welcome back! ${role.charAt(0).toUpperCase() + role.slice(1)} login successful.`)
@@ -297,9 +299,8 @@ export default function Auth() {
       const response = await authAPI.register(registrationPayload)
 
       if (response.success) {
-        // Store token and user data
-        localStorage.setItem('token', response.token)
-        localStorage.setItem('user', JSON.stringify(response.user))
+        // Use AuthContext login function to store token and user data
+        login(response.token, response.user)
         
         toast.success(`Congratulations! Your ${activeTab} account has been created successfully.`)
 

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 /**
  * ProtectedRoute Component
@@ -11,48 +12,29 @@ import React, { useEffect, useState } from 'react';
  * @param {React.ComponentType} fallback - Component to render while checking auth (optional)
  */
 export default function ProtectedRoute({ children, requiredRole, fallback = null }) {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
+    // Wait for auth context to finish loading
+    if (isLoading) {
+      return;
+    }
 
-        if (!token || !userData) {
-          // Not authenticated, redirect to login
-          setIsAuthorized(false);
-          setIsLoading(false);
-          window.location.hash = '#/auth';
-          return;
-        }
+    // If not authenticated, redirect to login
+    if (!isAuthenticated) {
+      window.location.hash = '#/auth';
+      return;
+    }
 
-        const user = JSON.parse(userData);
+    // Check if user has the required role
+    if (requiredRole && user && user.role !== requiredRole) {
+      // User doesn't have required role, redirect to home
+      window.location.hash = '#/';
+      return;
+    }
+  }, [isAuthenticated, isLoading, user, requiredRole]);
 
-        // Check if user has the required role
-        if (requiredRole && user.role !== requiredRole) {
-          // User doesn't have required role, redirect to home
-          setIsAuthorized(false);
-          setIsLoading(false);
-          window.location.hash = '#/';
-          return;
-        }
-
-        // Authorized
-        setIsAuthorized(true);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        setIsAuthorized(false);
-        setIsLoading(false);
-        window.location.hash = '#/auth';
-      }
-    };
-
-    checkAuth();
-  }, [requiredRole]);
-
+  // Show loading state while auth context is validating
   if (isLoading) {
     if (fallback) {
       return fallback;
@@ -67,7 +49,8 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
     );
   }
 
-  if (!isAuthorized) {
+  // If not authenticated or wrong role, don't render children
+  if (!isAuthenticated || (requiredRole && user && user.role !== requiredRole)) {
     return null;
   }
 
