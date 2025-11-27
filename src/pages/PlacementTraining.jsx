@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { courseAPI } from '../utils/api.js'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
+import { getDisplayStudentCount, formatStudentCount } from '../utils/courseUtils.js'
 
 const successStories = [
   {
@@ -35,20 +36,6 @@ const successMetrics = [
   { label: 'Hiring Partners', value: '500+', description: 'Companies actively hiring our graduates' },
   { label: 'Students Placed', value: '15,000+', description: 'Total students successfully placed' },
 ]
-
-const deriveFeatures = (course) => {
-  if (Array.isArray(course.features) && course.features.length) return course.features
-  if (Array.isArray(course.keyHighlights) && course.keyHighlights.length) return course.keyHighlights
-  if (Array.isArray(course.learningOutcomes) && course.learningOutcomes.length) return course.learningOutcomes
-  if (course.description) {
-    return course.description
-      .split('.')
-      .map((sentence) => sentence.trim())
-      .filter(Boolean)
-      .slice(0, 4)
-  }
-  return []
-}
 
 export default function PlacementTraining() {
   const [placementCourses, setPlacementCourses] = useState([])
@@ -196,10 +183,10 @@ export default function PlacementTraining() {
         ></div>
         <div className="absolute inset-0 bg-linear-to-r from-primary-900/75 to-primary-700/60"></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
             Placement-Guaranteed Training Programs
           </h1>
-          <p className="mt-4 text-lg text-white/95 drop-shadow-md">
+          <p className="mt-3 text-sm text-white/95 drop-shadow-md">
             Get job-ready with our comprehensive training and dedicated placement support
           </p>
         </div>
@@ -305,72 +292,77 @@ export default function PlacementTraining() {
               <p className="text-gray-600">No placement-guaranteed programs are published yet. Please check back soon.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {placementCourses.map((course) => {
                 const courseId = course._id || course.id
-                const tagline = course.tagline || course.shortDescription || 'Placement-focused program'
                 const placementRate = course.placementRate || course.successRate || 'Guaranteed support'
-                const avgSalary = course.avgSalary || course.averageSalary || 'Top industry packages'
-                const features = deriveFeatures(course)
                 return (
                   <div
                     key={courseId}
-                    className="bg-white rounded-xl border-2 border-primary-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
                     {/* Course Thumbnail */}
                     {course.thumbnail ? (
-                      <div className="w-full bg-gray-100 flex items-center justify-center py-3" style={{ maxHeight: '300px' }}>
+                      <div className="w-full bg-gray-100 flex items-center justify-center py-2" style={{ maxHeight: '200px' }}>
                         <img
                           src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
                           alt={course.title}
-                          className="h-auto w-auto max-h-72 object-contain"
-                          style={{ maxHeight: '300px' }}
+                          className="h-auto w-auto max-h-48 object-contain"
+                          style={{ maxHeight: '200px' }}
                           onError={(e) => {
                             e.target.style.display = 'none'
-                            e.target.parentElement.className = 'w-full h-48 bg-gray-100 flex items-center justify-center'
-                            e.target.parentElement.innerHTML = '<svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>'
+                            e.target.parentElement.className = 'w-full h-32 bg-gray-100 flex items-center justify-center'
+                            e.target.parentElement.innerHTML = '<svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>'
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                        <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
                     )}
 
-                    <div className="p-6 flex flex-col h-full">
+                    <div className="p-5 flex flex-col h-full">
                       <div className="flex-1 flex flex-col">
                         {/* Course Header */}
-                        <div className="mb-4">
+                        <div className="mb-3">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                              Placement Guaranteed
+                            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 min-h-14 flex-1">{course.title}</h3>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 ml-2 shrink-0">
+                              Placement
                             </span>
                           </div>
-                          <div className="mt-2 p-3 rounded-lg bg-primary-50 border border-primary-200">
-                            <div className="text-sm font-semibold text-primary-900">{tagline}</div>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-3">{course.description || 'Program details coming soon.'}</p>
+                          <p className="text-xs text-gray-600 line-clamp-2">{course.shortDescription || course.description}</p>
                         </div>
 
+                        {/* Focus Areas - Tags */}
+                        {course.tags && Array.isArray(course.tags) && course.tags.length > 0 && (
+                          <div className="mb-3">
+                            <div className="flex flex-wrap gap-1.5">
+                              {course.tags.slice(0, 3).map((tag, idx) => (
+                                <span
+                                  key={`${courseId}-tag-${idx}`}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Course Stats */}
-                        <div className="grid grid-cols-2 gap-4 mb-3 pb-3 border-b border-gray-200">
+                        <div className="grid grid-cols-2 gap-3 mb-4 pb-3 border-b border-gray-200">
                           <div>
                             <div className="text-xs text-gray-500 mb-1">Duration</div>
-                            <div className="text-sm font-semibold text-gray-900">{course.duration || 'Flexible'}</div>
+                            <div className="text-sm font-semibold text-gray-900 truncate">{course.duration || 'Flexible'}</div>
                           </div>
                           <div>
                             <div className="text-xs text-gray-500 mb-1">Price</div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1">
-                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-sm font-semibold text-gray-900">{formatPrice(course.price)}</span>
-                              </div>
+                            <div className="flex flex-col">
+                              <div className="text-sm font-semibold text-gray-900">{formatPrice(course.price)}</div>
                               {course.originalPrice && (
                                 <span className="text-xs text-gray-500 line-through">
                                   {formatPrice(course.originalPrice)}
@@ -379,50 +371,33 @@ export default function PlacementTraining() {
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Placement Rate</div>
-                            <div className="text-sm font-semibold text-green-700">{placementRate}</div>
+                            <div className="text-xs text-gray-500 mb-1">Students</div>
+                            <div className="text-sm font-semibold text-gray-900 truncate">
+                              {formatStudentCount(getDisplayStudentCount(course))}
+                            </div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Average Salary</div>
-                            <div className="text-sm font-semibold text-gray-900">{avgSalary}</div>
+                            <div className="text-xs text-gray-500 mb-1">Placement Rate</div>
+                            <div className="text-sm font-semibold text-green-700 truncate">{placementRate}</div>
                           </div>
                         </div>
-
-                        {/* Course Features */}
-                        {features.length > 0 && (
-                          <div className="mb-4">
-                            <h4 className="text-sm font-semibold text-gray-900 mb-3">Program Features:</h4>
-                            <ul className="space-y-2">
-                              {features.map((feature, idx) => (
-                                <li key={`${courseId}-feature-${idx}`} className="flex items-start gap-2 text-sm text-gray-600">
-                                  <svg className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span>{feature}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
                       </div>
 
                       {/* Action Buttons - pinned to bottom */}
-                      <div className="mt-2 flex gap-3">
+                      <div className="mt-auto flex gap-2">
                         <button
                           onClick={() => handleViewSyllabus(course)}
-                          className="flex-1 rounded-lg border-2 border-primary-600 px-4 py-3 text-primary-700 text-sm font-semibold transition-all duration-300 ease-in-out shadow-md hover:scale-105 hover:bg-primary-50 hover:shadow-xl hover:shadow-primary-400/30 relative overflow-hidden"
+                          className="flex-1 rounded-lg border-2 border-primary-600 px-3 py-2.5 text-primary-700 text-xs font-semibold transition-all hover:bg-primary-50"
                         >
-                          <span className="relative z-10 flex items-center justify-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <span className="flex items-center justify-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             View More
                           </span>
-                          <span className="absolute inset-0 bg-linear-to-br from-primary-50 to-primary-100 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                         </button>
-                        <button className="flex-1 rounded-lg bg-primary-600 px-6 py-4 text-white text-base font-bold transition-all duration-300 ease-in-out shadow-2xl shadow-primary-600/50 hover:scale-105 hover:bg-primary-700 hover:shadow-[0_25px_60px_rgba(147,51,234,0.7)] relative overflow-hidden">
-                          <span className="relative z-10">Enroll Now</span>
-                          <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-800 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+                        <button className="flex-1 rounded-lg bg-primary-600 px-4 py-2.5 text-white text-sm font-bold transition-all hover:bg-primary-700">
+                          Enroll Now
                         </button>
                       </div>
                     </div>
@@ -599,4 +574,5 @@ export default function PlacementTraining() {
     </main>
   )
 }
+
 

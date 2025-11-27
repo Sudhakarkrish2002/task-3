@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const articles = [
   {
@@ -102,10 +102,19 @@ const formatDate = (dateString) => {
 
 export default function Blog() {
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [displayLimit, setDisplayLimit] = useState(6)
 
   const filteredArticles = selectedCategory === 'All' 
     ? articles 
     : articles.filter(article => article.category === selectedCategory)
+  
+  const displayedArticles = filteredArticles.slice(0, displayLimit)
+  const hasMore = filteredArticles.length > displayLimit
+
+  // Reset display limit when category changes
+  useEffect(() => {
+    setDisplayLimit(6)
+  }, [selectedCategory])
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -143,7 +152,7 @@ export default function Blog() {
             ))}
           </div>
           <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''}
+            Showing {displayedArticles.length} of {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''}
           </div>
         </div>
       </section>
@@ -156,59 +165,75 @@ export default function Blog() {
               <p className="text-gray-600">No articles found in this category.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article) => (
-                <article
-                  key={article.id}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                >
-                  {/* Article Image Placeholder */}
-                  <div className="h-48 bg-linear-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">📄</div>
-                      <div className="text-xs font-semibold text-primary-700 uppercase tracking-wide">
-                        {article.category}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Article Content */}
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-800">
-                        {article.category}
-                      </span>
-                      <span className="text-xs text-gray-500">{article.readTime}</span>
-                    </div>
-
-                    <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                      {article.title}
-                    </h2>
-
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                      {article.excerpt}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-xs font-semibold text-gray-700">
-                            {article.author.split(' ').map(n => n[0]).join('')}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-gray-900">{article.author}</div>
-                          <div className="text-xs text-gray-500">{formatDate(article.date)}</div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayedArticles.map((article) => (
+                  <article
+                    key={article.id}
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  >
+                    {/* Article Image Placeholder */}
+                    <div className="h-48 bg-linear-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2">📄</div>
+                        <div className="text-xs font-semibold text-primary-700 uppercase tracking-wide">
+                          {article.category}
                         </div>
                       </div>
-                      <button className="text-primary-700 hover:text-primary-800 font-medium text-sm transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block">
-                        Read More →
-                      </button>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+
+                    {/* Article Content */}
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-800">
+                          {article.category}
+                        </span>
+                        <span className="text-xs text-gray-500">{article.readTime}</span>
+                      </div>
+
+                      <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                        {article.title}
+                      </h2>
+
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        {article.excerpt}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-gray-700">
+                              {article.author.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-xs font-semibold text-gray-900">{article.author}</div>
+                            <div className="text-xs text-gray-500">{formatDate(article.date)}</div>
+                          </div>
+                        </div>
+                        <a
+                          href={`#/blog/detail?id=${article.id}`}
+                          className="text-primary-700 hover:text-primary-800 font-medium text-sm transition-all duration-300 ease-in-out hover:font-bold hover:shadow-sm inline-block"
+                        >
+                          Read More →
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              
+              {hasMore && (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={() => setDisplayLimit(filteredArticles.length)}
+                    className="inline-flex items-center justify-center rounded-lg bg-primary-600 px-6 py-3 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-lg hover:scale-105 hover:bg-primary-700"
+                  >
+                    Load More Articles ({filteredArticles.length - displayLimit} remaining)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

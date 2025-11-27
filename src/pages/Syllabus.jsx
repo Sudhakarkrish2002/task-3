@@ -464,53 +464,53 @@ export default function Syllabus() {
               </div>
 
               {/* Course Title */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight drop-shadow-2xl">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 text-white leading-tight drop-shadow-2xl">
                 <span className="bg-linear-to-r from-white to-white/80 bg-clip-text text-transparent">
                   {course.title}
                 </span>
               </h1>
 
               {/* Course Benefits */}
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-3 mb-6">
                 {course.syllabus?.overview && (
-                  <li className="flex items-start gap-4 group">
-                    <div className="mt-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/50">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <li className="flex items-start gap-3 group">
+                    <div className="mt-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/50">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-lg sm:text-xl text-white font-medium leading-relaxed">
+                    <span className="text-sm sm:text-base text-white font-medium leading-relaxed">
                       {course.syllabus.overview.split('.')[0]}.
                     </span>
                   </li>
                 )}
-                <li className="flex items-start gap-4 group">
-                  <div className="mt-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/50">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <li className="flex items-start gap-3 group">
+                  <div className="mt-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-green-500/50">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-lg sm:text-xl text-white font-medium leading-relaxed">
+                  <span className="text-sm sm:text-base text-white font-medium leading-relaxed">
                     Includes placement assistance with guaranteed job support
                   </span>
                 </li>
               </ul>
 
               {/* Course Duration & Info */}
-              <div className="mb-8 flex flex-wrap items-center gap-6">
+              <div className="mb-6 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-primary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-primary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="text-base sm:text-lg text-white font-medium">
+                  <span className="text-sm sm:text-base text-white font-medium">
                     {course.duration || '6 weeks'} online course
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-primary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-primary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                  <span className="text-base sm:text-lg text-white font-medium">1 hour/day</span>
+                  <span className="text-sm sm:text-base text-white font-medium">1 hour/day</span>
                 </div>
               </div>
 
@@ -660,17 +660,17 @@ export default function Syllabus() {
          {/* Placement Assistance Section - Enhanced for Placement Guaranteed Courses */}
         {isPlacementGuaranteed ? (
             <section id="placement-section" className="mb-12 sm:mb-16 bg-linear-to-br from-green-50 via-blue-50 to-purple-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-green-200">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 text-center">
                   100% Placement Guarantee
                 </h2>
               </div>
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                     <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -781,10 +781,10 @@ export default function Syllabus() {
             </section>
         ) : (
         <section className="mb-12 sm:mb-16 bg-gray-50 rounded-2xl p-6 sm:p-8 lg:p-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
             What placement assistance will you receive?
           </h2>
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-center">
             <div className="hidden md:block order-2">
               <div className="bg-linear-to-br from-green-100 to-blue-100 rounded-2xl p-8 h-full flex items-center justify-center">
                 <div className="text-center">
@@ -821,17 +821,17 @@ export default function Syllabus() {
 
         {!isPlacementGuaranteed && (
           <section id="placement-section" className="mb-12 sm:mb-16 bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-blue-200">
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 text-center">
                 Placement Assistance
               </h2>
             </div>
-            <div className="space-y-6">
+            <div className="max-w-3xl mx-auto space-y-6">
               <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                 <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -874,7 +874,7 @@ export default function Syllabus() {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-8 sm:mb-10 text-center">
             How will your training work?
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -940,11 +940,11 @@ export default function Syllabus() {
         {/* AI Tools Section */}
         {course.syllabus && course.syllabus.aiTools && course.syllabus.aiTools.length > 0 && (
           <section className="mb-12 sm:mb-16 bg-primary-50 rounded-2xl p-6 sm:p-8 lg:p-10">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
               How will your tech career become future-proof with AI tools in this course?
               <span className="ml-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">NEW</span>
             </h2>
-            <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
                 {course.syllabus.aiTools.slice(0, 2).map((tool, idx) => (
                   <div key={idx} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
@@ -979,7 +979,7 @@ export default function Syllabus() {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-8 sm:mb-10 text-center">
             Why learn with KiwisEdutech?
           </h2>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
+          <div className="max-w-5xl mx-auto bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -1145,7 +1145,7 @@ export default function Syllabus() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
                 Comprehensive Career Support Services
               </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
                     <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1316,7 +1316,7 @@ export default function Syllabus() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
                 Your Success is Our Mission
               </h2>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mb-8">
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1402,17 +1402,18 @@ export default function Syllabus() {
 
             {/* Comprehensive Course Syllabus Section */}
             <section className="mb-12 sm:mb-16 bg-white rounded-2xl border-2 border-primary-200 p-6 sm:p-8 lg:p-10">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 text-center">
                   Comprehensive Course Syllabus
                 </h2>
               </div>
-              <p className="text-gray-700 text-lg mb-6">
+              <div className="max-w-4xl mx-auto">
+              <p className="text-gray-700 text-lg mb-6 text-center">
                 Our placement guaranteed course includes industry-relevant curriculum designed by experts from top tech companies. 
                 Every module includes hands-on projects that you can showcase in your portfolio.
               </p>
@@ -1457,13 +1458,14 @@ export default function Syllabus() {
                   </div>
                 </div>
               </div>
+              </div>
             </section>
           </>
         )}
 
         {/* Course Syllabus Section */}
-        <div id="syllabus-section">
-        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 wrap-break-words">
+        <div id="syllabus-section" className="max-w-4xl mx-auto">
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 wrap-break-words text-center">
           Course Syllabus
         </h2>
 

@@ -575,48 +575,66 @@ export default function Auth() {
                       Student
                     </button>
                   )}
-                  <button
-                    onClick={() => {
-                      setActiveTab('employer')
-                      setError('')
-                      window.location.hash = '#/auth?tab=employer'
-                    }}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      activeTab === 'employer'
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'text-gray-600 hover:bg-white'
-                    }`}
-                  >
-                    Employer
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('college')
-                      setError('')
-                      window.location.hash = '#/auth?tab=college'
-                    }}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      activeTab === 'college'
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'text-gray-600 hover:bg-white'
-                    }`}
-                  >
-                    College
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('admin')
-                      setError('')
-                      window.location.hash = '#/auth?tab=admin'
-                    }}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      activeTab === 'admin'
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'text-gray-600 hover:bg-white'
-                    }`}
-                  >
-                    Admin
-                  </button>
+                  {activeTab === 'employer' ? (
+                    <button
+                      className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold bg-primary-600 text-white shadow-md"
+                      disabled
+                    >
+                      Employer
+                    </button>
+                  ) : activeTab === 'college' ? (
+                    <button
+                      className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold bg-primary-600 text-white shadow-md"
+                      disabled
+                    >
+                      College
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setActiveTab('employer')
+                          setError('')
+                          window.location.hash = '#/auth?tab=employer'
+                        }}
+                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          activeTab === 'employer'
+                            ? 'bg-primary-600 text-white shadow-md'
+                            : 'text-gray-600 hover:bg-white'
+                        }`}
+                      >
+                        Employer
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveTab('college')
+                          setError('')
+                          window.location.hash = '#/auth?tab=college'
+                        }}
+                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          activeTab === 'college'
+                            ? 'bg-primary-600 text-white shadow-md'
+                            : 'text-gray-600 hover:bg-white'
+                        }`}
+                      >
+                        College
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveTab('admin')
+                          setError('')
+                          window.location.hash = '#/auth?tab=admin'
+                        }}
+                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          activeTab === 'admin'
+                            ? 'bg-primary-600 text-white shadow-md'
+                            : 'text-gray-600 hover:bg-white'
+                        }`}
+                      >
+                        Admin
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 

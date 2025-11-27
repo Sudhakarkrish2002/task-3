@@ -191,10 +191,10 @@ export default function Workshops() {
       {/* Header */}
       <section className="bg-linear-to-br from-primary-50 to-white border-b border-primary-200 pt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Hands-On Workshops for Skill Boost
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-3 text-sm text-gray-600">
             Join our expert-led workshops and enhance your skills with hands-on learning
           </p>
         </div>

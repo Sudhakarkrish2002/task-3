@@ -39,6 +39,8 @@ import RefundPolicy from './pages/RefundPolicy.jsx'
 import Syllabus from './pages/Syllabus.jsx'
 import FAQ from './pages/FAQ.jsx'
 import Careers from './pages/Careers.jsx'
+import ResearchDevelopment from './pages/ResearchDevelopment.jsx'
+import BlogDetail from './pages/BlogDetail.jsx'
 
 const routes = {
   '#/': <Home />,
@@ -79,6 +81,8 @@ const routes = {
   '#/courses/syllabus': <Syllabus />,
   '#/faq': <FAQ />,
   '#/careers': <Careers />,
+  '#/other-services/research': <ResearchDevelopment />,
+  '#/blog/detail': <BlogDetail />,
 }
 
 export default function App() {

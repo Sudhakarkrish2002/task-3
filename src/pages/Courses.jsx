@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { courseAPI } from '../utils/api.js'
 import { processRazorpayPayment } from '../utils/razorpay.js'
+import { getDisplayStudentCount, formatStudentCount } from '../utils/courseUtils.js'
 
 const categories = ['All', 'certification', 'placement_training', 'workshop', 'other']
 const categoryLabels = {
@@ -188,10 +189,10 @@ export default function Courses() {
         ></div>
         <div className="absolute inset-0 bg-linear-to-r from-primary-900/75 to-primary-700/60"></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
             Our Courses – Upskill, Certify, Get Hired
           </h1>
-          <p className="mt-4 text-lg text-white/95 drop-shadow-md">
+          <p className="mt-3 text-sm text-white/95 drop-shadow-md">
             Choose from our wide range of industry-relevant courses designed to transform your career
           </p>
         </div>
@@ -320,6 +321,12 @@ export default function Courses() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span>{course.duration}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span>{formatStudentCount(getDisplayStudentCount(course))} students</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-sm">

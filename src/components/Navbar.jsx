@@ -14,6 +14,15 @@ const mainMenuItems = [
   },
   { label: 'Internships', hash: '#/internships' },
   { label: 'Direct Hiring / Employers', hash: '#/employers' },
+  {
+    label: 'Other Services',
+    hash: '#/other-services',
+    submenu: [
+      { label: 'Research & Development Services', hash: '#/other-services/research' },
+      { label: 'Electronic Components Supply', hash: '#/other-services/components' },
+      { label: 'Student Entrepreneurship Support', hash: '#/other-services/entrepreneur' },
+    ],
+  },
   { label: 'Student Login', hash: '#/auth?tab=student' },
 ]
 
@@ -187,18 +196,20 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
                     }`}
                     onMouseLeave={() => setOpenDesktopDropdown(null)}
                   >
-                    <a
-                    href={item.hash}
-                    className="hidden lg:block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
-                      onClick={() => setOpenDesktopDropdown(null)}
-                    >
-                      {item.label}
-                    </a>
+                    {item.hash !== '#/other-services' && (
+                      <a
+                        href={item.hash}
+                        className="hidden lg:block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
+                        onClick={() => setOpenDesktopDropdown(null)}
+                      >
+                        {item.label}
+                      </a>
+                    )}
                     {item.submenu.map((subItem) => (
                       <a
                         key={subItem.hash}
                         href={subItem.hash}
-                        className="hidden lg:block rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 pl-6 relative overflow-hidden after:absolute after:bottom-1 after:left-6 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]"
+                        className={`hidden lg:block rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 relative overflow-hidden after:absolute after:bottom-1 after:left-3 after:w-0 after:h-0.5 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)] ${item.hash === '#/other-services' ? '' : 'pl-6 after:left-6 hover:after:w-[calc(100%-1.5rem)]'}`}
                         onClick={() => setOpenDesktopDropdown(null)}
                       >
                         {subItem.label}

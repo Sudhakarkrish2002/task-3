@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 import { courseAPI } from '../utils/api.js'
+import { getDisplayStudentCount, formatStudentCount } from '../utils/courseUtils.js'
 
 const partnerColleges = [
   // Central Government Colleges
@@ -97,11 +98,16 @@ export default function Home() {
   const trendingContentRef = useRef(null)
   const cardWidthRef = useRef(0)
   const trendingSectionRef = useRef(null)
+  const bannerContainerRef = useRef(null)
+  const heroSectionRef = useRef(null)
   const [currentCourseIndex, setCurrentCourseIndex] = useState(0)
   const [featuredCourses, setFeaturedCourses] = useState([])
   const [trendingCourses, setTrendingCourses] = useState([])
   const [loadingFeatured, setLoadingFeatured] = useState(true)
   const [loadingTrending, setLoadingTrending] = useState(true)
+  const [bannerIndex, setBannerIndex] = useState(0)
+  const [isBannerHovered, setIsBannerHovered] = useState(false)
+  const [isHeroVisible, setIsHeroVisible] = useState(false)
 
   // Fetch featured courses
   useEffect(() => {
@@ -147,6 +153,46 @@ export default function Home() {
       }
     }
     fetchTrendingCourses()
+  }, [])
+
+  // Banner scrolling effect - cycle through 2 banners
+  useEffect(() => {
+    if (isBannerHovered) return
+
+    const interval = setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % 2)
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [isBannerHovered])
+
+  // Hero section scroll animation observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsHeroVisible(true)
+          } else {
+            setIsHeroVisible(false)
+          }
+        })
+      },
+      {
+        threshold: 0.2,
+        rootMargin: '0px'
+      }
+    )
+
+    if (heroSectionRef.current) {
+      observer.observe(heroSectionRef.current)
+    }
+
+    return () => {
+      if (heroSectionRef.current) {
+        observer.unobserve(heroSectionRef.current)
+      }
+    }
   }, [])
 
   const scrollToIndex = useCallback((index, behavior = 'smooth') => {
@@ -201,18 +247,67 @@ export default function Home() {
   return (
     <main>
       {/* Hero */}
-      <section className="pt-16 relative overflow-hidden">
+      <section 
+        ref={heroSectionRef}
+        className="pt-16 relative overflow-hidden"
+        onMouseEnter={() => setIsBannerHovered(true)}
+        onMouseLeave={() => setIsBannerHovered(false)}
+      >
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          ref={bannerContainerRef}
+          className="absolute inset-0 flex transition-transform duration-1000 ease-in-out"
           style={{
-            backgroundImage: 'url(/Assets/hero-home-banner.jpeg)'
+            transform: `translateX(-${bannerIndex * 50}%)`,
+            width: '200%'
           }}
-        ></div>
-        <div className="absolute inset-0 bg-linear-to-br from-primary-900/70 via-primary-800/60 to-primary-700/70"></div>
+        >
+          <div 
+            className="w-1/2 h-full bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url(/Assets/hero-home-banner.jpeg)'
+            }}
+          ></div>
+          <div 
+            className="w-1/2 h-full bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url(/Assets/Home-page-banner-2.png)'
+            }}
+          ></div>
+        </div>
+        <div className="absolute inset-0 bg-linear-to-br from-primary-900/50 via-primary-800/40 to-primary-700/50"></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 relative z-10">
           <div className="max-w-3xl">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg">
-              Transforming Freshers into Industry-Ready Professionals
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg flex flex-wrap items-center gap-2">
+              <span 
+                className={`inline-block transition-all ease-in-out ${
+                  isHeroVisible 
+                    ? 'translate-x-0 opacity-100' 
+                    : '-translate-x-full opacity-0'
+                }`}
+                style={{ 
+                  transitionDuration: '1200ms',
+                  transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                  transitionDelay: '0.1s',
+                  willChange: 'transform, opacity'
+                }}
+              >
+                Transforming Freshers into
+              </span>
+              <span 
+                className={`inline-block transition-all ease-in-out ${
+                  isHeroVisible 
+                    ? 'translate-x-0 opacity-100' 
+                    : 'translate-x-full opacity-0'
+                }`}
+                style={{ 
+                  transitionDuration: '1200ms',
+                  transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                  transitionDelay: '0.3s',
+                  willChange: 'transform, opacity'
+                }}
+              >
+                Industry-Ready Professionals
+              </span>
             </h1>
             <p className="mt-5 text-white/95 text-base sm:text-lg drop-shadow-md">
               Welcome to KiwisEdutech, where we believe every student can build a
@@ -261,18 +356,48 @@ export default function Home() {
           ) : (
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredCourses.map((course) => (
-                <div key={course._id} className="rounded-xl border border-gray-200 p-5 hover:shadow-xl hover:shadow-gray-400/50 transition-shadow bg-white">
-                  <div className="text-xs font-medium text-primary-700 inline-flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-primary-600" />
-                    {course.placementGuaranteed ? 'Placement-Guaranteed' : 'Certification'}
+                <div 
+                  key={course._id} 
+                  className="group relative rounded-2xl bg-white p-6 shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden"
+                >
+                  {/* Floating icon circle */}
+                  <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-linear-to-br from-primary-400 to-primary-600 opacity-20 group-hover:opacity-30 group-hover:scale-110 transition-all duration-300"></div>
+                  <div className="absolute top-4 right-4 w-16 h-16 rounded-full bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
                   </div>
-                  <h3 className="mt-3 text-lg font-semibold text-gray-900">{course.title}</h3>
-                  <p className="mt-2 text-sm text-gray-600">{course.shortDescription || course.description}</p>
-                  <div className="mt-4 flex gap-2">
-                    <a href={`#/courses/syllabus?title=${encodeURIComponent(course.title)}`} className="text-sm text-primary-700 font-medium transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-flex items-center gap-1 hover:gap-2">
-                      Learn more →
-                    </a>
+
+                  {/* Badge with icon */}
+                  <div className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 mb-4">
+                    <svg className="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-bold text-primary-700">
+                      {course.placementGuaranteed ? 'Placement-Guaranteed' : 'Certification'}
+                    </span>
                   </div>
+
+                  {/* Title */}
+                  <h3 className="relative text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-700 transition-colors pr-20">
+                    {course.title}
+                  </h3>
+                  
+                  {/* Description */}
+                  <p className="relative text-sm text-gray-600 leading-relaxed mb-5 line-clamp-3">
+                    {course.shortDescription || course.description}
+                  </p>
+                  
+                  {/* CTA with icon */}
+                  <a 
+                    href={`#/courses/syllabus?title=${encodeURIComponent(course.title)}`} 
+                    className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-primary-600 to-primary-700 text-white text-sm font-semibold transition-all duration-300 hover:from-primary-700 hover:to-primary-800 hover:shadow-lg hover:shadow-primary-500/50 hover:scale-105 group/btn"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                    <span>Explore Course</span>
+                  </a>
                 </div>
               ))}
             </div>
@@ -323,45 +448,82 @@ export default function Home() {
                 ) : (
                   trendingCourses.map((course, index) => {
                     const isActive = currentCourseIndex === index
-                    const enrolledCount = course.enrolledCount || 0
-                    const enrolledText = enrolledCount >= 1000 
-                      ? `${(enrolledCount / 1000).toFixed(1)}K+` 
-                      : `${enrolledCount}+`
+                    const enrolledText = formatStudentCount(getDisplayStudentCount(course))
                     const rating = course.rating || 4.5
+                    const fullStars = Math.floor(rating)
+                    
                     return (
                       <div
                         key={`trending-${course._id}`}
-                        className={`group shrink-0 w-80 sm:w-96 mx-3 rounded-2xl border bg-white/95 p-6 transition-all duration-300 ease-in-out shadow-lg hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-primary-500/70 ${isActive ? 'border-primary-200/80 shadow-primary-200/80 scale-[1.02]' : 'border-gray-100 hover:border-transparent'}`}
+                        className={`group relative shrink-0 w-80 sm:w-96 mx-3 rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 ease-out ${isActive ? 'scale-[1.02] shadow-primary-200/50' : ''} hover:-translate-y-3 hover:shadow-2xl hover:shadow-primary-500/30 hover:scale-105 overflow-hidden`}
                       >
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-semibold text-primary-700 bg-primary-50/80 px-3 py-1 rounded-full uppercase tracking-wide">
+                        {/* Decorative icon circles */}
+                        <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-primary-100/50 -translate-x-10 -translate-y-10 group-hover:scale-150 transition-transform duration-500"></div>
+                        <div className="absolute bottom-0 right-0 w-16 h-16 rounded-full bg-primary-200/50 translate-x-8 translate-y-8 group-hover:scale-150 transition-transform duration-500"></div>
+
+                        {/* Header with icon and rating */}
+                        <div className="relative flex items-start justify-between mb-5">
+                          {/* Icon circle */}
+                          <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-linear-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
+                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            </svg>
+                          </div>
+                          
+                          {/* Rating badge */}
+                          <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 border border-yellow-200">
+                            {[...Array(5)].map((_, i) => (
+                              <svg 
+                                key={i} 
+                                className={`w-3.5 h-3.5 ${i < fullStars ? 'text-yellow-500 fill-current' : 'text-gray-300 fill-current'}`}
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                              </svg>
+                            ))}
+                            <span className="ml-1 text-gray-800 text-sm font-bold">{rating.toFixed(1)}</span>
+                          </div>
+                        </div>
+
+                        {/* Badge */}
+                        <div className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 mb-4">
+                          <svg className="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-xs font-bold text-primary-700">
                             {course.placementGuaranteed ? 'Placement-Guaranteed' : 'Certification'}
                           </span>
-                          <div className="flex items-center gap-1 text-primary-600">
-                            <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                              <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                            </svg>
-                            <span className="text-sm font-semibold text-gray-800">{rating.toFixed(1)}</span>
-                          </div>
                         </div>
-                        <div className="space-y-3">
-                          <h3 className="text-lg font-semibold text-gray-900">{course.title}</h3>
-                          <p className="text-sm text-gray-600 leading-relaxed">{course.shortDescription || course.description}</p>
-                        </div>
-                        <div className="flex items-center justify-between pt-5 mt-5 border-t border-gray-100">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+
+                        {/* Title */}
+                        <h3 className="relative text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-700 transition-colors line-clamp-2">
+                          {course.title}
+                        </h3>
+                        
+                        {/* Description */}
+                        <p className="relative text-sm text-gray-600 leading-relaxed mb-5 line-clamp-2">
+                          {course.shortDescription || course.description}
+                        </p>
+
+                        {/* Footer */}
+                        <div className="relative flex items-center justify-between pt-4 border-t border-gray-200">
+                          {/* Enrolled with icon */}
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700">
+                            <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span>{enrolledText} enrolled</span>
+                            <span className="text-sm font-semibold">{enrolledText}</span>
                           </div>
+                          
+                          {/* CTA */}
                           <a 
                             href={`#/courses/syllabus?title=${encodeURIComponent(course.title)}`}
-                            className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors group-hover:text-primary-700"
+                            className="px-4 py-2 rounded-xl bg-linear-to-r from-primary-600 to-primary-700 text-white text-sm font-semibold transition-all duration-300 hover:from-primary-700 hover:to-primary-800 hover:shadow-lg hover:shadow-primary-500/50 hover:scale-110 inline-flex items-center gap-2 group/btn"
                           >
-                            Learn more
-                            <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                            <span>Explore</span>
+                            <svg className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
                           </a>
                         </div>
