@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-const TRANSITION_DURATION = 250
+const TRANSITION_DURATION = 300
 
 export default function PageTransition({ children, routeKey }) {
   const [renderedChildren, setRenderedChildren] = useState(children)
@@ -38,14 +38,18 @@ export default function PageTransition({ children, routeKey }) {
 
   return (
     <div
-      className={`transition-all ease-in-out ${
+      className={`transition-all ${
         stage === 'enter'
           ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-2'
+          : 'opacity-0 translate-y-4'
       }`}
       style={{
         willChange: 'opacity, transform',
         transitionDuration: `${TRANSITION_DURATION}ms`,
+        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
       }}
     >
       {renderedChildren}

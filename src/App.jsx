@@ -97,8 +97,13 @@ export default function App() {
   useEffect(() => {
     const onHashChange = () => {
       setHash(window.location.hash || '#/')
-      // Scroll to top when route changes
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      // Smooth scroll to top when route changes
+      requestAnimationFrame(() => {
+        window.scrollTo({ 
+          top: 0, 
+          behavior: 'smooth' 
+        })
+      })
     }
     window.addEventListener('hashchange', onHashChange)
     if (!window.location.hash) {
@@ -113,9 +118,14 @@ export default function App() {
     setShowBanner(routeHash === '#/')
   }, [hash])
 
-  // Scroll to top when hash changes (including initial load)
+  // Smooth scroll to top when hash changes (including initial load)
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    requestAnimationFrame(() => {
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      })
+    })
   }, [hash])
 
   useEffect(() => {

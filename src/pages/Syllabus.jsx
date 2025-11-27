@@ -613,50 +613,153 @@ export default function Syllabus() {
         </div>
       </section>
 
-      {/* Main Content with Sidebar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8 w-full overflow-x-hidden" style={{ transform: 'translateZ(0)' }}>
+      {/* Why Learn Section with Enrollment Form - Two Column Layout */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8 w-full">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Left Content Area */}
+          {/* Left Content - Why Learn Section */}
           <div className="flex-1 min-w-0">
-        {/* Why Learn Section */}
-        <section id="certificate-section" className="mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
-            Why learn {course.title}?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Learn what the world is hiring for</h3>
-                <p className="text-gray-700 text-base sm:text-lg">
-                  {course.title} is shaping every industry. This course helps you learn the tech that's creating tomorrow's jobs.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Work with cutting-edge tools</h3>
-                <p className="text-gray-700 text-base sm:text-lg">
-                  Master the tools top companies use and build real-world applications that showcase your skills.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Create a future-ready portfolio</h3>
-                <p className="text-gray-700 text-base sm:text-lg">
-                  Work on real-world projects in every module that showcase your skills in action.
-                </p>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <div className="bg-linear-to-br from-primary-100 to-primary-200 rounded-2xl p-8 h-full flex items-center justify-center">
-                <div className="text-center">
-                  <svg className="w-32 h-32 mx-auto text-primary-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <p className="text-primary-800 font-semibold text-lg">Future-Ready Skills</p>
+            <section id="certificate-section" className="mb-12 sm:mb-16">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 sm:mb-8">
+                Why learn {course.title}?
+              </h2>
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Learn what the world is hiring for</h3>
+                    <p className="text-gray-700 text-base sm:text-lg">
+                      {course.title} is shaping every industry. This course helps you learn the tech that's creating tomorrow's jobs.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Work with cutting-edge tools</h3>
+                    <p className="text-gray-700 text-base sm:text-lg">
+                      Master the tools top companies use and build real-world applications that showcase your skills.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Create a future-ready portfolio</h3>
+                    <p className="text-gray-700 text-base sm:text-lg">
+                      Work on real-world projects in every module that showcase your skills in action.
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden md:block">
+                  <div className="bg-linear-to-br from-primary-100 to-primary-200 rounded-2xl p-8 h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="w-32 h-32 mx-auto text-primary-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <p className="text-primary-800 font-semibold text-lg">Future-Ready Skills</p>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </section>
+          </div>
+
+          {/* Right Sidebar - Enrollment Form */}
+          <div className="lg:w-80 xl:w-96 shrink-0">
+            <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 sm:p-6 sticky top-24">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Enroll Now</h3>
+              
+              <form onSubmit={handleEnroll} className="space-y-4">
+                {/* Mobile Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mobile Number
+                  </label>
+                  <div className="flex">
+                    <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      value={enrollmentData.mobile}
+                      onChange={(e) => setEnrollmentData({ ...enrollmentData, mobile: e.target.value })}
+                      placeholder="8586080747"
+                      className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-r-lg text-sm focus:ring-primary-500 focus:border-primary-500"
+                      maxLength="10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Batch Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Choose batch
+                  </label>
+                  <select
+                    value={enrollmentData.batch}
+                    onChange={(e) => setEnrollmentData({ ...enrollmentData, batch: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  >
+                    <option value="">Select batch</option>
+                    {upcomingBatches.map((batch, idx) => (
+                      <option key={idx} value={batch.date}>
+                        {batch.date} {batch.status && `(${batch.status})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Objective Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    I want to learn {course.title} to
+                  </label>
+                  <select
+                    value={enrollmentData.objective}
+                    onChange={(e) => setEnrollmentData({ ...enrollmentData, objective: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  >
+                    <option value="">Choose your objective</option>
+                    {objectives.map((obj, idx) => (
+                      <option key={idx} value={obj}>{obj}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Pricing */}
+                <div className="pt-4 border-t border-gray-200">
+                  {discountedPrice && (
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl font-bold text-orange-600">{formatPrice(discountedPrice)}</span>
+                        {originalPrice && (
+                          <span className="text-lg text-gray-500 line-through">{formatPrice(originalPrice)}</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mb-4">Valid till 5th Nov</p>
+                    </>
+                  )}
+                  
+                  <button
+                    type="submit"
+                    className="w-full px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors text-base"
+                  >
+                    Enroll Now
+                  </button>
+                </div>
+              </form>
+
+              {/* Course Duration Info */}
+              {course.duration && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-600">
+                    <span className="font-medium">{course.duration}</span> online course
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
+      {/* Placement Assistance Section - Full Width Centered */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8 w-full">
          {/* Placement Assistance Section - Enhanced for Placement Guaranteed Courses */}
         {isPlacementGuaranteed ? (
             <section id="placement-section" className="mb-12 sm:mb-16 bg-linear-to-br from-green-50 via-blue-50 to-purple-50 rounded-2xl p-6 sm:p-8 lg:p-10 border-2 border-green-200">
@@ -869,7 +972,7 @@ export default function Syllabus() {
           </section>
         )}
 
-        {/* How Training Works Section */}
+        {/* How Training Works Section - Full Width Centered */}
         <section className="mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-8 sm:mb-10 text-center">
             How will your training work?
@@ -911,31 +1014,15 @@ export default function Syllabus() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">1:1 doubt solving</h3>
-              <p className="text-gray-600 text-sm sm:text-base">Get your doubts solved by experts through Q&A forum within 24 hours</p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Take final exam</h3>
-              <p className="text-gray-600 text-sm sm:text-base">Complete your training by taking the final exam</p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Get certified</h3>
-              <p className="text-gray-600 text-sm sm:text-base">Get certified in {course.title} upon successful completion of training</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Get support</h3>
+              <p className="text-gray-600 text-sm sm:text-base">Get your doubts cleared by mentors and peers in the community</p>
             </div>
           </div>
         </section>
+      </div>
+
+      {/* Main Content - All Centered */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8 w-full overflow-x-hidden" style={{ transform: 'translateZ(0)' }}>
 
         {/* AI Tools Section */}
         {course.syllabus && course.syllabus.aiTools && course.syllabus.aiTools.length > 0 && (
@@ -1505,59 +1592,12 @@ export default function Syllabus() {
           After completing the training, you can also download videos for future reference
         </p>
 
-        {/* Course Overview Information */}
-        {course.syllabus && (course.syllabus.learningOutcomes?.length > 0 || course.syllabus.prerequisites?.length > 0) && (
-          <div className="mb-6 sm:mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Learning Outcomes */}
-            {course.syllabus.learningOutcomes && course.syllabus.learningOutcomes.length > 0 && (
-              <div className="bg-linear-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Learning Outcomes
-                </h3>
-                <ul className="space-y-2">
-                  {course.syllabus.learningOutcomes.map((outcome, idx) => (
-                    <li key={idx} className="flex gap-2 text-xs sm:text-sm text-gray-700">
-                      <span className="text-green-600 shrink-0 flex items-center h-5">✓</span>
-                      <span className="flex-1 leading-5">{outcome}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Prerequisites */}
-            {course.syllabus.prerequisites && course.syllabus.prerequisites.length > 0 && (
-              <div className="bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Prerequisites
-                </h3>
-                <ul className="space-y-2">
-                  {course.syllabus.prerequisites.map((prereq, idx) => (
-                    <li key={idx} className="flex gap-2 text-xs sm:text-sm text-gray-700">
-                      <span className="text-blue-600 shrink-0 flex items-center h-5">•</span>
-                      <span className="flex-1 leading-5">{prereq}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Syllabus Modules - Accordion Style */}
         {course.syllabus && course.syllabus.modules && course.syllabus.modules.length > 0 ? (
           <div className="space-y-3">
             {course.syllabus.modules.map((module, idx) => {
               const isExpanded = expandedModules[idx]
               const topicCount = module.topics?.length || 0
-              // Show demo video for modules with more than 3 topics
-              const hasDemoVideo = topicCount >= 4
 
               return (
                 <div
@@ -1587,19 +1627,6 @@ export default function Syllabus() {
                               </svg>
                               {module.duration}
                             </span>
-                          )}
-                          {hasDemoVideo && (
-                            <a
-                              href="#"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 whitespace-nowrap shrink-0"
-                            >
-                              <svg className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                              <span className="hidden sm:inline">1 Demo video inside</span>
-                              <span className="sm:hidden">Demo</span>
-                            </a>
                           )}
                         </div>
                   </div>
@@ -1653,38 +1680,38 @@ export default function Syllabus() {
 
         {/* Projects Section */}
         <div id="projects-section" className="mt-8 sm:mt-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-            <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-3">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Required Projects
           </h2>
           {projectsList.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {projectsList.map((project, idx) => {
                 const points = getProjectPoints(project)
                 const isOpen = openProjectIndex === idx
                 return (
-                  <div key={idx} className="border border-gray-200 rounded-xl bg-white shadow-sm">
+                  <div key={idx} className="border border-gray-200 rounded-lg bg-white shadow-sm">
                     <button
                       type="button"
                       onClick={() => toggleProjectAccordion(idx)}
-                      className="w-full flex items-center justify-between p-4 text-left"
+                      className="w-full flex items-center justify-between p-3 text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-100 text-primary-600 font-semibold flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-primary-100 text-primary-600 font-semibold text-sm flex items-center justify-center shrink-0">
                           {idx + 1}
                         </div>
                         <div>
-                          <p className="text-xs uppercase tracking-wide text-gray-400">Project brief</p>
-                          <h3 className="text-sm sm:text-base font-semibold text-gray-900 wrap-break-words">
+                          <p className="text-xs uppercase tracking-wide text-gray-400 mb-0.5">Project brief</p>
+                          <h3 className="text-sm font-semibold text-gray-900 wrap-break-words">
                             {project.name || `Project ${idx + 1}`}
                           </h3>
                         </div>
                       </div>
                       <svg
-                        className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1693,27 +1720,24 @@ export default function Syllabus() {
                       </svg>
                     </button>
                     {isOpen && (
-                      <div className="px-4 pb-4">
+                      <div className="px-3 pb-3 border-t border-gray-100">
                         {points.length > 0 ? (
-                          <ul className="space-y-2">
+                          <ul className="space-y-1.5 mt-2">
                             {points.map((point, pointIdx) => (
-                              <li key={pointIdx} className="flex items-start gap-2 text-sm text-gray-700">
+                              <li key={pointIdx} className="flex items-start gap-2 text-xs text-gray-700">
                                 <span className="text-primary-600 shrink-0 mt-1">•</span>
                                 <span className="flex-1 wrap-break-words">{point}</span>
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-gray-400 italic">No project details available</p>
+                          <p className="text-xs text-gray-400 italic mt-2">No project details available</p>
                         )}
                       </div>
                     )}
                   </div>
                 )
               })}
-              {openProjectIndex === null && projectsList.length > 0 && (
-                <p className="text-xs text-gray-500 text-center pt-2">Select a project to see its details.</p>
-              )}
             </div>
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
@@ -1727,6 +1751,51 @@ export default function Syllabus() {
             </div>
           )}
         </div>
+
+        {/* Course Overview Information - Learning Outcomes and Prerequisites */}
+        {course.syllabus && (course.syllabus.learningOutcomes?.length > 0 || course.syllabus.prerequisites?.length > 0) && (
+          <div className="mt-8 sm:mt-10 mb-6 sm:mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* Learning Outcomes */}
+            {course.syllabus.learningOutcomes && course.syllabus.learningOutcomes.length > 0 && (
+              <div className="bg-linear-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Learning Outcomes
+                </h3>
+                <ul className="space-y-2">
+                  {course.syllabus.learningOutcomes.map((outcome, idx) => (
+                    <li key={idx} className="flex gap-2 text-xs sm:text-sm text-gray-700">
+                      <span className="text-green-600 shrink-0 flex items-center h-5">✓</span>
+                      <span className="flex-1 leading-5">{outcome}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Prerequisites */}
+            {course.syllabus.prerequisites && course.syllabus.prerequisites.length > 0 && (
+              <div className="bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Prerequisites
+                </h3>
+                <ul className="space-y-2">
+                  {course.syllabus.prerequisites.map((prereq, idx) => (
+                    <li key={idx} className="flex gap-2 text-xs sm:text-sm text-gray-700">
+                      <span className="text-blue-600 shrink-0 flex items-center h-5">•</span>
+                      <span className="flex-1 leading-5">{prereq}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Certification Information Section */}
         {course.syllabus && course.syllabus.certification && (
@@ -1813,107 +1882,6 @@ export default function Syllabus() {
               </p>
             </div>
           )}
-        </div>
-          </div>
-
-          {/* Right Sidebar - Enrollment Form */}
-          <div className="lg:w-80 xl:w-96 shrink-0">
-            <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 sm:p-6 sticky top-24">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Enroll Now</h3>
-              
-              <form onSubmit={handleEnroll} className="space-y-4">
-                {/* Mobile Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mobile Number
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      value={enrollmentData.mobile}
-                      onChange={(e) => setEnrollmentData({ ...enrollmentData, mobile: e.target.value })}
-                      placeholder="8586080747"
-                      className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-r-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-                      maxLength="10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Batch Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Choose batch
-                  </label>
-                  <select
-                    value={enrollmentData.batch}
-                    onChange={(e) => setEnrollmentData({ ...enrollmentData, batch: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-                    required
-                  >
-                    <option value="">Select batch</option>
-                    {upcomingBatches.map((batch, idx) => (
-                      <option key={idx} value={batch.date}>
-                        {batch.date} {batch.status && `(${batch.status})`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Objective Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    I want to learn {course.title} to
-                  </label>
-                  <select
-                    value={enrollmentData.objective}
-                    onChange={(e) => setEnrollmentData({ ...enrollmentData, objective: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-                    required
-                  >
-                    <option value="">Choose your objective</option>
-                    {objectives.map((obj, idx) => (
-                      <option key={idx} value={obj}>{obj}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Pricing */}
-                <div className="pt-4 border-t border-gray-200">
-                  {discountedPrice && (
-                    <>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl font-bold text-orange-600">{formatPrice(discountedPrice)}</span>
-                        {originalPrice && (
-                          <span className="text-lg text-gray-500 line-through">{formatPrice(originalPrice)}</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mb-4">Valid till 5th Nov</p>
-                    </>
-                  )}
-                  
-                  <button
-                    type="submit"
-                    className="w-full px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors text-base"
-                  >
-                    Enroll Now
-                  </button>
-                </div>
-              </form>
-
-              {/* Course Duration Info */}
-              {course.duration && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-600">
-                    <span className="font-medium">{course.duration}</span> online course
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 

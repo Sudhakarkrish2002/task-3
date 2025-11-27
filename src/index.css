@@ -47,6 +47,19 @@ html {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   will-change: scroll-position;
+  /* Smooth scroll with better easing */
+  scroll-padding-top: 80px;
+}
+
+/* Enhanced smooth scrolling for all scrollable elements */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  * {
+    scroll-behavior: smooth;
+  }
 }
 
 * {
@@ -74,6 +87,8 @@ body {
   /* Reduce repaints during scroll */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  /* Smooth scroll restoration */
+  scroll-padding-top: 80px;
 }
 
 /* Hide scrollbar for horizontal scrolling elements */
@@ -210,6 +225,9 @@ main {
   /* Enable hardware acceleration */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  /* Smooth scroll behavior */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Optimize sections for smooth scrolling */
@@ -218,6 +236,8 @@ section {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
+  /* Smooth scroll into view */
+  scroll-margin-top: 80px;
 }
 
 /* Optimize sticky elements */
@@ -293,4 +313,33 @@ article div[style*="lineHeight"] li {
 article div[style*="lineHeight"] strong {
   font-weight: 600;
   color: #111827;
+}
+
+/* Enhanced smooth scrolling for all scrollable containers */
+[class*="overflow"],
+[class*="scroll"] {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth scroll for anchor links */
+a[href^="#"] {
+  scroll-behavior: smooth;
+}
+
+/* Optimize scroll performance for all containers */
+div,
+section,
+article,
+main {
+  scroll-behavior: smooth;
+}
+
+/* Prevent scroll jank on mobile */
+@media (max-width: 768px) {
+  html,
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
 }
