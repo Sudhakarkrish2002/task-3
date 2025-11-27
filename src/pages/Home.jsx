@@ -406,7 +406,7 @@ export default function Home() {
       </section>
 
       {/* Trending Courses */}
-      <section ref={trendingSectionRef} className="py-16 bg-linear-to-b from-white to-primary-50 border-t-2 border-primary-200">
+      <section ref={trendingSectionRef} className="py-16 bg-linear-to-b from-primary-100 to-primary-50 border-t-2 border-primary-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-4 mb-8">
             <div>
@@ -555,7 +555,7 @@ export default function Home() {
       </section>
 
       {/* Skills and Tools You Will Learn */}
-      <section className="py-16 bg-linear-to-b from-primary-50 via-white to-primary-50 border-t-2 border-primary-300">
+      <section className="py-16 bg-linear-to-b from-primary-100 via-primary-50 to-primary-100 border-t-2 border-primary-400">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Skills and Tools You Will Learn</h2>
@@ -633,7 +633,7 @@ export default function Home() {
       </section>
 
       {/* Where Do Our Students Work */}
-      <section className="py-16 bg-linear-to-b from-primary-50 to-white border-t-2 border-primary-200">
+      <section className="py-16 bg-linear-to-b from-primary-100 to-primary-50 border-t-2 border-primary-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Where Do Our Students Work?</h2>

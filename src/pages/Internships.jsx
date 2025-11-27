@@ -263,8 +263,18 @@ export default function Internships() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{internship.title}</h3>
-                    <div className="text-lg font-semibold text-primary-700 mb-2">{companyName}</div>
+                    <div className="flex items-start gap-2 mb-1">
+                      <svg className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <h3 className="text-xl font-bold text-gray-900">{internship.title}</h3>
+                    </div>
+                    <div className="flex items-center gap-2 text-lg font-semibold text-primary-700 mb-2">
+                      <svg className="w-5 h-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span>{companyName}</span>
+                    </div>
                   </div>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                     typeLabel.toLowerCase().includes('full')
@@ -277,30 +287,30 @@ export default function Internships() {
 
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>{internship.location || 'Flexible'}</span>
+                    <span className="font-medium">{internship.location || 'Flexible'}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>{internship.duration || 'Duration shared during screening'}</span>
+                    <span className="font-medium">{internship.duration || 'Duration shared during screening'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{stipendLabel}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>Posted {formatPostedLabel(internship.createdAt || internship.updatedAt)}</span>
+                    <span className="font-medium">Posted {formatPostedLabel(internship.createdAt || internship.updatedAt)}</span>
                   </div>
                 </div>
 
@@ -327,8 +337,13 @@ export default function Internships() {
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-500">
-                    {internship.applicationsReceived ? `${internship.applicationsReceived} applicants` : 'Be the first to apply'}
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="font-medium">
+                      {internship.applicationsReceived ? `${internship.applicationsReceived} applicants` : 'Be the first to apply'}
+                    </span>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -383,27 +398,53 @@ export default function Internships() {
               {/* Basic Info Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.location || 'N/A'}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Location</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">{selectedInternship.location || 'N/A'}</p>
                   {selectedInternship.isRemote && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">Remote</span>
+                    <span className="inline-block mt-1 ml-7 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">Remote</span>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Type</label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">{selectedInternship.type || 'N/A'}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Type</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7 capitalize">{selectedInternship.type || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Duration</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.duration || 'N/A'}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Duration</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">{selectedInternship.duration || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Stipend</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatStipend(selectedInternship.stipend)}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Stipend</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">{formatStipend(selectedInternship.stipend)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Application Deadline</label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Application Deadline</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">
                     {selectedInternship.applicationDeadline
                       ? new Date(selectedInternship.applicationDeadline).toLocaleDateString('en-IN', {
                           year: 'numeric',
@@ -414,8 +455,13 @@ export default function Internships() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Start Date</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">
                     {selectedInternship.startDate
                       ? new Date(selectedInternship.startDate).toLocaleDateString('en-IN', {
                           year: 'numeric',
@@ -426,16 +472,31 @@ export default function Internships() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Positions Available</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.positionsAvailable || 'N/A'}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Positions Available</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">{selectedInternship.positionsAvailable || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Applications Received</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedInternship.applicationsReceived || 0}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Applications Received</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7">{selectedInternship.applicationsReceived || 0}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">{selectedInternship.category || 'N/A'}</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span>Category</span>
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 ml-7 capitalize">{selectedInternship.category || 'N/A'}</p>
                 </div>
               </div>
 
@@ -448,8 +509,13 @@ export default function Internships() {
               {/* Qualifications */}
               {selectedInternship.qualifications && selectedInternship.qualifications.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Qualifications</label>
-                  <ul className="list-disc list-inside space-y-1">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                    <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <span>Qualifications</span>
+                  </label>
+                  <ul className="list-disc list-inside space-y-1 ml-7">
                     {selectedInternship.qualifications.map((qual, idx) => (
                       <li key={idx} className="text-sm text-gray-900">{qual}</li>
                     ))}
