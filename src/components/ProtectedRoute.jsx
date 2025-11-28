@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
  * @param {React.ComponentType} fallback - Component to render while checking auth (optional)
  */
 export default function ProtectedRoute({ children, requiredRole, fallback = null }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isAuthenticatedForRole, switchRole, activeRole } = useAuth();
 
   useEffect(() => {
     // Wait for auth context to finish loading
@@ -20,19 +20,50 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
       return;
     }
 
-    // If not authenticated, redirect to login
-    if (!isAuthenticated) {
-      window.location.hash = '#/auth';
+    if (!requiredRole) {
+      // No role required, just check if authenticated
+      if (!isAuthenticated) {
+        window.location.hash = '#/auth'
+      }
       return;
     }
 
-    // Check if user has the required role
-    if (requiredRole && user && user.role !== requiredRole) {
-      // User doesn't have required role, redirect to home
-      window.location.hash = '#/';
+    // Check if user is authenticated for the required role
+    const isAuthForRequiredRole = isAuthenticatedForRole(requiredRole)
+    
+    if (!isAuthForRequiredRole) {
+      // User is not logged in as the required role - redirect to login
+      const roleTabMap = {
+        admin: 'admin',
+        student: 'student',
+        employer: 'employer',
+        college: 'college',
+        content_writer: 'content'
+      }
+      const tab = roleTabMap[requiredRole] || 'student'
+      window.location.hash = `#/auth?tab=${tab}`
       return;
     }
-  }, [isAuthenticated, isLoading, user, requiredRole]);
+
+    // User is logged in as required role - auto-switch to it if not already active
+    if (activeRole !== requiredRole) {
+      switchRole(requiredRole)
+    }
+
+    // Check if user is active and verified (except students who can access regardless)
+    if (user && user.role !== 'student' && user.role !== 'admin') {
+      const isApproved = user.isActive === true && 
+        (user.isVerified === true || 
+         (user.role === 'employer' && user.employerDetails?.adminApprovalStatus === 'approved') ||
+         (user.role === 'college' && user.collegeDetails?.adminApprovalStatus === 'approved'));
+      
+      if (!isApproved) {
+        // User is not approved, redirect to home with message
+        window.location.hash = '#/';
+        return;
+      }
+    }
+  }, [isAuthenticated, isLoading, user, requiredRole, isAuthenticatedForRole, switchRole, activeRole]);
 
   // Show loading state while auth context is validating
   if (isLoading) {
@@ -49,9 +80,46 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
     );
   }
 
-  // If not authenticated or wrong role, don't render children
-  if (!isAuthenticated || (requiredRole && user && user.role !== requiredRole)) {
+  // If not authenticated for required role, don't render children (redirect is handled in useEffect)
+  if (requiredRole && !isAuthenticatedForRole(requiredRole)) {
     return null;
+  }
+
+  // If no role required but not authenticated, don't render children
+  if (!requiredRole && !isAuthenticated) {
+    return null;
+  }
+
+  // Check if user is active and verified (except students and admins)
+  if (user && user.role !== 'student' && user.role !== 'admin') {
+    const isApproved = user.isActive === true && 
+      (user.isVerified === true || 
+       (user.role === 'employer' && user.employerDetails?.adminApprovalStatus === 'approved') ||
+       (user.role === 'college' && user.collegeDetails?.adminApprovalStatus === 'approved'));
+    
+    if (!isApproved) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-center max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Pending Approval</h2>
+            <p className="text-gray-600 mb-6">
+              Your account is currently pending admin approval. You will be able to access your dashboard once an administrator approves your account.
+            </p>
+            <a
+              href="#/"
+              className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+            >
+              Go to Home
+            </a>
+          </div>
+        </div>
+      );
+    }
   }
 
   return <>{children}</>;

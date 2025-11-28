@@ -26,8 +26,20 @@ if (!rawBaseUrl.endsWith('/api')) {
 
 const API_BASE_URL = rawBaseUrl;
 
-// Get auth token from localStorage
-const getAuthToken = () => {
+// Get auth token from localStorage for active role
+const getAuthToken = (role = null) => {
+  // If role is specified, get token for that role
+  if (role) {
+    return localStorage.getItem(`token_${role}`);
+  }
+  
+  // Otherwise, get token for active role
+  const activeRole = localStorage.getItem('activeRole');
+  if (activeRole) {
+    return localStorage.getItem(`token_${activeRole}`);
+  }
+  
+  // Fallback to old token format for backward compatibility
   return localStorage.getItem('token');
 };
 
@@ -69,13 +81,70 @@ const apiRequest = async (endpoint, options = {}) => {
     });
 
     if (!response.ok) {
-      // Handle 401 Unauthorized - token expired or invalid
+      // Handle 401 Unauthorized - try to refresh token instead of logging out
       if (response.status === 401) {
-        // Clear auth data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        // Dispatch custom event to notify AuthContext
-        window.dispatchEvent(new CustomEvent('auth:logout'));
+        // Try to refresh the token
+        const token = getAuthToken();
+        if (token) {
+          try {
+            const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              if (refreshData.success && refreshData.token) {
+                // Update token in localStorage for active role
+                const activeRole = localStorage.getItem('activeRole');
+                if (activeRole) {
+                  localStorage.setItem(`token_${activeRole}`, refreshData.token);
+                  if (refreshData.user) {
+                    localStorage.setItem(`user_${activeRole}`, JSON.stringify(refreshData.user));
+                  }
+                } else {
+                  // Fallback to old format for backward compatibility
+                  localStorage.setItem('token', refreshData.token);
+                  if (refreshData.user) {
+                    localStorage.setItem('user', JSON.stringify(refreshData.user));
+                  }
+                }
+                // Retry the original request with new token
+                const retryConfig = {
+                  ...config,
+                  headers: {
+                    ...config.headers,
+                    Authorization: `Bearer ${refreshData.token}`,
+                  },
+                };
+                const retryResponse = await fetch(url, retryConfig);
+                const retryContentType = retryResponse.headers.get('content-type');
+                if (retryContentType && retryContentType.includes('application/json')) {
+                  const retryData = await retryResponse.json();
+                  if (retryResponse.ok) {
+                    return retryData;
+                  } else {
+                    // If retry still fails, throw error but don't logout
+                    const error = new Error(retryData.message || retryData.error || 'Request failed after token refresh');
+                    error.status = retryResponse.status;
+                    error.data = retryData;
+                    throw error;
+                  }
+                } else {
+                  const retryText = await retryResponse.text();
+                  throw new Error(`Server returned non-JSON response: ${retryText.substring(0, 100)}`);
+                }
+              }
+            }
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+            // If refresh fails, don't logout - just throw the original error
+            // User stays logged in and can retry manually
+          }
+        }
       }
       
       // Create an error with more details
@@ -95,6 +164,13 @@ const apiRequest = async (endpoint, options = {}) => {
         data: error.data
       });
       throw error;
+    }
+    // Handle network errors
+    if (error.message && error.message.includes('Failed to fetch')) {
+      console.error(`[API Network Error] ${options.method || 'GET'} ${url}`, error);
+      const networkError = new Error('Unable to connect to server. Please check your internet connection and ensure the server is running.');
+      networkError.status = 0;
+      throw networkError;
     }
     // Otherwise, log and wrap it
     console.error(`[API Network Error] ${options.method || 'GET'} ${url}`, error);
@@ -125,6 +201,13 @@ export const authAPI = {
     return apiRequest('/auth/me');
   },
 
+  // Refresh token
+  refreshToken: async () => {
+    return apiRequest('/auth/refresh-token', {
+      method: 'POST',
+    });
+  },
+
   // Update user profile
   updateProfile: async (profileData) => {
     return apiRequest('/auth/update-profile', {
@@ -136,6 +219,22 @@ export const authAPI = {
   // Get all roles
   getRoles: async () => {
     return apiRequest('/auth/roles');
+  },
+
+  // Forgot password
+  forgotPassword: async (email) => {
+    return apiRequest('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  // Reset password
+  resetPassword: async (token, password) => {
+    return apiRequest('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    });
   },
 };
 

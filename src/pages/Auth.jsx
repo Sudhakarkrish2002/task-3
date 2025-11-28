@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { authAPI } from '../utils/api.js'
 
 export default function Auth() {
-  const { login } = useAuth()
+  const { login, logout, user, isAuthenticated, isLoading: authLoading } = useAuth()
   
   // Get tab from URL parameter (supports both hash query params and regular query params)
   const getTabFromURL = () => {
@@ -36,8 +36,13 @@ export default function Auth() {
         }
       }
       
+      // Check for reset token
+      if (hash && hash.includes('token=')) {
+        return 'reset'
+      }
+      
       // Validate tab value
-      const validTabs = ['employer', 'college', 'admin', 'content', 'student']
+      const validTabs = ['employer', 'college', 'admin', 'content', 'student', 'forgot', 'reset']
       return validTabs.includes(tab) ? tab : 'student'
     } catch (error) {
       console.error('Error in getTabFromURL:', error)
@@ -46,10 +51,92 @@ export default function Auth() {
     }
   }
 
-  const [activeTab, setActiveTab] = useState(() => getTabFromURL()) // student, employer, college, admin, content
+  const [activeTab, setActiveTab] = useState(() => getTabFromURL()) // student, employer, college, admin, content, forgot, reset
   const [isLogin, setIsLogin] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetToken, setResetToken] = useState('')
+  
+  // Get reset token from URL
+  useEffect(() => {
+    const hash = window.location.hash || ''
+    const search = window.location.search || ''
+    
+    let token = null
+    if (hash && hash.includes('token=')) {
+      const tokenMatch = hash.match(/token=([^&]+)/)
+      if (tokenMatch) token = tokenMatch[1]
+    } else if (search && search.includes('token=')) {
+      const urlParams = new URLSearchParams(search)
+      token = urlParams.get('token')
+    }
+    
+    if (token) {
+      setResetToken(token)
+      setActiveTab('reset')
+      setIsLogin(false)
+    }
+  }, [])
+  
+  // CAPTCHA execution function
+  const executeCaptcha = async (action = 'submit') => {
+    return new Promise((resolve, reject) => {
+      if (!window.grecaptcha || !window.grecaptcha.ready) {
+        // If CAPTCHA is not loaded, resolve with null (for development)
+        if (!import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY) {
+          resolve(null)
+          return
+        }
+        reject(new Error('CAPTCHA not loaded'))
+        return
+      }
+      
+      window.grecaptcha.ready(() => {
+        const siteKey = import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY
+        if (!siteKey) {
+          resolve(null)
+          return
+        }
+        
+        window.grecaptcha.execute(siteKey, { action })
+          .then((token) => {
+            resolve(token)
+          })
+          .catch((error) => {
+            console.error('CAPTCHA execution error:', error)
+            reject(error)
+          })
+      })
+    })
+  }
+
+  // Check authentication status and handle role mismatches
+  useEffect(() => {
+    if (authLoading) return
+
+    if (isAuthenticated && user) {
+      const currentRole = user.role
+      const expectedRole = activeTab === 'content' ? 'content_writer' : activeTab
+      
+      // If user is logged in with the same role as the tab, redirect to their dashboard
+      if (currentRole === expectedRole) {
+        const redirectMap = {
+          student: '#/dashboard/student',
+          employer: '#/dashboard/employer',
+          college: '#/dashboard/college',
+          admin: '#/admin',
+          content_writer: '#/dashboard/content'
+        }
+        const redirectPath = redirectMap[currentRole] || '#/'
+        window.location.hash = redirectPath
+        return
+      }
+      
+      // Allow users to login with different role without showing warning
+      // The login handler will automatically logout and login with new credentials
+    }
+  }, [isAuthenticated, user, activeTab, authLoading])
 
   // Update tab when URL changes
   useEffect(() => {
@@ -113,19 +200,32 @@ export default function Auth() {
     setError('') // Clear error when user types
   }
 
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
 
     try {
+      // Execute CAPTCHA
+      let captchaToken = null
+      try {
+        captchaToken = await executeCaptcha('login')
+      } catch (captchaError) {
+        console.warn('CAPTCHA error:', captchaError)
+        // Continue without CAPTCHA if it fails (for development)
+      }
+      
       // Map 'content' to 'content_writer' for backend
       const backendRole = activeTab === 'content' ? 'content_writer' : activeTab
+      
+      // Note: We no longer clear all sessions - each role maintains its own session
       
       const response = await authAPI.login({
         email: loginData.email,
         password: loginData.password,
         role: backendRole, // Include the selected role tab
+        captchaToken, // Include CAPTCHA token
       })
 
       if (response.success) {
@@ -262,7 +362,17 @@ export default function Auth() {
     setIsLoading(true)
 
     try {
+      // Execute CAPTCHA
+      let captchaToken = null
+      try {
+        captchaToken = await executeCaptcha('register')
+      } catch (captchaError) {
+        console.warn('CAPTCHA error:', captchaError)
+        // Continue without CAPTCHA if it fails (for development)
+      }
+      
       // Prepare registration data based on role
+      // Note: We no longer clear all sessions - each role maintains its own session
       // Map 'content' to 'content_writer' for backend
       let backendRole = activeTab
       if (activeTab === 'content') {
@@ -283,6 +393,7 @@ export default function Auth() {
         phone: registerData.phone,
         password: registerData.password,
         role: backendRole,
+        captchaToken, // Include CAPTCHA token
       }
 
       // Add role-specific data
@@ -302,9 +413,20 @@ export default function Auth() {
         // Use AuthContext login function to store token and user data
         login(response.token, response.user)
         
-        toast.success(`Congratulations! Your ${activeTab} account has been created successfully.`)
-
         const role = response.user.role
+        const isApproved = role === 'student' || role === 'admin' || 
+          (response.user.isActive === true && 
+           (response.user.isVerified === true || 
+            (role === 'employer' && response.user.employerDetails?.adminApprovalStatus === 'approved') ||
+            (role === 'college' && response.user.collegeDetails?.adminApprovalStatus === 'approved')))
+        
+        if (isApproved) {
+          toast.success(`Congratulations! Your ${activeTab} account has been created successfully.`)
+        } else {
+          toast.success(`Your ${activeTab} account has been created successfully.`)
+          toast.info('Your account is pending admin approval. You will be notified once approved.')
+        }
+
         const redirectAfterRegister = () => {
           // Check for redirect parameter in URL
           const hash = window.location.hash || ''
@@ -348,8 +470,11 @@ export default function Auth() {
             }
           }
           
-          // Default redirect based on role
-          if (role === 'student') {
+          // Default redirect based on role and approval status
+          // If not approved, redirect to home page
+          if (!isApproved) {
+            window.location.hash = '#/'
+          } else if (role === 'student') {
             window.location.hash = '#/dashboard/student'
           } else if (role === 'employer') {
             window.location.hash = '#/dashboard/employer'
@@ -394,6 +519,117 @@ export default function Auth() {
         setError(errorMessage)
         toast.error(errorMessage)
       }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Forgot password handler
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    setError('')
+    setIsLoading(true)
+
+    try {
+      // Validate email
+      if (!forgotPasswordEmail || !forgotPasswordEmail.includes('@')) {
+        setError('Please enter a valid email address')
+        toast.error('Please enter a valid email address')
+        setIsLoading(false)
+        return
+      }
+
+      const response = await authAPI.forgotPassword(forgotPasswordEmail)
+      
+      if (response.success) {
+        toast.success(response.message || 'If an account with that email exists, a password reset link has been sent.')
+        setForgotPasswordEmail('')
+        setShowForgotPassword(false)
+        setIsLogin(true)
+        setError('')
+      } else {
+        const errorMessage = response.message || 'Failed to send password reset email. Please try again.'
+        setError(errorMessage)
+        toast.error(errorMessage)
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error)
+      let errorMessage = 'Failed to send password reset email. Please try again.'
+      
+      // Handle specific error cases
+      if (error.status === 404 || (error.message && error.message.includes('Route not found'))) {
+        errorMessage = 'Password reset service is not available. Please ensure the server is running and try again.'
+      } else if (error.status === 429) {
+        errorMessage = 'Too many requests. Please wait a moment and try again.'
+      } else if (error.status === 0 || (error.message && error.message.includes('Failed to fetch'))) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection and ensure the server is running on port 5000.'
+      } else if (error.message && !error.message.includes('Route not found')) {
+        errorMessage = error.message
+      } else if (error.data && error.data.message) {
+        errorMessage = error.data.message
+      }
+      
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Reset password handler
+  const [resetPasswordData, setResetPasswordData] = useState({
+    password: '',
+    confirmPassword: ''
+  })
+  
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    if (resetPasswordData.password !== resetPasswordData.confirmPassword) {
+      setError('Passwords do not match!')
+      toast.error('Passwords do not match!')
+      return
+    }
+
+    if (resetPasswordData.password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      toast.error('Password must be at least 8 characters long')
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await authAPI.resetPassword(resetToken, resetPasswordData.password)
+      
+      if (response.success) {
+        toast.success('Password reset successful! Logging you in...')
+        
+        // Login the user with the new token
+        if (response.token && response.user) {
+          login(response.token, response.user)
+          
+          // Redirect to appropriate dashboard
+          setTimeout(() => {
+            const role = response.user.role
+            const redirectMap = {
+              student: '#/dashboard/student',
+              employer: '#/dashboard/employer',
+              college: '#/dashboard/college',
+              admin: '#/admin',
+              content_writer: '#/dashboard/content'
+            }
+            window.location.hash = redirectMap[role] || '#/'
+          }, 1000)
+        }
+      }
+    } catch (error) {
+      console.error('Reset password error:', error)
+      const errorMessage = error.message || 'Failed to reset password. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -560,12 +796,12 @@ export default function Auth() {
               {showTabs && (
                 <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
                   {showStudentTab && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('student')
-                        setError('')
-                        window.location.hash = '#/auth?tab=student'
-                      }}
+                  <button
+                    onClick={() => {
+                      setActiveTab('student')
+                      setError('')
+                      window.location.hash = '#/auth?tab=student'
+                    }}
                       className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                         activeTab === 'student'
                           ? 'bg-primary-600 text-white shadow-md'
@@ -638,7 +874,8 @@ export default function Auth() {
                 </div>
               )}
 
-              {/* Login/Register Toggle */}
+              {/* Login/Register Toggle - Hide for forgot/reset password */}
+              {!showForgotPassword && activeTab !== 'reset' && (
               <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
                 <button
                   onClick={() => {
@@ -667,6 +904,8 @@ export default function Auth() {
                   Register
                 </button>
               </div>
+              )}
+
 
               {/* Error Message */}
               {error && (
@@ -677,28 +916,168 @@ export default function Auth() {
                     </svg>
                     <div className="flex-1">
                       <p className="text-sm text-red-800 font-medium">{error}</p>
-                      {error.includes('not found') || error.includes('register') ? (
-                        <button
-                          onClick={() => setIsLogin(false)}
-                          className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
-                        >
-                          Click here to register
-                        </button>
-                      ) : error.includes('already exists') || error.includes('login') ? (
-                        <button
-                          onClick={() => setIsLogin(true)}
-                          className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
-                        >
-                          Click here to login
-                        </button>
-                      ) : null}
+                      {!showForgotPassword && activeTab !== 'reset' && (
+                        <>
+                          {error.includes('not found') || error.includes('register') ? (
+                            <button
+                              onClick={() => setIsLogin(false)}
+                              className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
+                            >
+                              Click here to register
+                            </button>
+                          ) : error.includes('already exists') || error.includes('login') ? (
+                            <button
+                              onClick={() => setIsLogin(true)}
+                              className="mt-2 text-sm text-red-700 hover:text-red-800 underline font-medium"
+                            >
+                              Click here to login
+                            </button>
+                          ) : null}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Login Form */}
-              {isLogin ? (
+              {/* Reset Password Form */}
+              {activeTab === 'reset' ? (
+                <form onSubmit={handleResetPassword} className="space-y-5">
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      Enter your new password below. Make sure it's at least 8 characters long and contains uppercase, lowercase, and a number.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="resetPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      id="resetPassword"
+                      name="password"
+                      value={resetPasswordData.password}
+                      onChange={(e) => setResetPasswordData({ ...resetPasswordData, password: e.target.value })}
+                      required
+                      minLength={8}
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="resetConfirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      id="resetConfirmPassword"
+                      name="confirmPassword"
+                      value={resetPasswordData.confirmPassword}
+                      onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full rounded-xl bg-primary-600 px-6 py-3.5 text-white text-base font-semibold transition-all shadow-lg hover:bg-primary-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] mt-2 ${
+                      isLoading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Resetting password...
+                      </span>
+                    ) : (
+                      'Reset Password'
+                    )}
+                  </button>
+                  
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('student')
+                        setIsLogin(true)
+                        setResetToken('')
+                        window.location.hash = '#/auth?tab=student'
+                      }}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </form>
+              ) : showForgotPassword ? (
+                /* Forgot Password Form */
+                <form onSubmit={handleForgotPassword} className="space-y-5">
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="forgotEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="forgotEmail"
+                      name="email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      required
+                      className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full rounded-xl bg-primary-600 px-6 py-3.5 text-white text-base font-semibold transition-all shadow-lg hover:bg-primary-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] mt-2 ${
+                      isLoading ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending reset link...
+                      </span>
+                    ) : (
+                      'Send Reset Link'
+                    )}
+                  </button>
+                  
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false)
+                        setIsLogin(true)
+                        setForgotPasswordEmail('')
+                        setError('')
+                      }}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </form>
+              ) : isLogin ? (
                 <form onSubmit={handleLoginSubmit} className="space-y-5">
                   <div>
                     <label htmlFor="loginEmail" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -737,9 +1116,17 @@ export default function Auth() {
                       <input type="checkbox" className="mr-2 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500" />
                       <span className="text-sm text-gray-600">Remember me</span>
                     </label>
-                    <a href="#/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(true)
+                        setIsLogin(false)
+                        setError('')
+                      }}
+                      className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                    >
                       Forgot password?
-                    </a>
+                    </button>
                   </div>
 
                   <button

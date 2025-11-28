@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { courseAPI } from '../utils/api.js'
+import { courseAPI, authAPI } from '../utils/api.js'
 import SyllabusEditor from '../components/SyllabusEditor.jsx'
 
 const defaultCourseForm = {
@@ -41,22 +41,37 @@ export default function ContentDashboard() {
 
 
   useEffect(() => {
-    // Get user info from localStorage
-    // Note: ProtectedRoute already handles authentication, so we can safely assume user is authenticated
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData)
-        setUser(parsedUser)
-      } catch (error) {
-        console.error('Error parsing user data:', error)
-        toast.error('Error loading user data. Please try logging in again.')
-      }
-    }
-
+    // Fetch user data from API (real-time)
+    fetchUserData()
     // Always load data - ProtectedRoute ensures we have the right user
     loadCourses()
   }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const response = await authAPI.getMe()
+      if (response.success && response.user) {
+        setUser(response.user)
+        // Update localStorage with fresh data
+        localStorage.setItem('user', JSON.stringify(response.user))
+      } else {
+        throw new Error(response.message || 'Invalid response from server')
+      }
+    } catch (error) {
+      console.error('Error fetching user from API:', error)
+      // Fallback to localStorage if API fails
+      try {
+        const userData = localStorage.getItem('user')
+        if (userData) {
+          const parsedUser = JSON.parse(userData)
+          setUser(parsedUser)
+        }
+      } catch (e) {
+        console.error('Error loading from localStorage:', e)
+        toast.error('Error loading user data. Please try logging in again.')
+      }
+    }
+  }
 
   useEffect(() => {
     if (activeSection !== 'courses' && activeSection !== 'placements') {
@@ -453,13 +468,33 @@ export default function ContentDashboard() {
   }
   const currentDescription = sectionDescriptionMap[activeSection] || 'Manage your content assets'
 
+  const isApproved = user && user.isActive === true && user.isVerified === true
+
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-4 mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">Content Writer Dashboard</h1>
+    <main className="min-h-screen bg-gray-50">
+      {/* Approval Status Banner */}
+      {!isApproved && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="max-w-7xl mx-auto px-8 py-4">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-yellow-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800">
+                  Your account is pending admin approval. Some features may be limited until your account is approved.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900">Content Writer Dashboard</h1>
             {user && (
               <span className="text-sm text-gray-500">Welcome, {user.name}</span>
             )}
@@ -1077,6 +1112,7 @@ export default function ContentDashboard() {
           </div>
         )}
 
+        </div>
       </div>
     </main>
   )

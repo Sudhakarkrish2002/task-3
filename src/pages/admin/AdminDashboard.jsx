@@ -102,7 +102,8 @@ export default function AdminDashboard() {
       return
     }
 
-    const isCurrentlyVerified = currentStatus === true || 
+    // Check verification status using the same logic as in the table rendering
+    const isCurrentlyVerified = currentStatus?.isVerified === true || 
       (role === 'employer' && currentStatus?.employerDetails?.adminApprovalStatus === 'approved') ||
       (role === 'college' && currentStatus?.collegeDetails?.adminApprovalStatus === 'approved')
     const shouldVerify = !isCurrentlyVerified
@@ -123,11 +124,13 @@ export default function AdminDashboard() {
       if (response && response.success) {
         const action = shouldVerify ? 'verified' : 'unverified'
         toast.success(`${getRoleDisplayName(role)} "${userName || 'User'}" ${action} successfully`)
-        // Reload users and dashboard stats
-        await Promise.all([
-          loadUnverifiedUsers(),
-          loadDashboardStats()
-        ])
+        
+        // Reload the user list to reflect the current filter state
+        // This ensures users are removed/added based on the verification status filter
+        await loadUnverifiedUsers()
+        
+        // Update dashboard stats in the background without blocking UI
+        loadDashboardStats().catch(err => console.error('Error updating stats:', err))
       } else {
         throw new Error(response?.message || `${shouldVerify ? 'Verification' : 'Unverification'} failed`)
       }
@@ -135,6 +138,8 @@ export default function AdminDashboard() {
       console.error(`Error ${shouldVerify ? 'verifying' : 'unverifying'} user:`, error)
       const errorMessage = error.message || error.data?.message || `Failed to ${shouldVerify ? 'verify' : 'unverify'} user. Please try again.`
       toast.error(errorMessage)
+      // Reload users on error to ensure consistency
+      loadUnverifiedUsers().catch(err => console.error('Error reloading users:', err))
     } finally {
       setVerifyingUserId(null)
     }
@@ -650,7 +655,12 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => handleVerifyUser(user._id, user.role, user.name, user)}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleVerifyUser(user._id, user.role, user.name, user)
+                              }}
                               disabled={verifyingUserId === user._id}
                               className={`flex items-center gap-1 font-medium transition-colors ${
                                 verifyingUserId === user._id

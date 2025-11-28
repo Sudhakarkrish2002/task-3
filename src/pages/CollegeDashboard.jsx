@@ -1,21 +1,43 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
+import { authAPI } from '../utils/api.js'
 
 export default function CollegeDashboard() {
   const [activeTab, setActiveTab] = useState('students')
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
     try {
-      const userData = localStorage.getItem('user')
-      if (userData) {
-        setUser(JSON.parse(userData))
+      setLoading(true)
+      const response = await authAPI.getMe()
+      if (response.success && response.user) {
+        setUser(response.user)
+        // Update localStorage with fresh data
+        localStorage.setItem('user', JSON.stringify(response.user))
+      } else {
+        throw new Error(response.message || 'Invalid response from server')
       }
     } catch (error) {
-      console.error('Error loading college profile:', error)
+      console.error('Error fetching user from API:', error)
       toast.error('Unable to load college profile. Please refresh.')
+      // Fallback to localStorage if API fails
+      try {
+        const userData = localStorage.getItem('user')
+        if (userData) {
+          setUser(JSON.parse(userData))
+        }
+      } catch (e) {
+        console.error('Error loading from localStorage:', e)
+      }
+    } finally {
+      setLoading(false)
     }
-  }, [])
+  }
 
   const handleExportList = () => {
     toast.info('Exporting student list...')
@@ -49,6 +71,20 @@ export default function CollegeDashboard() {
       .slice(0, 2)
   }
 
+  const isApproved = user && user.isActive === true && 
+    (user.isVerified === true || user.collegeDetails?.adminApprovalStatus === 'approved')
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </main>
+    )
+  }
+
   const registeredStudents = [
     { id: 1, name: 'Ananya Sharma', course: 'Full-Stack Development', status: 'Active', enrollDate: '2024-01-10' },
     { id: 2, name: 'Rahul Verma', course: 'Data Science', status: 'Active', enrollDate: '2024-01-08' },
@@ -63,6 +99,23 @@ export default function CollegeDashboard() {
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {/* Approval Status Banner */}
+      {!isApproved && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-yellow-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800">
+                  Your account is pending admin approval. Some features may be limited until your account is approved.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-bold text-gray-900">College Dashboard</h1>

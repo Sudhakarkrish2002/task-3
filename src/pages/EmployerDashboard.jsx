@@ -315,6 +315,16 @@ export default function EmployerDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Check if user is approved before allowing submission
+    const isApproved = user && user.isActive === true && 
+      (user.isVerified === true || user.employerDetails?.adminApprovalStatus === 'approved')
+    
+    if (!isApproved) {
+      toast.error('Your account is pending admin approval. Please wait for approval before posting internships.')
+      return
+    }
+    
     setLoading(true)
 
     // Declare internshipData outside try block to make it accessible in catch block
@@ -576,6 +586,16 @@ export default function EmployerDashboard() {
 
   const handleWorkshopSubmit = async (e) => {
     e.preventDefault()
+    
+    // Check if user is approved before allowing submission
+    const isApproved = user && user.isActive === true && 
+      (user.isVerified === true || user.employerDetails?.adminApprovalStatus === 'approved')
+    
+    if (!isApproved) {
+      toast.error('Your account is pending admin approval. Please wait for approval before posting workshops.')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -797,8 +817,28 @@ export default function EmployerDashboard() {
     }
   }
 
+  const isApproved = user && user.isActive === true && 
+    (user.isVerified === true || user.employerDetails?.adminApprovalStatus === 'approved')
+
   return (
     <main className="min-h-screen bg-gray-50">
+      {/* Approval Status Banner */}
+      {!isApproved && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-yellow-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800">
+                  Your account is pending admin approval. You cannot post internships or workshops until your account is approved.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-bold text-gray-900">Employer Dashboard</h1>

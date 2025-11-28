@@ -541,7 +541,7 @@ export default function Home() {
                 const isActive = currentCourseIndex === index
                 return (
                   <button
-                    key={`trending-dot-${course.id}`}
+                    key={course.id || `trending-dot-${index}`}
                     type="button"
                     onClick={() => handleDotClick(index)}
                     aria-label={`View slide ${index + 1}`}

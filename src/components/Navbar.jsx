@@ -34,7 +34,7 @@ const flatMenuItems = mainMenuItems.flatMap((item) =>
 )
 
 export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHeight = 80 }) {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, logout, activeRole, getLoggedInRoles, switchRole, getUser } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState(null)
   const mobileMenuRef = useRef(null)
@@ -127,8 +127,27 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
   }
 
   const handleLogout = () => {
-    logout()
-    window.location.hash = '#/'
+    logout() // Logout only the active role
+    const remainingRoles = getLoggedInRoles()
+    if (remainingRoles.length > 0) {
+      // Switch to another logged-in role if available
+      switchRole(remainingRoles[0])
+      const nextUser = getUser(remainingRoles[0])
+      if (nextUser) {
+        const roleDashboardMap = {
+          student: '#/dashboard/student',
+          employer: '#/dashboard/employer',
+          college: '#/dashboard/college',
+          admin: '#/admin',
+          content_writer: '#/dashboard/content'
+        }
+        window.location.hash = roleDashboardMap[nextUser.role] || '#/'
+      } else {
+        window.location.hash = '#/'
+      }
+    } else {
+      window.location.hash = '#/'
+    }
   }
 
   return (
