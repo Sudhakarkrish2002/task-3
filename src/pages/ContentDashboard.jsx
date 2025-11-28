@@ -86,15 +86,6 @@ export default function ContentDashboard() {
       const response = await courseAPI.getMyCourses({ limit: 100 })
       if (response.success) {
         const courses = response.data.courses || []
-        // Debug: Log thumbnail data for first course
-        if (courses.length > 0) {
-          console.log('Loaded courses:', courses.length)
-          console.log('First course thumbnail:', {
-            hasThumbnail: !!courses[0].thumbnail,
-            thumbnailLength: courses[0].thumbnail?.length || 0,
-            thumbnailPreview: courses[0].thumbnail?.substring(0, 50) || 'none'
-          })
-        }
         setCourses(courses)
       } else {
         console.error('Failed to load courses:', response.message)
@@ -272,20 +263,7 @@ export default function ContentDashboard() {
         }
       })
 
-      // Log thumbnail size for debugging
-      if (courseData.thumbnail) {
-        const thumbnailSize = courseData.thumbnail.length
-        console.log('Thumbnail size (base64 length):', thumbnailSize, 'bytes (~' + Math.round(thumbnailSize / 1024) + 'KB)')
-      }
-
-      console.log('Saving course data:', {
-        title: courseData.title,
-        hasThumbnail: !!courseData.thumbnail,
-        thumbnailLength: courseData.thumbnail?.length || 0,
-        featuredOnHome: courseData.featuredOnHome,
-        trendingOnHome: courseData.trendingOnHome
-      })
-
+      // Save course data
       let response
       if (showEditModal && selectedCourse) {
         // If publishing, fetch the latest course data to include existing syllabus
@@ -296,8 +274,8 @@ export default function ContentDashboard() {
               // Include existing syllabus when publishing to ensure it's preserved
               courseData.syllabus = courseResponse.data.syllabus
             }
-          } catch (error) {
-            console.warn('Could not fetch course syllabus, continuing without it:', error)
+          } catch {
+            // Continue without syllabus if fetch fails
           }
           // Save and publish in one call
           response = await courseAPI.publishCourse(selectedCourse._id, 'publish', courseData)
@@ -311,8 +289,6 @@ export default function ContentDashboard() {
           response = await courseAPI.publishCourse(response.data._id, 'publish')
         }
       }
-
-      console.log('Save response:', response)
 
       if (response && response.success) {
         toast.success(
@@ -363,8 +339,8 @@ export default function ContentDashboard() {
           if (courseResponse.success && courseResponse.data) {
             latestCourse = courseResponse.data
           }
-        } catch (error) {
-          console.warn('Could not fetch latest course data, using cached data:', error)
+        } catch {
+          // Use cached data if fetch fails
         }
       }
 
@@ -657,11 +633,8 @@ export default function ContentDashboard() {
                                       src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
                                       alt={course.title}
                                       className="w-full h-full object-cover"
-                                      onLoad={() => {
-                                        console.log('Thumbnail loaded successfully for:', course.title)
-                                      }}
                                       onError={(e) => {
-                                        console.error('Thumbnail failed to load for:', course.title, 'Thumbnail preview:', course.thumbnail?.substring(0, 100))
+                                        // Thumbnail failed to load
                                         e.target.style.display = 'none'
                                         if (!e.target.parentElement.querySelector('.error-message')) {
                                           const errorDiv = document.createElement('div')
@@ -823,11 +796,8 @@ export default function ContentDashboard() {
                                 src={course.thumbnail.startsWith('data:') ? course.thumbnail : `data:image/jpeg;base64,${course.thumbnail}`}
                                 alt={course.title}
                                 className="w-full h-full object-cover"
-                                onLoad={() => {
-                                  console.log('Mobile thumbnail loaded for:', course.title)
-                                }}
                                 onError={(e) => {
-                                  console.error('Mobile thumbnail failed for:', course.title)
+                                  // Mobile thumbnail failed to load
                                   e.target.style.display = 'none'
                                   if (!e.target.parentElement.querySelector('.error-message')) {
                                     const errorDiv = document.createElement('div')
@@ -1178,11 +1148,8 @@ function CourseForm({ formData, setFormData }) {
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) {
-      console.log('No file selected')
       return
     }
-
-    console.log('File selected:', file.name, file.type, file.size)
 
     // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
@@ -1210,7 +1177,6 @@ function CourseForm({ formData, setFormData }) {
     try {
       // Compress and resize image before converting to base64
       const compressedBase64 = await compressImage(file, 800, 600, 0.8)
-      console.log('Image compressed, original size:', file.size, 'bytes, compressed size:', compressedBase64.length, 'bytes (~' + Math.round(compressedBase64.length / 1024) + 'KB)')
       
       if (compressedBase64) {
         setFormData(prev => ({
@@ -1248,7 +1214,6 @@ function CourseForm({ formData, setFormData }) {
 
   // Set preview when formData.thumbnail changes (for editing existing courses)
   useEffect(() => {
-    console.log('formData.thumbnail changed:', formData.thumbnail ? 'has value' : 'empty', formData.thumbnail?.substring(0, 50))
     if (formData.thumbnail) {
       // Handle both URL and base64 data URLs
       if (formData.thumbnail.startsWith('data:image') || formData.thumbnail.startsWith('http://') || formData.thumbnail.startsWith('https://')) {
@@ -1421,11 +1386,8 @@ function CourseForm({ formData, setFormData }) {
                   src={imagePreview}
                   alt="Thumbnail preview"
                   className="w-full h-full object-cover"
-                  onLoad={() => {
-                    console.log('Image loaded successfully in preview')
-                  }}
                   onError={(e) => {
-                    console.error('Image failed to load in preview:', imagePreview?.substring(0, 100))
+                    // Image failed to load in preview
                     // Hide the broken image
                     e.target.style.display = 'none'
                     // Show error message

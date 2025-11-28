@@ -58,8 +58,7 @@ export default function Syllabus() {
         )
         return (exactMatch || response.data.courses[0])?._id || null
       }
-    } catch (error) {
-      console.warn('Unable to resolve course ID by title:', error)
+    } catch {
       toast.error('Unable to find that course right now. Please retry.')
     }
     return null
@@ -83,21 +82,19 @@ export default function Syllabus() {
           try {
             const response = await courseAPI.getCourseSyllabus(courseId)
             if (response.success && response.data) {
-              console.log('Syllabus API data:', response.data)
               const courseData = {
                 ...response.data,
                 syllabus: response.data.syllabus,
                 id: courseId,
                 type: courseType
               }
-              console.log('Normalized course data for syllabus page:', courseData)
               setCourse(courseData)
               storeCourseView(courseData)
               setLoading(false)
               return
             }
-          } catch (error) {
-            console.log('API fetch failed, trying fallback:', error)
+          } catch {
+            // API fetch failed, trying fallback
           }
         }
 

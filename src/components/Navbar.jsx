@@ -127,27 +127,30 @@ export default function Navbar({ bannerVisible = false, bannerHeight = 0, navHei
   }
 
   const handleLogout = () => {
-    logout() // Logout only the active role
-    const remainingRoles = getLoggedInRoles()
-    if (remainingRoles.length > 0) {
-      // Switch to another logged-in role if available
-      switchRole(remainingRoles[0])
-      const nextUser = getUser(remainingRoles[0])
-      if (nextUser) {
-        const roleDashboardMap = {
-          student: '#/dashboard/student',
-          employer: '#/dashboard/employer',
-          college: '#/dashboard/college',
-          admin: '#/admin',
-          content_writer: '#/dashboard/content'
-        }
-        window.location.hash = roleDashboardMap[nextUser.role] || '#/'
-      } else {
-        window.location.hash = '#/'
-      }
-    } else {
+    // Get current route to determine context
+    const currentHash = window.location.hash || '#/'
+    const isOnRoleDashboard = currentHash.includes('/dashboard/') || currentHash.includes('/admin')
+    
+    // Logout the active role and get remaining roles
+    const { remainingRoles, wasActiveRole } = logout()
+    
+    // If no remaining roles, redirect to home
+    if (remainingRoles.length === 0) {
       window.location.hash = '#/'
+      return
     }
+    
+    // If we logged out the active role (the one currently being used),
+    // redirect to home instead of auto-switching to another role
+    // This prevents the bug where logging out student shows admin dashboard
+    if (wasActiveRole) {
+      window.location.hash = '#/'
+      return
+    }
+    
+    // If logging out a non-active role, stay on current page
+    // The logout already happened, just keep the current view
+    // (This case is less common - typically users logout the active role)
   }
 
   return (

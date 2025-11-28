@@ -143,7 +143,6 @@ export default function Auth() {
     const updateTab = () => {
       try {
         const newTab = getTabFromURL()
-        console.log('Updating tab from URL:', newTab, 'Hash:', window.location.hash)
         setActiveTab(prevTab => {
           if (newTab !== prevTab) {
             setError('')
@@ -151,8 +150,7 @@ export default function Auth() {
           }
           return prevTab
         })
-      } catch (error) {
-        console.error('Error updating tab:', error)
+      } catch {
         // Ensure we have a valid tab even if there's an error
         setActiveTab('student')
       }
@@ -203,6 +201,12 @@ export default function Auth() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
+    
+    // Prevent multiple simultaneous login attempts
+    if (isLoading) {
+      return
+    }
+    
     setError('')
     setIsLoading(true)
 
@@ -211,8 +215,7 @@ export default function Auth() {
       let captchaToken = null
       try {
         captchaToken = await executeCaptcha('login')
-      } catch (captchaError) {
-        console.warn('CAPTCHA error:', captchaError)
+      } catch {
         // Continue without CAPTCHA if it fails (for development)
       }
       
@@ -313,8 +316,15 @@ export default function Auth() {
         setLoginData({ email: '', password: '' })
       }
     } catch (error) {
+      // Handle rate limit errors (429) - silently ignore, don't show error to user or console
+      if (error.status === 429) {
+        setIsLoading(false)
+        return
+      }
+      
+      // Only log non-rate-limit errors
       console.error('Login error:', error)
-      const errorMessage = error.message || 'Login failed. Please try again.'
+      let errorMessage = error.message || 'Login failed. Please try again.'
       
       // Check for specific error cases
       if (errorMessage.includes('No') && errorMessage.includes('account found')) {
@@ -366,8 +376,7 @@ export default function Auth() {
       let captchaToken = null
       try {
         captchaToken = await executeCaptcha('register')
-      } catch (captchaError) {
-        console.warn('CAPTCHA error:', captchaError)
+      } catch {
         // Continue without CAPTCHA if it fails (for development)
       }
       
@@ -909,13 +918,27 @@ export default function Auth() {
 
               {/* Error Message */}
               {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500">
+                <div className={`mb-6 p-4 rounded-xl border-l-4 ${
+                  error.includes('Too many') || error.includes('rate limit') || error.includes('wait')
+                    ? 'bg-yellow-50 border-yellow-500'
+                    : 'bg-red-50 border-red-500'
+                }`}>
                   <div className="flex items-start">
-                    <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
+                    {error.includes('Too many') || error.includes('rate limit') || error.includes('wait') ? (
+                      <svg className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    )}
                     <div className="flex-1">
-                      <p className="text-sm text-red-800 font-medium">{error}</p>
+                      <p className={`text-sm font-medium ${
+                        error.includes('Too many') || error.includes('rate limit') || error.includes('wait')
+                          ? 'text-yellow-800'
+                          : 'text-red-800'
+                      }`}>{error}</p>
                       {!showForgotPassword && activeTab !== 'reset' && (
                         <>
                           {error.includes('not found') || error.includes('register') ? (

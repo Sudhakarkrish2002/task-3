@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 /**
@@ -13,16 +13,30 @@ import { useAuth } from '../contexts/AuthContext.jsx';
  */
 export default function ProtectedRoute({ children, requiredRole, fallback = null }) {
   const { user, isAuthenticated, isLoading, isAuthenticatedForRole, switchRole, activeRole } = useAuth();
+  const hasRedirectedRef = useRef(false);
+  const lastCheckedRoleRef = useRef(null);
 
   useEffect(() => {
+    // Reset redirect flag when requiredRole changes
+    if (lastCheckedRoleRef.current !== requiredRole) {
+      hasRedirectedRef.current = false;
+      lastCheckedRoleRef.current = requiredRole;
+    }
+
     // Wait for auth context to finish loading
     if (isLoading) {
+      return;
+    }
+
+    // Prevent multiple redirects
+    if (hasRedirectedRef.current) {
       return;
     }
 
     if (!requiredRole) {
       // No role required, just check if authenticated
       if (!isAuthenticated) {
+        hasRedirectedRef.current = true;
         window.location.hash = '#/auth'
       }
       return;
@@ -33,6 +47,7 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
     
     if (!isAuthForRequiredRole) {
       // User is not logged in as the required role - redirect to login
+      hasRedirectedRef.current = true;
       const roleTabMap = {
         admin: 'admin',
         student: 'student',
@@ -46,7 +61,10 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
     }
 
     // User is logged in as required role - auto-switch to it if not already active
+    // IMPORTANT: Update localStorage synchronously before state update to ensure API calls use correct token
     if (activeRole !== requiredRole) {
+      // Update localStorage immediately so API calls use the correct token
+      localStorage.setItem('activeRole', requiredRole)
       switchRole(requiredRole)
     }
 
@@ -59,11 +77,12 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
       
       if (!isApproved) {
         // User is not approved, redirect to home with message
+        hasRedirectedRef.current = true;
         window.location.hash = '#/';
         return;
       }
     }
-  }, [isAuthenticated, isLoading, user, requiredRole, isAuthenticatedForRole, switchRole, activeRole]);
+  }, [isAuthenticated, isLoading, requiredRole, isAuthenticatedForRole, switchRole, activeRole, user]);
 
   // Show loading state while auth context is validating
   if (isLoading) {
@@ -88,6 +107,34 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
   // If no role required but not authenticated, don't render children
   if (!requiredRole && !isAuthenticated) {
     return null;
+  }
+
+  // CRITICAL: Wait for activeRole to match requiredRole before rendering children
+  // This ensures API calls use the correct role's token
+  // Only check this if we have a required role
+  if (requiredRole && activeRole !== requiredRole) {
+    // Check if localStorage has the correct role set (might be set but state not updated yet)
+    const storedActiveRole = localStorage.getItem('activeRole');
+    // If localStorage matches and user is authenticated for the role, render children
+    // This handles the case where login just set the role but state hasn't updated yet
+    if (storedActiveRole === requiredRole && isAuthenticatedForRole(requiredRole)) {
+      // Role is set in localStorage, just waiting for state to sync - render children
+      // The useEffect will update the state, but we don't need to block rendering
+      return <>{children}</>;
+    }
+    
+    // Show loading state while role is switching
+    if (fallback) {
+      return fallback;
+    }
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600">Switching role...</p>
+        </div>
+      </div>
+    );
   }
 
   // Check if user is active and verified (except students and admins)

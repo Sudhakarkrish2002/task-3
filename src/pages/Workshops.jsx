@@ -70,19 +70,12 @@ export default function Workshops() {
     setLoading(true)
     setError(null)
     try {
-      console.log('[Workshops] Fetching workshops from backend...')
       const response = await workshopAPI.getAllWorkshops({ limit: 100 })
-      console.log('[Workshops] Backend response received:', response)
-      console.log('[Workshops] Response success:', response.success)
-      console.log('[Workshops] Response data:', response.data)
       
       if (response.success) {
         const list = response.data?.workshops || response.data || []
-        console.log('[Workshops] Processed workshops list:', list)
-        console.log('[Workshops] Number of workshops:', list.length)
         list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         setWorkshops(list)
-        console.log('[Workshops] Workshops set in state successfully')
       } else {
         console.error('[Workshops] Response indicates failure:', response.message)
         throw new Error(response.message || 'Unable to load workshops')

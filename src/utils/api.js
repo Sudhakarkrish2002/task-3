@@ -59,8 +59,6 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   try {
-    console.log(`[API Request] ${options.method || 'GET'} ${url}`, options.body ? JSON.parse(options.body) : '');
-    
     const response = await fetch(url, config);
     
     // Handle non-JSON responses
@@ -70,15 +68,8 @@ const apiRequest = async (endpoint, options = {}) => {
       data = await response.json();
     } else {
       const text = await response.text();
-      console.error(`[API Error] Non-JSON response from ${url}:`, text);
       throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
     }
-    
-    console.log(`[API Response] ${options.method || 'GET'} ${url}`, {
-      status: response.status,
-      ok: response.ok,
-      data: data
-    });
 
     if (!response.ok) {
       // Handle 401 Unauthorized - try to refresh token instead of logging out
@@ -147,6 +138,61 @@ const apiRequest = async (endpoint, options = {}) => {
         }
       }
       
+      // Handle 429 Rate Limit errors with better messaging
+      if (response.status === 429) {
+        // Extract retry-after information from headers or response data
+        let retryAfter = null;
+        const retryAfterHeader = response.headers.get('Retry-After');
+        if (retryAfterHeader) {
+          retryAfter = parseInt(retryAfterHeader, 10);
+        } else if (data.retryAfter) {
+          retryAfter = parseInt(data.retryAfter, 10);
+        } else if (data.retry_after) {
+          retryAfter = parseInt(data.retry_after, 10);
+        }
+        
+        // Validate and normalize retryAfter value
+        // If value is unreasonably large (> 1 hour = 3600 seconds), assume it's in milliseconds
+        if (retryAfter !== null && !isNaN(retryAfter)) {
+          if (retryAfter > 3600) {
+            // Likely in milliseconds, convert to seconds
+            retryAfter = Math.ceil(retryAfter / 1000);
+          }
+          // Cap at 1 hour (3600 seconds) for display purposes
+          if (retryAfter > 3600) {
+            retryAfter = 3600;
+          }
+          // Ensure it's a positive number
+          if (retryAfter < 0) {
+            retryAfter = null;
+          }
+        } else {
+          retryAfter = null;
+        }
+        
+        const rateLimitError = new Error(data.message || data.error || 'Too many requests from this IP, please try again later.');
+        rateLimitError.status = 429;
+        rateLimitError.data = data;
+        rateLimitError.retryAfter = retryAfter; // Will be null if not provided or invalid
+        throw rateLimitError;
+      }
+      
+      // Handle 403 Forbidden errors - check if it's a role mismatch
+      // This can happen during role switching, so we'll still throw but with better context
+      if (response.status === 403) {
+        const errorMessage = data.message || data.error || 'Access forbidden';
+        // Check if it's a role authorization error
+        if (errorMessage.includes('not authorized') || errorMessage.includes('role')) {
+          // This is expected during role transitions, but we still need to throw
+          // The ProtectedRoute should prevent this by waiting for role switch
+          const roleError = new Error(errorMessage);
+          roleError.status = 403;
+          roleError.data = data;
+          roleError.isRoleError = true; // Flag to identify role-related errors
+          throw roleError;
+        }
+      }
+      
       // Create an error with more details
       const error = new Error(data.message || data.error || 'An error occurred');
       error.status = response.status;
@@ -158,11 +204,14 @@ const apiRequest = async (endpoint, options = {}) => {
   } catch (error) {
     // If it's already our custom error, just re-throw it
     if (error.status) {
-      console.error(`[API Error] ${options.method || 'GET'} ${url}`, {
-        status: error.status,
-        message: error.message,
-        data: error.data
-      });
+      // Don't log 429 rate limit errors to console - handle silently
+      if (error.status !== 429) {
+        console.error(`[API Error] ${options.method || 'GET'} ${url}`, {
+          status: error.status,
+          message: error.message,
+          data: error.data
+        });
+      }
       throw error;
     }
     // Handle network errors
@@ -172,8 +221,7 @@ const apiRequest = async (endpoint, options = {}) => {
       networkError.status = 0;
       throw networkError;
     }
-    // Otherwise, log and wrap it
-    console.error(`[API Network Error] ${options.method || 'GET'} ${url}`, error);
+    // Otherwise, wrap and throw it
     throw error;
   }
 };

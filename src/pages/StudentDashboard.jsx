@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { authAPI, courseAPI, paymentAPI } from '../utils/api.js'
 
 export default function StudentDashboard() {
+  const { user: authUser, refreshUser } = useAuth()
   const [activeTab, setActiveTab] = useState('courses')
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(authUser)
   const [loading, setLoading] = useState(true)
   const [myCourses, setMyCourses] = useState([])
   const [myCertificates, setMyCertificates] = useState([])
@@ -60,6 +62,13 @@ export default function StudentDashboard() {
     collegeName: ''
   })
 
+  // Update user when authUser changes
+  useEffect(() => {
+    if (authUser) {
+      setUser(authUser)
+    }
+  }, [authUser])
+
   // Fetch all data on component mount
   useEffect(() => {
     fetchAllData()
@@ -67,42 +76,45 @@ export default function StudentDashboard() {
 
   const fetchAllData = async () => {
       try {
-        // Fetch fresh user data from API (real-time data only)
-        try {
-          const response = await authAPI.getMe()
-          if (response.success) {
-            setUser(response.user)
-            // Set profile data from API response (real-time data)
-            setProfileData({
-              name: response.user.name || '',
-              email: response.user.email || '',
-              phone: response.user.phone || '',
-              collegeName: response.user.studentDetails?.collegeName || ''
-            })
-            if (response.user.studentDetails) {
-              setMyCertificates(response.user.studentDetails.certificates || [])
-              setMyInternships(response.user.studentDetails.internships || [])
-            }
-            // Update localStorage user data
-            localStorage.setItem('user', JSON.stringify(response.user))
+        // Use user from AuthContext, refresh if needed
+        let currentUser = authUser
+        if (!currentUser) {
+          // Try to refresh user data
+          currentUser = await refreshUser('student')
+        }
+        
+        if (currentUser) {
+          setUser(currentUser)
+          // Set profile data from user data
+          setProfileData({
+            name: currentUser.name || '',
+            email: currentUser.email || '',
+            phone: currentUser.phone || '',
+            collegeName: currentUser.studentDetails?.collegeName || ''
+          })
+          if (currentUser.studentDetails) {
+            setMyCertificates(currentUser.studentDetails.certificates || [])
+            setMyInternships(currentUser.studentDetails.internships || [])
           }
-        } catch (error) {
-          console.error('Error fetching user:', error)
-          // Fallback to localStorage only if API fails
-          const userData = localStorage.getItem('user')
-          if (userData) {
-            const parsedUser = JSON.parse(userData)
-            setUser(parsedUser)
-            setProfileData({
-              name: parsedUser.name || '',
-              email: parsedUser.email || '',
-              phone: parsedUser.phone || '',
-              collegeName: parsedUser.studentDetails?.collegeName || ''
-            })
-            if (parsedUser.studentDetails) {
-              setMyCertificates(parsedUser.studentDetails.certificates || [])
-              setMyInternships(parsedUser.studentDetails.internships || [])
+        } else {
+          // Fallback: try to fetch from API
+          try {
+            const response = await authAPI.getMe()
+            if (response.success) {
+              setUser(response.user)
+              setProfileData({
+                name: response.user.name || '',
+                email: response.user.email || '',
+                phone: response.user.phone || '',
+                collegeName: response.user.studentDetails?.collegeName || ''
+              })
+              if (response.user.studentDetails) {
+                setMyCertificates(response.user.studentDetails.certificates || [])
+                setMyInternships(response.user.studentDetails.internships || [])
+              }
             }
+          } catch (error) {
+            console.error('Error fetching user:', error)
           }
         }
       
@@ -1045,16 +1057,17 @@ ${resume.projects.map(proj => `${proj.name}: ${proj.description}`).join('\n')}
                         const response = await authAPI.updateProfile(updateData)
                         
                         if (response.success) {
-                          // Update local state with fresh data from API
-                          setUser(response.user)
-                          setProfileData({
-                            name: response.user.name || '',
-                            email: response.user.email || '',
-                            phone: response.user.phone || '',
-                            collegeName: response.user.studentDetails?.collegeName || ''
-                          })
-                          // Update localStorage with fresh data
-                          localStorage.setItem('user', JSON.stringify(response.user))
+                          // Refresh user data from AuthContext
+                          const updatedUser = await refreshUser('student')
+                          if (updatedUser) {
+                            setUser(updatedUser)
+                            setProfileData({
+                              name: updatedUser.name || '',
+                              email: updatedUser.email || '',
+                              phone: updatedUser.phone || '',
+                              collegeName: updatedUser.studentDetails?.collegeName || ''
+                            })
+                          }
                           toast.success('Profile updated successfully!')
                         } else {
                           throw new Error(response.message || 'Failed to update profile')

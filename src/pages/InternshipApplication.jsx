@@ -68,13 +68,8 @@ export default function InternshipApplication() {
           course: userData.studentDetails?.course || prev.course,
           year: userData.studentDetails?.year || prev.year
         }))
-        console.log('[InternshipApplication] User data loaded successfully')
-      } else {
-        console.warn('[InternshipApplication] Failed to get user data, but continuing:', response)
-        // Don't block - user can still submit, backend will validate
       }
     } catch (err) {
-      console.warn('[InternshipApplication] Error fetching user data, but continuing:', err)
       // Don't block - user can still submit, backend will validate from token
     }
   }
@@ -101,9 +96,7 @@ export default function InternshipApplication() {
     
     setLoading(true)
     try {
-      console.log('Loading internship with ID:', internshipId)
       const response = await internshipAPI.getInternshipById(internshipId)
-      console.log('Internship response:', response)
       
       if (response.success && response.data) {
         setInternship(response.data)
@@ -128,13 +121,6 @@ export default function InternshipApplication() {
     e.preventDefault()
     e.stopPropagation()
     
-    console.log('[InternshipApplication] Form submit triggered', {
-      internship: !!internship,
-      internshipId: internship?._id,
-      submitting,
-      loading
-    })
-    
     // Validate internship exists
     if (!internship || !internship._id) {
       console.error('[InternshipApplication] Internship not loaded')
@@ -153,7 +139,6 @@ export default function InternshipApplication() {
     // Try to get user data if not available (retry)
     let userData = currentUser
     if (!userData) {
-      console.log('[InternshipApplication] User data not available, fetching...')
       userData = await fetchUserData()
       if (userData) {
         setCurrentUser(userData)
@@ -193,22 +178,12 @@ export default function InternshipApplication() {
 
     setSubmitting(true)
     try {
-      console.log('[InternshipApplication] Submitting application:', {
-        internshipId: internship._id,
-        formData: trimmedForm,
-        hasUserData: !!userData,
-        userId: userData?._id || 'will be set by backend from token'
-      })
-
       const response = await internshipAPI.applyToInternship(
         internship._id,
         trimmedForm
       )
 
-      console.log('[InternshipApplication] Application response:', response)
-
       if (response && response.success) {
-        console.log('[InternshipApplication] Application submitted successfully')
         toast.success('Application submitted successfully! Your application has been received.')
         // Wait a bit longer to ensure toast is visible
         setTimeout(() => {
@@ -409,12 +384,7 @@ export default function InternshipApplication() {
                   type="submit"
                   disabled={submitting || loading}
                   onClick={(e) => {
-                    console.log('[InternshipApplication] Submit button clicked', {
-                      submitting,
-                      loading,
-                      hasInternship: !!internship,
-                      internshipId: internship?._id
-                    })
+                    // Submit handler
                   }}
                   className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >

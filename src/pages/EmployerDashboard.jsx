@@ -108,25 +108,12 @@ export default function EmployerDashboard() {
           industry: employerDetails.industry || ''
         }
         setProfileData(fetchedProfileData)
-        console.log('User data fetched from MongoDB:', {
-          name: response.user.name,
-          role: response.user.role,
-          isActive: response.user.isActive,
-          companyName: employerDetails.companyName,
-          industry: employerDetails.industry,
-          companyWebsite: employerDetails.companyWebsite,
-          companyDescription: employerDetails.companyDescription,
-          fullEmployerDetails: employerDetails,
-          fetchedProfileData: fetchedProfileData
-        })
         
         // Check if user has correct role and is active
         if (response.user.role !== 'employer' && response.user.role !== 'content_writer') {
-          console.warn('User role does not allow posting internships:', response.user.role)
           toast.warning(`Your role (${response.user.role}) may not have permission to post internships.`)
         }
         if (response.user.isActive === false) {
-          console.warn('User account is inactive')
           toast.error('Your account is inactive. Please contact support.')
         }
       } else {
@@ -145,36 +132,15 @@ export default function EmployerDashboard() {
       if (showLoading) {
         setLoading(true)
       }
-      console.log('[EmployerDashboard] Fetching my internships...')
-      console.log('[EmployerDashboard] Current user:', {
-        id: user?._id,
-        email: user?.email,
-        role: user?.role
-      })
       
       const response = await internshipAPI.getMyInternships()
-      console.log('[EmployerDashboard] API Response:', {
-        success: response.success,
-        data: response.data,
-        internshipsCount: response.data?.internships?.length || 0
-      })
       
       if (response.success) {
         // Handle both response.data.internships and response.data (for backward compatibility)
         const internshipsList = response.data?.internships || response.data || []
-        console.log('[EmployerDashboard] Setting internships:', {
-          count: internshipsList.length,
-          internships: internshipsList.map(i => ({
-            id: i._id,
-            title: i.title,
-            company: i.company,
-            createdBy: i.createdBy
-          }))
-        })
         
         if (Array.isArray(internshipsList)) {
           setInternships(internshipsList)
-          console.log('[EmployerDashboard] Internships set successfully, count:', internshipsList.length)
         } else {
           console.error('[EmployerDashboard] Response data is not an array:', internshipsList)
           setInternships([])
@@ -403,11 +369,6 @@ export default function EmployerDashboard() {
         startDate: formData.startDate || undefined,
         isPublished: true  // Publish immediately when created - no admin approval needed
       }
-
-      console.log('========== SUBMITTING INTERNSHIP ==========')
-      console.log('Form Data:', formData)
-      console.log('Processed Internship Data:', internshipData)
-      console.log('===========================================')
 
       let response
       if (editingInternship) {
@@ -716,38 +677,15 @@ export default function EmployerDashboard() {
       setLoading(true)
       const newIsPublished = !workshop.isPublished
       
-      console.log('[EmployerDashboard] Publishing workshop:', {
-        workshopId: workshop._id,
-        title: workshop.title,
-        currentIsPublished: workshop.isPublished,
-        currentIsActive: workshop.isActive,
-        newIsPublished: newIsPublished
-      })
-      
       // Use updateWorkshop for both publish and unpublish (consistent with internships)
       const updateData = { isPublished: newIsPublished }
       
       const response = await workshopAPI.updateWorkshop(workshop._id, updateData)
       
-      console.log('[EmployerDashboard] Workshop update response:', {
-        success: response.success,
-        data: response.data,
-        workshopId: response.data?._id,
-        isPublished: response.data?.isPublished,
-        isActive: response.data?.isActive,
-        title: response.data?.title
-      })
-      
       if (response.success) {
         // Verify the workshop was saved correctly
         if (response.data) {
           const savedWorkshop = response.data
-          console.log('[EmployerDashboard] Saved workshop verification:', {
-            id: savedWorkshop._id,
-            title: savedWorkshop.title,
-            isPublished: savedWorkshop.isPublished,
-            isActive: savedWorkshop.isActive
-          })
           
           if (newIsPublished && (!savedWorkshop.isPublished || !savedWorkshop.isActive)) {
             console.error('[EmployerDashboard] WARNING: Workshop was not saved with correct publish status!', {
@@ -1682,14 +1620,11 @@ export default function EmployerDashboard() {
                       industry: profileData.industry || '' // Ensure industry is always sent, even if empty
                     }
                     
-                    console.log('Sending update data to MongoDB:', updateData)
                     const response = await authAPI.updateProfile(updateData)
                     
                     if (response.success) {
                       // Verify the response has the updated data
-                      console.log('Response from MongoDB:', response.user)
                       const employerDetails = response.user.employerDetails || {}
-                      console.log('Employer details from response:', employerDetails)
                       
                       // Update local state with fresh data from MongoDB
                       setUser(response.user)
@@ -1702,7 +1637,6 @@ export default function EmployerDashboard() {
                         industry: employerDetails.industry || ''
                       }
                       setProfileData(updatedProfileData)
-                      console.log('Updated profileData state:', updatedProfileData)
                       
                       // Verify by fetching again after a short delay
                       setTimeout(async () => {
@@ -1710,10 +1644,6 @@ export default function EmployerDashboard() {
                           const verifyResponse = await authAPI.getMe()
                           if (verifyResponse.success) {
                             const verifyDetails = verifyResponse.user.employerDetails || {}
-                            console.log('Verification - Data in MongoDB:', {
-                              industry: verifyDetails.industry,
-                              companyName: verifyDetails.companyName
-                            })
                           }
                         } catch (err) {
                           console.error('Verification fetch error:', err)

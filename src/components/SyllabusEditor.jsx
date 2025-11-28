@@ -110,8 +110,6 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
           points: Array.isArray(project.points) ? project.points : []
         }))
 
-        console.log('Loaded projects:', projects) // Debug log
-
         setSyllabus({
           overview: response.data.syllabus.overview || '',
           modules: modules,
@@ -134,7 +132,6 @@ export default function SyllabusEditor({ courseId, courseTitle, courseCategory, 
     setSaving(true)
     try {
       const normalizedSyllabus = normalizeSyllabusForSave(syllabus)
-      console.log('Saving syllabus with projects:', normalizedSyllabus.projects) // Debug log
       const response = await courseAPI.updateCourseSyllabus(courseId, normalizedSyllabus)
       if (response.success) {
         if (shouldPublish) {

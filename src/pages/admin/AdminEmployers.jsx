@@ -75,20 +75,11 @@ export default function AdminEmployers() {
     }
 
     try {
-      console.log('Approving employer:', {
-        employerId: selectedEmployer._id,
-        action,
-        rejectionReason,
-        currentStatus: getApprovalStatus(selectedEmployer)
-      })
-      
       const response = await adminAPI.approveEmployer(
         selectedEmployer._id,
         action,
         rejectionReason
       )
-      
-      console.log('Approval response:', response)
       
       if (response.success) {
         toast.success(`Employer ${action}d successfully`)
@@ -99,8 +90,6 @@ export default function AdminEmployers() {
         
         // Force refresh the employers list
         await loadEmployers()
-        
-        console.log('Employers list refreshed after approval')
       } else {
         throw new Error(response.message || 'Failed to update employer status')
       }

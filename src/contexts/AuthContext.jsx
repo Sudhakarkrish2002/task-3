@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { authAPI } from '../utils/api.js'
 
 const AuthContext = createContext(null)
@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isValidating, setIsValidating] = useState(false) // Prevent multiple simultaneous validations
 
   // Update user and auth state based on active role
   const updateActiveRoleState = useCallback((role) => {
@@ -105,6 +106,9 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
+  // Track which roles are currently being validated to prevent duplicate requests
+  const validatingRolesRef = useRef(new Set())
+  
   // Validate token for a specific role
   const validateTokenForRole = useCallback(async (role) => {
     const token = getTokenForRole(role)
@@ -113,6 +117,13 @@ export const AuthProvider = ({ children }) => {
     if (!token || !storedUser) {
       return false
     }
+
+    // Prevent duplicate validation for the same role
+    if (validatingRolesRef.current.has(role)) {
+      return true // Assume valid if already validating
+    }
+
+    validatingRolesRef.current.add(role)
 
     try {
       // Temporarily set active role to validate this role's token
@@ -135,72 +146,118 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // Try to refresh token
-      try {
-        setActiveRole(role)
-        const refreshResponse = await authAPI.refreshToken()
-        setActiveRole(previousActiveRole)
-        
-        if (refreshResponse.success && refreshResponse.token) {
-          localStorage.setItem(getRoleTokenKey(role), refreshResponse.token)
-          if (refreshResponse.user) {
-            localStorage.setItem(getRoleUserKey(role), JSON.stringify(refreshResponse.user))
-            return true
-          } else {
-            const meResponse = await authAPI.getMe()
-            setActiveRole(previousActiveRole)
-            if (meResponse.success && meResponse.data) {
-              localStorage.setItem(getRoleUserKey(role), JSON.stringify(meResponse.data))
-              return true
-            }
-          }
-        }
-      } catch (refreshError) {
-        setActiveRole(previousActiveRole)
-        console.error(`Token refresh failed for ${role}:`, refreshError)
-      }
-      
       // Keep user logged in with stored data
       return true
     } catch (error) {
-      console.error(`Token validation failed for ${role}:`, error)
-      // Keep user logged in with stored data
+      // Handle rate limit errors gracefully - don't try to refresh on rate limit
+      if (error.message?.includes('Too many requests') || error.status === 429) {
+        // Keep user logged in with stored data during rate limit
+        return true
+      }
+      
+      // Try to refresh token only if we got a 401 or token expired error
+      if (error.status === 401 || error.message?.includes('token') || error.message?.includes('authorized')) {
+        try {
+          const previousActiveRole = getActiveRole()
+          setActiveRole(role)
+          const refreshResponse = await authAPI.refreshToken()
+          setActiveRole(previousActiveRole)
+          
+          if (refreshResponse.success && refreshResponse.token) {
+            localStorage.setItem(getRoleTokenKey(role), refreshResponse.token)
+            if (refreshResponse.user) {
+              localStorage.setItem(getRoleUserKey(role), JSON.stringify(refreshResponse.user))
+              return true
+            } else {
+              setActiveRole(role)
+              const meResponse = await authAPI.getMe()
+              setActiveRole(previousActiveRole)
+              if (meResponse.success && meResponse.data) {
+                localStorage.setItem(getRoleUserKey(role), JSON.stringify(meResponse.data))
+                return true
+              }
+            }
+          }
+        } catch {
+          const previousActiveRole = getActiveRole()
+          setActiveRole(previousActiveRole)
+          // Silently handle refresh errors - keep user logged in with stored data
+        }
+      }
+      
+      // Keep user logged in with stored data (even during rate limits)
       return true
+    } finally {
+      // Remove from validating set when done
+      validatingRolesRef.current.delete(role)
     }
   }, [])
 
   // Validate all tokens on mount
   const validateAllTokens = useCallback(async () => {
-    const loggedInRoles = getLoggedInRoles()
-    
-    if (loggedInRoles.length === 0) {
-      setUser(null)
-      setIsAuthenticated(false)
-      setActiveRoleState(null)
-      setActiveRole(null)
-      setIsLoading(false)
+    // Prevent multiple simultaneous validations
+    if (isValidating) {
       return
     }
-
-    // Validate all logged-in roles
-    await Promise.all(loggedInRoles.map(role => validateTokenForRole(role)))
-
-    // Set active role
-    const currentActiveRole = getActiveRole()
-    if (currentActiveRole && loggedInRoles.includes(currentActiveRole)) {
-      updateActiveRoleState(currentActiveRole)
-    } else {
-      // Use first logged-in role as active
-      updateActiveRoleState(loggedInRoles[0])
-    }
     
-    setIsLoading(false)
-  }, [validateTokenForRole, updateActiveRoleState])
+    setIsValidating(true)
+    
+    try {
+      const loggedInRoles = getLoggedInRoles()
+      
+      if (loggedInRoles.length === 0) {
+        setUser(null)
+        setIsAuthenticated(false)
+        setActiveRoleState(null)
+        setActiveRole(null)
+        setIsLoading(false)
+        return
+      }
 
-  // Initialize auth state on mount
+      // Validate all logged-in roles sequentially to avoid rate limiting
+      // Only validate the active role immediately, others can be validated in background
+      const currentActiveRole = getActiveRole()
+      
+      if (currentActiveRole && loggedInRoles.includes(currentActiveRole)) {
+        // Validate active role first
+        await validateTokenForRole(currentActiveRole)
+        updateActiveRoleState(currentActiveRole)
+        setIsLoading(false)
+        
+        // Validate other roles in background (don't wait) - but limit to prevent resource exhaustion
+        const otherRoles = loggedInRoles.filter(role => role !== currentActiveRole)
+        // Only validate up to 3 other roles to prevent too many requests
+        otherRoles.slice(0, 3).forEach(role => {
+          validateTokenForRole(role).catch(() => {
+            // Silently handle errors for background validation
+          })
+        })
+      } else {
+        // No active role, validate first role and set as active
+        const firstRole = loggedInRoles[0]
+        await validateTokenForRole(firstRole)
+        updateActiveRoleState(firstRole)
+        setIsLoading(false)
+        
+        // Validate other roles in background - limit to prevent resource exhaustion
+        loggedInRoles
+          .slice(1, 4) // Only validate up to 3 other roles
+          .forEach(role => {
+            validateTokenForRole(role).catch(() => {
+              // Silently handle errors for background validation
+            })
+          })
+      }
+    } finally {
+      setIsValidating(false)
+    }
+  }, [validateTokenForRole, updateActiveRoleState, isValidating])
+
+  // Initialize auth state on mount - only run once
   useEffect(() => {
     validateAllTokens()
-  }, [validateAllTokens])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount, not when validateAllTokens changes
 
   // Listen for localStorage changes (cross-tab sync) and custom auth updates (same-tab)
   useEffect(() => {
@@ -222,6 +279,8 @@ export const AuthProvider = ({ children }) => {
 
     const handleAuthUpdate = () => {
       // Handle same-tab auth updates
+      // Don't trigger validation on every update to prevent resource exhaustion
+      // Just update the state based on what's in localStorage
       const loggedInRoles = getLoggedInRoles()
       const currentActiveRole = getActiveRole()
       
@@ -232,6 +291,7 @@ export const AuthProvider = ({ children }) => {
       } else if (loggedInRoles.length > 0) {
         updateActiveRoleState(loggedInRoles[0])
       }
+      // Don't call validateAllTokens here to prevent infinite loops
     }
 
     // Listen for cross-tab storage changes
@@ -263,27 +323,46 @@ export const AuthProvider = ({ children }) => {
   }, [updateActiveRoleState])
 
   // Logout function - clears specific role's session
+  // Returns: { remainingRoles: string[], wasActiveRole: boolean }
   const logout = useCallback((role = null) => {
     const roleToLogout = role || activeRole
     
-    if (roleToLogout) {
-      localStorage.removeItem(getRoleTokenKey(roleToLogout))
-      localStorage.removeItem(getRoleUserKey(roleToLogout))
-      
-      // If logging out active role, switch to another logged-in role
-      if (roleToLogout === activeRole) {
-        const remainingRoles = getLoggedInRoles().filter(r => r !== roleToLogout)
-        if (remainingRoles.length > 0) {
-          updateActiveRoleState(remainingRoles[0])
-        } else {
-          updateActiveRoleState(null)
-        }
-      }
-      
-      // Trigger custom event for same-tab sync
-      window.dispatchEvent(new CustomEvent(AUTH_UPDATE_EVENT))
-      // Note: storage event only fires from other tabs, so we use custom event for same-tab
+    if (!roleToLogout) {
+      return { remainingRoles: [], wasActiveRole: false }
     }
+    
+    // Check remaining roles BEFORE removing the current role (fix timing issue)
+    const currentLoggedInRoles = getLoggedInRoles()
+    const wasActiveRole = roleToLogout === activeRole
+    
+    // Remove the role's data from localStorage
+    localStorage.removeItem(getRoleTokenKey(roleToLogout))
+    localStorage.removeItem(getRoleUserKey(roleToLogout))
+    
+    // Calculate remaining roles (excluding the one we just logged out)
+    const remainingRoles = currentLoggedInRoles.filter(r => r !== roleToLogout)
+    
+    // If logging out the active role, clear active role state
+    // Let the caller decide whether to switch to another role
+    if (wasActiveRole) {
+      if (remainingRoles.length === 0) {
+        // No remaining roles, clear everything
+        updateActiveRoleState(null)
+      } else {
+        // There are remaining roles, but don't auto-switch
+        // Clear active role and let caller handle switching
+        setUser(null)
+        setIsAuthenticated(false)
+        setActiveRoleState(null)
+        setActiveRole(null)
+      }
+    }
+    
+    // Trigger custom event for same-tab sync
+    window.dispatchEvent(new CustomEvent(AUTH_UPDATE_EVENT))
+    // Note: storage event only fires from other tabs, so we use custom event for same-tab
+    
+    return { remainingRoles, wasActiveRole }
   }, [activeRole, updateActiveRoleState])
 
   // Switch active role
@@ -332,8 +411,7 @@ export const AuthProvider = ({ children }) => {
         
         return userData
       }
-    } catch (error) {
-      console.error(`Error refreshing user data for ${targetRole}:`, error)
+    } catch {
       // Try to refresh token
       try {
         const previousActiveRole = getActiveRole()
@@ -351,8 +429,7 @@ export const AuthProvider = ({ children }) => {
             return refreshResponse.user
           }
         }
-      } catch (refreshError) {
-        console.error(`Token refresh failed for ${targetRole}:`, refreshError)
+      } catch {
         // Keep user logged in with stored data
         const storedUser = getUserForRole(targetRole)
         if (storedUser && targetRole === activeRole) {

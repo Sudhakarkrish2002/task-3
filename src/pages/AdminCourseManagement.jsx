@@ -25,8 +25,8 @@ export default function AdminCourseManagement() {
           setCourses(response.data.courses || [])
           return
         }
-      } catch (adminError) {
-        console.log('Admin endpoint failed, trying public endpoint')
+      } catch {
+        // Admin endpoint failed, trying public endpoint
       }
       
       const response = await courseAPI.getAllCourses({ limit: 100 })
