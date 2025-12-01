@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
-import { courseAPI } from '../utils/api.js'
+import { courseAPI, checkBackendHealth } from '../utils/api.js'
 import { getDisplayStudentCount, formatStudentCount } from '../utils/courseUtils.js'
 
 const partnerColleges = [
@@ -112,20 +112,68 @@ export default function Home() {
   // Fetch featured courses
   useEffect(() => {
     const fetchFeaturedCourses = async () => {
+      // Component-level timeout fallback (35 seconds - slightly longer than API timeout)
+      const componentTimeout = setTimeout(() => {
+        setLoadingFeatured(false);
+        setFeaturedCourses([]);
+      }, 35000);
+      
       try {
         setLoadingFeatured(true)
-        const response = await courseAPI.getAllCourses({
+        
+        // Health check before making requests (non-blocking - don't wait for it)
+        checkBackendHealth().catch(() => {
+          // Ignore health check errors - don't block the request
+        });
+        
+        // First try to get featured courses
+        let response = await courseAPI.getAllCourses({
           category: 'certification',
           featuredOnHome: true,
           limit: 3
         })
-        if (response.success && response.data.courses) {
+        
+        clearTimeout(componentTimeout);
+        
+        if (response && response.success && response.data && response.data.courses) {
+          const courses = response.data.courses
+          // If we have featured courses, use them
+          if (courses.length > 0) {
+            setFeaturedCourses(courses)
+            return
+          }
+        }
+        
+        // Fallback: get any published certification courses (without featuredOnHome requirement)
+        response = await courseAPI.getAllCourses({
+          category: 'certification',
+          limit: 3
+        }, { enableRetry: true, maxRetries: 1 })
+        
+        if (response && response.success && response.data && response.data.courses) {
           setFeaturedCourses(response.data.courses)
+        } else {
+          setFeaturedCourses([])
         }
       } catch (error) {
-        console.error('Error fetching featured courses:', error)
-        setFeaturedCourses([])
+        clearTimeout(componentTimeout);
+        console.error('Error fetching featured courses:', error.message);
+        // Try fallback on error too - get any published certification courses
+        try {
+          const fallbackResponse = await courseAPI.getAllCourses({
+            category: 'certification',
+            limit: 3
+          }, { enableRetry: true, maxRetries: 1 })
+          if (fallbackResponse && fallbackResponse.success && fallbackResponse.data && fallbackResponse.data.courses) {
+            setFeaturedCourses(fallbackResponse.data.courses)
+          } else {
+            setFeaturedCourses([])
+          }
+        } catch (fallbackError) {
+          setFeaturedCourses([])
+        }
       } finally {
+        clearTimeout(componentTimeout);
         setLoadingFeatured(false)
       }
     }
@@ -135,20 +183,68 @@ export default function Home() {
   // Fetch trending courses
   useEffect(() => {
     const fetchTrendingCourses = async () => {
+      // Component-level timeout fallback (35 seconds - slightly longer than API timeout)
+      const componentTimeout = setTimeout(() => {
+        setLoadingTrending(false);
+        setTrendingCourses([]);
+      }, 35000);
+      
       try {
         setLoadingTrending(true)
-        const response = await courseAPI.getAllCourses({
+        
+        // Health check before making requests (non-blocking - don't wait for it)
+        checkBackendHealth().catch(() => {
+          // Ignore health check errors - don't block the request
+        });
+        
+        // First try to get trending courses
+        let response = await courseAPI.getAllCourses({
           category: 'certification',
           trendingOnHome: true,
           limit: 8
         })
-        if (response.success && response.data.courses) {
+        
+        clearTimeout(componentTimeout);
+        
+        if (response && response.success && response.data && response.data.courses) {
+          const courses = response.data.courses
+          // If we have trending courses, use them
+          if (courses.length > 0) {
+            setTrendingCourses(courses)
+            return
+          }
+        }
+        
+        // Fallback: get any published certification courses (without trendingOnHome requirement)
+        response = await courseAPI.getAllCourses({
+          category: 'certification',
+          limit: 8
+        }, { enableRetry: true, maxRetries: 1 })
+        
+        if (response && response.success && response.data && response.data.courses) {
           setTrendingCourses(response.data.courses)
+        } else {
+          setTrendingCourses([])
         }
       } catch (error) {
-        console.error('Error fetching trending courses:', error)
-        setTrendingCourses([])
+        clearTimeout(componentTimeout);
+        console.error('Error fetching trending courses:', error.message);
+        // Try fallback on error too - get any published certification courses
+        try {
+          const fallbackResponse = await courseAPI.getAllCourses({
+            category: 'certification',
+            limit: 8
+          }, { enableRetry: true, maxRetries: 1 })
+          if (fallbackResponse && fallbackResponse.success && fallbackResponse.data && fallbackResponse.data.courses) {
+            setTrendingCourses(fallbackResponse.data.courses)
+          } else {
+            setTrendingCourses([])
+          }
+        } catch (fallbackError) {
+          setTrendingCourses([])
+        }
       } finally {
+        clearTimeout(componentTimeout);
         setLoadingTrending(false)
       }
     }
@@ -243,6 +339,7 @@ export default function Home() {
     const newIndex = Math.round(container.scrollLeft / cardWidth)
     setCurrentCourseIndex((prev) => (prev === newIndex ? prev : newIndex))
   }, [])
+
 
   return (
     <main>
@@ -348,10 +445,12 @@ export default function Home() {
             <div className="mt-8 text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
               <p className="text-gray-600 mt-4">Loading featured courses...</p>
+              <p className="text-sm text-gray-500 mt-2">If this takes too long, the server may be starting up (Render.com free tier)</p>
             </div>
           ) : featuredCourses.length === 0 ? (
             <div className="mt-8 text-center py-8">
               <p className="text-gray-600">No featured courses available at the moment.</p>
+              <p className="text-sm text-gray-500 mt-2">Please check back later or contact support if the issue persists.</p>
             </div>
           ) : (
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -610,6 +709,66 @@ export default function Home() {
                 </div>
               )
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Simple Steps Section */}
+      <section className="py-16 bg-white border-t-2 border-gray-200">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Simple Steps to Your Consultation</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            {/* Step 1 */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-24 h-24 rounded-xl bg-primary-500 border-4 border-white shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">1. Schedule Your Consultation</h3>
+              <p className="text-gray-600 text-sm">Book a convenient time slot that fits your schedule</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-24 h-24 rounded-xl bg-primary-500 border-4 border-white shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">2. Get a Call from Career Expert</h3>
+              <p className="text-gray-600 text-sm">Receive personalized guidance from our experienced career counselors</p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-24 h-24 rounded-xl bg-primary-500 border-4 border-white shadow-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">3. Discover Your Opportunities</h3>
+              <p className="text-gray-600 text-sm">Explore career paths and opportunities tailored to your skills</p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <a 
+              href="#/consultation"
+              className="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-primary-600 text-white font-semibold text-base transition-all duration-300 hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-500/50 hover:scale-105"
+            >
+              View More
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
           </div>
         </div>
       </section>

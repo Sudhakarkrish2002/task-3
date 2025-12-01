@@ -59,15 +59,61 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   try {
-    const response = await fetch(url, config);
+    // Add timeout to fetch (30 seconds for Render.com cold starts)
+    const timeoutMs = 30000;
+    const controller = new AbortController();
+    let timeoutId;
+    
+    // Create timeout promise as backup (in case AbortController doesn't work)
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        controller.abort(); // Also abort the controller
+        reject(new Error(`Request timeout after ${timeoutMs}ms - Server may be sleeping (Render.com free tier) or slow to respond`));
+      }, timeoutMs);
+    });
+    
+    // Add abort signal to config
+    const configWithTimeout = {
+      ...config,
+      signal: controller.signal
+    };
+    
+    let response;
+    try {
+      // Use Promise.race to ensure timeout works even if AbortController fails
+      const fetchPromise = fetch(url, configWithTimeout).then(res => {
+        if (timeoutId) clearTimeout(timeoutId);
+        return res;
+      }).catch(err => {
+        if (timeoutId) clearTimeout(timeoutId);
+        throw err;
+      });
+      
+      response = await Promise.race([fetchPromise, timeoutPromise]);
+    } catch (fetchError) {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError' || fetchError.message.includes('timeout')) {
+        const timeoutError = new Error(`Request timeout after ${timeoutMs}ms - Server may be sleeping (Render.com free tier) or slow to respond`);
+        timeoutError.status = 0;
+        timeoutError.isTimeout = true;
+        throw timeoutError;
+      }
+      throw fetchError;
+    }
     
     // Handle non-JSON responses
     let data;
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError.message);
+        throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+      }
     } else {
       const text = await response.text();
+      console.error('Non-JSON response received:', contentType);
       throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
     }
 
@@ -204,25 +250,50 @@ const apiRequest = async (endpoint, options = {}) => {
   } catch (error) {
     // If it's already our custom error, just re-throw it
     if (error.status) {
-      // Don't log 429 rate limit errors to console - handle silently
-      if (error.status !== 429) {
-        console.error(`[API Error] ${options.method || 'GET'} ${url}`, {
-          status: error.status,
-          message: error.message,
-          data: error.data
-        });
-      }
       throw error;
     }
+    // Handle timeout errors
+    if (error.message && error.message.includes('timeout')) {
+      const timeoutError = new Error('Request timed out. The server may be slow or unresponsive. Please try again.');
+      timeoutError.status = 0;
+      timeoutError.isTimeout = true;
+      timeoutError.originalError = error;
+      throw timeoutError;
+    }
+    
     // Handle network errors
-    if (error.message && error.message.includes('Failed to fetch')) {
-      console.error(`[API Network Error] ${options.method || 'GET'} ${url}`, error);
-      const networkError = new Error('Unable to connect to server. Please check your internet connection and ensure the server is running.');
+    if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError' || error.message.includes('Network request failed'))) {
+      const networkError = new Error('Unable to connect to server. Please check your internet connection and ensure the server is running. If using Render.com free tier, the server may be sleeping.');
       networkError.status = 0;
+      networkError.isNetworkError = true;
+      networkError.originalError = error;
       throw networkError;
     }
     // Otherwise, wrap and throw it
     throw error;
+  }
+};
+
+// Health check function
+export const checkBackendHealth = async () => {
+  try {
+    const healthUrl = `${API_BASE_URL}/health`;
+    const response = await fetch(healthUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(5000) // 5 second timeout for health check
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return { healthy: true, data };
+    } else {
+      return { healthy: false, status: response.status };
+    }
+  } catch (error) {
+    return { healthy: false, error: error.message };
   }
 };
 
@@ -286,12 +357,63 @@ export const authAPI = {
   },
 };
 
+// Helper function for retry logic with exponential backoff
+const retryRequest = async (requestFn, maxRetries = 2, baseDelay = 1000) => {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      return await requestFn();
+    } catch (error) {
+      lastError = error;
+      const shouldRetry = 
+        (error.isTimeout || error.isNetworkError || error.status === 0) && 
+        attempt < maxRetries;
+      
+      if (!shouldRetry) {
+        break;
+      }
+    }
+  }
+  throw lastError;
+};
+
 // Course API functions
 export const courseAPI = {
   // Get all courses
-  getAllCourses: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/courses${queryParams ? `?${queryParams}` : ''}`);
+  getAllCourses: async (params = {}, retryOptions = { maxRetries: 2, enableRetry: true }) => {
+    // Convert params to URLSearchParams, handling boolean values correctly
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        // Convert boolean to string 'true' or 'false'
+        if (typeof value === 'boolean') {
+          searchParams.append(key, value.toString());
+        } else {
+          searchParams.append(key, value.toString());
+        }
+      }
+    });
+    const queryString = searchParams.toString();
+    const url = `/courses${queryString ? `?${queryString}` : ''}`;
+    
+    const makeRequest = async () => {
+      return await apiRequest(url);
+    };
+    
+    try {
+      if (retryOptions.enableRetry) {
+        return await retryRequest(makeRequest, retryOptions.maxRetries);
+      } else {
+        return await makeRequest();
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error.message);
+      throw error;
+    }
   },
 
   // Get course by ID
@@ -756,6 +878,39 @@ export const adminAPI = {
   getUnverifiedUsers: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
     return apiRequest(`/admin/users/unverified${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  // Consultation Management
+  getAllConsultations: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/consultations${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getConsultationById: async (consultationId) => {
+    return apiRequest(`/admin/consultations/${consultationId}`);
+  },
+
+  updateConsultation: async (consultationId, consultationData) => {
+    return apiRequest(`/admin/consultations/${consultationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(consultationData),
+    });
+  },
+
+  deleteConsultation: async (consultationId) => {
+    return apiRequest(`/admin/consultations/${consultationId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Consultation API (Public)
+export const consultationAPI = {
+  createConsultation: async (consultationData) => {
+    return apiRequest('/consultation', {
+      method: 'POST',
+      body: JSON.stringify(consultationData),
+    });
   },
 };
 

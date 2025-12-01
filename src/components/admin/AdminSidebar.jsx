@@ -8,6 +8,7 @@ import {
   DocumentIcon,
   UploadIcon,
   BriefcaseIcon,
+  PhoneIcon,
 } from './Icons.jsx'
 
 const menuItems = [
@@ -19,6 +20,7 @@ const menuItems = [
   { label: 'Blogs', hash: '#/admin/blogs', Icon: DocumentIcon },
   { label: 'Submissions', hash: '#/admin/submissions', Icon: UploadIcon },
   { label: 'Internships', hash: '#/admin/internships', Icon: BriefcaseIcon },
+  { label: 'Consultations', hash: '#/admin/consultations', Icon: PhoneIcon },
 ]
 
 export default function AdminSidebar() {

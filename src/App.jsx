@@ -31,6 +31,7 @@ import AdminCourses from './pages/admin/AdminCourses.jsx'
 import AdminBlogs from './pages/admin/AdminBlogs.jsx'
 import AdminSubmissions from './pages/admin/AdminSubmissions.jsx'
 import AdminInternships from './pages/admin/AdminInternships.jsx'
+import AdminConsultations from './pages/admin/AdminConsultations.jsx'
 import ContentDashboard from './pages/ContentDashboard.jsx'
 import TermsConditions from './pages/TermsConditions.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
@@ -40,6 +41,7 @@ import FAQ from './pages/FAQ.jsx'
 import Careers from './pages/Careers.jsx'
 import ResearchDevelopment from './pages/ResearchDevelopment.jsx'
 import BlogDetail from './pages/BlogDetail.jsx'
+import Consultation from './pages/Consultation.jsx'
 
 const routes = {
   '#/': <Home />,
@@ -74,6 +76,7 @@ const routes = {
   '#/admin/blogs': <ProtectedRoute requiredRole="admin"><AdminBlogs /></ProtectedRoute>,
   '#/admin/submissions': <ProtectedRoute requiredRole="admin"><AdminSubmissions /></ProtectedRoute>,
   '#/admin/internships': <ProtectedRoute requiredRole="admin"><AdminInternships /></ProtectedRoute>,
+  '#/admin/consultations': <ProtectedRoute requiredRole="admin"><AdminConsultations /></ProtectedRoute>,
   '#/terms': <TermsConditions />,
   '#/privacy': <PrivacyPolicy />,
   '#/refund': <RefundPolicy />,
@@ -82,6 +85,7 @@ const routes = {
   '#/careers': <Careers />,
   '#/other-services/research': <ResearchDevelopment />,
   '#/blog/detail': <BlogDetail />,
+  '#/consultation': <Consultation />,
 }
 
 export default function App() {
