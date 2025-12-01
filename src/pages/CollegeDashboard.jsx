@@ -71,8 +71,9 @@ export default function CollegeDashboard() {
       .slice(0, 2)
   }
 
+  // ONLY admin approval allows access - not isVerified
   const isApproved = user && user.isActive === true && 
-    (user.isVerified === true || user.collegeDetails?.adminApprovalStatus === 'approved')
+    user.collegeDetails?.adminApprovalStatus === 'approved'
 
   if (loading) {
     return (

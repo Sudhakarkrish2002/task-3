@@ -282,9 +282,9 @@ export default function EmployerDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Check if user is approved before allowing submission
+    // Check if user is approved before allowing submission - ONLY admin approval allows access
     const isApproved = user && user.isActive === true && 
-      (user.isVerified === true || user.employerDetails?.adminApprovalStatus === 'approved')
+      user.employerDetails?.adminApprovalStatus === 'approved'
     
     if (!isApproved) {
       toast.error('Your account is pending admin approval. Please wait for approval before posting internships.')
@@ -548,9 +548,9 @@ export default function EmployerDashboard() {
   const handleWorkshopSubmit = async (e) => {
     e.preventDefault()
     
-    // Check if user is approved before allowing submission
+    // Check if user is approved before allowing submission - ONLY admin approval allows access
     const isApproved = user && user.isActive === true && 
-      (user.isVerified === true || user.employerDetails?.adminApprovalStatus === 'approved')
+      user.employerDetails?.adminApprovalStatus === 'approved'
     
     if (!isApproved) {
       toast.error('Your account is pending admin approval. Please wait for approval before posting workshops.')
@@ -755,8 +755,9 @@ export default function EmployerDashboard() {
     }
   }
 
+  // ONLY admin approval allows access - not isVerified
   const isApproved = user && user.isActive === true && 
-    (user.isVerified === true || user.employerDetails?.adminApprovalStatus === 'approved')
+    user.employerDetails?.adminApprovalStatus === 'approved'
 
   return (
     <main className="min-h-screen bg-gray-50">

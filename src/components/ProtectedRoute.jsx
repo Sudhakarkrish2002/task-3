@@ -68,12 +68,24 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
       switchRole(requiredRole)
     }
 
-    // Check if user is active and verified (except students who can access regardless)
+    // Check if user is active and has admin approval (except students and admins who can access regardless)
     if (user && user.role !== 'student' && user.role !== 'admin') {
-      const isApproved = user.isActive === true && 
-        (user.isVerified === true || 
-         (user.role === 'employer' && user.employerDetails?.adminApprovalStatus === 'approved') ||
-         (user.role === 'college' && user.collegeDetails?.adminApprovalStatus === 'approved'));
+      let isApproved = false;
+      
+      // For employers: ONLY admin approval allows access
+      if (user.role === 'employer') {
+        isApproved = user.isActive === true && 
+                     user.employerDetails?.adminApprovalStatus === 'approved';
+      }
+      // For colleges: ONLY admin approval allows access
+      else if (user.role === 'college') {
+        isApproved = user.isActive === true && 
+                     user.collegeDetails?.adminApprovalStatus === 'approved';
+      }
+      // For content_writer: Check if they need approval (for now, allow if active)
+      else if (user.role === 'content_writer') {
+        isApproved = user.isActive === true;
+      }
       
       if (!isApproved) {
         // User is not approved, redirect to home with message
@@ -137,12 +149,24 @@ export default function ProtectedRoute({ children, requiredRole, fallback = null
     );
   }
 
-  // Check if user is active and verified (except students and admins)
+  // Check if user is active and has admin approval (except students and admins)
   if (user && user.role !== 'student' && user.role !== 'admin') {
-    const isApproved = user.isActive === true && 
-      (user.isVerified === true || 
-       (user.role === 'employer' && user.employerDetails?.adminApprovalStatus === 'approved') ||
-       (user.role === 'college' && user.collegeDetails?.adminApprovalStatus === 'approved'));
+    let isApproved = false;
+    
+    // For employers: ONLY admin approval allows access
+    if (user.role === 'employer') {
+      isApproved = user.isActive === true && 
+                   user.employerDetails?.adminApprovalStatus === 'approved';
+    }
+    // For colleges: ONLY admin approval allows access
+    else if (user.role === 'college') {
+      isApproved = user.isActive === true && 
+                   user.collegeDetails?.adminApprovalStatus === 'approved';
+    }
+    // For content_writer: Check if they need approval (for now, allow if active)
+    else if (user.role === 'content_writer') {
+      isApproved = user.isActive === true;
+    }
     
     if (!isApproved) {
       return (

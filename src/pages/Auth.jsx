@@ -423,11 +423,12 @@ export default function Auth() {
         login(response.token, response.user)
         
         const role = response.user.role
+        // For employers and colleges: ONLY admin approval allows access
         const isApproved = role === 'student' || role === 'admin' || 
           (response.user.isActive === true && 
-           (response.user.isVerified === true || 
-            (role === 'employer' && response.user.employerDetails?.adminApprovalStatus === 'approved') ||
-            (role === 'college' && response.user.collegeDetails?.adminApprovalStatus === 'approved')))
+           ((role === 'employer' && response.user.employerDetails?.adminApprovalStatus === 'approved') ||
+            (role === 'college' && response.user.collegeDetails?.adminApprovalStatus === 'approved') ||
+            (role === 'content_writer'))) // content_writer can access if active
         
         if (isApproved) {
           toast.success(`Congratulations! Your ${activeTab} account has been created successfully.`)
