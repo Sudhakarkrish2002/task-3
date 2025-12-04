@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react'
 import {
   DashboardIcon,
   UsersIcon,
-  BuildingIcon,
   SchoolIcon,
   BookIcon,
-  DocumentIcon,
   UploadIcon,
   BriefcaseIcon,
   PhoneIcon,
@@ -14,10 +12,8 @@ import {
 const menuItems = [
   { label: 'Dashboard', hash: '#/admin', Icon: DashboardIcon },
   { label: 'Students', hash: '#/admin/students', Icon: UsersIcon },
-  { label: 'Employers', hash: '#/admin/employers', Icon: BuildingIcon },
   { label: 'Colleges', hash: '#/admin/colleges', Icon: SchoolIcon },
   { label: 'Courses', hash: '#/admin/courses', Icon: BookIcon },
-  { label: 'Blogs', hash: '#/admin/blogs', Icon: DocumentIcon },
   { label: 'Submissions', hash: '#/admin/submissions', Icon: UploadIcon },
   { label: 'Internships', hash: '#/admin/internships', Icon: BriefcaseIcon },
   { label: 'Consultations', hash: '#/admin/consultations', Icon: PhoneIcon },

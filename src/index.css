@@ -43,10 +43,6 @@ html {
   scroll-behavior: smooth;
   width: 100%;
   max-width: 100vw;
-  /* Enable hardware acceleration for smooth scrolling */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: scroll-position;
   /* Smooth scroll with better easing */
   scroll-padding-top: 80px;
 }
@@ -84,9 +80,6 @@ body {
   /* Smooth scrolling optimizations */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  /* Reduce repaints during scroll */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   /* Smooth scroll restoration */
   scroll-padding-top: 80px;
 }
@@ -133,13 +126,11 @@ body {
   overflow: hidden;
   white-space: nowrap;
   position: relative;
-  transform: translateZ(0);
 }
 
 .partner-scroll-content {
   display: inline-flex;
   gap: 1.5rem;
-  will-change: transform;
   backface-visibility: hidden;
 }
 
@@ -177,17 +168,13 @@ body {
   position: relative;
   height: 400px;
   perspective: 1000px;
-  transform: translateZ(0);
-  will-change: scroll-position;
 }
 
 .college-scroll-content {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  will-change: transform;
   backface-visibility: hidden;
-  transform: translateZ(0);
   contain: layout style paint;
 }
 
@@ -196,13 +183,24 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
-  transform: translateZ(0);
   mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
   -ms-overflow-style: none;
   scrollbar-width: none;
   cursor: grab;
   touch-action: pan-x;
+  /* Optimize scrolling performance */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  /* Enhanced smooth scrolling with snap */
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 1.5rem;
+  /* Smooth momentum scrolling */
+  scroll-snap-stop: always;
+  /* Better scroll performance */
+  will-change: scroll-position;
+  /* Smooth scroll timing */
+  scroll-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .trending-courses-scroll-container::-webkit-scrollbar {
@@ -216,15 +214,18 @@ body {
 .trending-courses-scroll-content {
   display: inline-flex;
   gap: 0;
-  will-change: transform;
   backface-visibility: hidden;
+}
+
+.trending-courses-scroll-content > * {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  /* Smooth scroll alignment */
+  scroll-margin: 0 1.5rem;
 }
 
 /* Global scroll performance optimizations */
 main {
-  /* Enable hardware acceleration */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   /* Smooth scroll behavior */
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
@@ -232,9 +233,6 @@ main {
 
 /* Optimize sections for smooth scrolling */
 section {
-  /* Hardware acceleration */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   backface-visibility: hidden;
   /* Smooth scroll into view */
   scroll-margin-top: 80px;
@@ -242,41 +240,12 @@ section {
 
 /* Optimize sticky elements */
 .sticky {
-  /* Enable GPU acceleration for sticky positioning */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
   backface-visibility: hidden;
-}
-
-/* Optimize backdrop blur elements to reduce performance impact */
-[class*="backdrop-blur"] {
-  /* Reduce blur performance impact */
-  will-change: filter;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
 }
 
 /* Optimize animated elements */
 [class*="animate-"] {
-  will-change: transform;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   backface-visibility: hidden;
-}
-
-/* Optimize tables and large content blocks */
-table {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* Reduce repaints for cards and containers */
-.bg-white,
-.border,
-.rounded {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
 }
 
 /* Blog Detail Content Styles */
@@ -341,5 +310,59 @@ main {
   body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+  }
+}
+
+/* Premium 3D Neon Glow Hover Effect */
+.footer-header-premium {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.footer-header-premium:hover {
+  transform: translateY(-5px) scale(1.05);
+  color: #ffffff;
+  text-shadow: 
+    0 0 10px rgba(232, 213, 255, 0.8),
+    0 0 20px rgba(216, 180, 254, 0.6),
+    0 0 30px rgba(192, 132, 252, 0.4),
+    0 0 40px rgba(168, 85, 247, 0.3),
+    0 5px 15px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.2);
+}
+
+.footer-header-premium::before {
+  content: 'KIWISEDUTECH';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(232, 213, 255, 0.3), rgba(192, 132, 252, 0.3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+  transform: translateZ(-20px);
+}
+
+.footer-header-premium:hover::before {
+  opacity: 1;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateZ(-20px) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateZ(-20px) scale(1.02);
   }
 }

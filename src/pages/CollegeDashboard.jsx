@@ -86,17 +86,6 @@ export default function CollegeDashboard() {
     )
   }
 
-  const registeredStudents = [
-    { id: 1, name: 'Ananya Sharma', course: 'Full-Stack Development', status: 'Active', enrollDate: '2024-01-10' },
-    { id: 2, name: 'Rahul Verma', course: 'Data Science', status: 'Active', enrollDate: '2024-01-08' },
-    { id: 3, name: 'Priya Patel', course: 'React Development', status: 'Completed', enrollDate: '2023-11-15' },
-  ]
-
-  const partnerCourses = [
-    { id: 1, title: 'Full-Stack Web Development', students: 45, completionRate: 78 },
-    { id: 2, title: 'Data Science Foundations', students: 32, completionRate: 82 },
-    { id: 3, title: 'Cloud Computing', students: 28, completionRate: 71 },
-  ]
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -183,40 +172,8 @@ export default function CollegeDashboard() {
                     <span className="absolute inset-0 bg-linear-to-r from-primary-400 via-primary-500 to-primary-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
                   </button>
                 </div>
-                <div className="space-y-4">
-                  {registeredStudents.map((student) => (
-                    <div key={student.id} className="p-5 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                            <span className="text-lg font-bold text-primary-700">
-                              {student.name.split(' ').map(n => n[0]).join('')}
-                            </span>
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900">{student.name}</h3>
-                            <p className="text-sm text-gray-600">{student.course}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Enrolled on {new Date(student.enrollDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          student.status === 'Active'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {student.status}
-                        </span>
-                      </div>
-                      <button 
-                        onClick={() => handleViewStudentDetails(student.id)}
-                        className="text-sm text-primary-700 hover:text-primary-800 font-medium transition-all duration-300 ease-in-out hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-block"
-                      >
-                        View Details →
-                      </button>
-                    </div>
-                  ))}
+                <div className="text-center py-8 text-gray-600">
+                  <p>No registered students available at the moment.</p>
                 </div>
               </div>
             )}
@@ -224,44 +181,8 @@ export default function CollegeDashboard() {
             {activeTab === 'courses' && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Partner Courses</h2>
-                <div className="space-y-4">
-                  {partnerCourses.map((course) => (
-                    <div key={course.id} className="p-5 rounded-lg border border-gray-200">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-bold text-gray-900 mb-2">{course.title}</h3>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Students Enrolled: </span>
-                              <span className="font-semibold text-gray-900">{course.students}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Completion Rate: </span>
-                              <span className="font-semibold text-gray-900">{course.completionRate}%</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-gray-600">Completion Progress</span>
-                          <span className="font-semibold text-gray-900">{course.completionRate}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary-600 h-2 rounded-full"
-                            style={{ width: `${course.completionRate}%` }}
-                          />
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => handleViewCourseDetails(course.id)}
-                        className="text-sm text-primary-700 hover:text-primary-800 font-medium"
-                      >
-                        View Course Details →
-                      </button>
-                    </div>
-                  ))}
+                <div className="text-center py-8 text-gray-600">
+                  <p>No courses available at the moment.</p>
                 </div>
               </div>
             )}

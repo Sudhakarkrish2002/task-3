@@ -3,32 +3,6 @@ import { courseAPI } from '../utils/api.js'
 import { partnerCompanies } from '../utils/partnerCompanies.js'
 import { getDisplayStudentCount, formatStudentCount } from '../utils/courseUtils.js'
 
-const successStories = [
-  {
-    name: 'Priya Sharma',
-    course: 'Full-Stack Web Development',
-    company: 'TechCorp',
-    salary: '₹10 LPA',
-    quote: 'The mentorship and live sessions helped me land my dream job at a top tech company within 2 months of completion.',
-    image: 'PS',
-  },
-  {
-    name: 'Rajesh Kumar',
-    course: 'Data Science & ML',
-    company: 'DataViz',
-    salary: '₹12 LPA',
-    quote: 'The placement support team worked tirelessly with me. Got placed at a leading data analytics firm with an amazing package.',
-    image: 'RK',
-  },
-  {
-    name: 'Anita Patel',
-    course: 'DevOps Engineering',
-    company: 'CloudNova',
-    salary: '₹11 LPA',
-    quote: 'From zero knowledge to getting hired - the training program transformed my career completely. Highly recommended!',
-    image: 'AP',
-  },
-]
 
 const successMetrics = [
   { label: 'Placement Rate', value: '90%', description: 'Average placement rate across all programs' },
@@ -406,43 +380,6 @@ export default function PlacementTraining() {
               })}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Success Stories */}
-      <section className="py-12 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Success Stories</h2>
-            <p className="text-gray-600">Real stories from students who got placed through our programs</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {successStories.map((story, idx) => (
-              <div key={idx} className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
-                    {story.image}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">{story.name}</div>
-                    <div className="text-sm text-gray-600">{story.course}</div>
-                  </div>
-                </div>
-                <blockquote className="text-sm text-gray-700 italic mb-4">"{story.quote}"</blockquote>
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-500">Placed at</div>
-                    <div className="text-sm font-semibold text-gray-900">{story.company}</div>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-500">Package</div>
-                    <div className="text-sm font-semibold text-primary-700">{story.salary}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

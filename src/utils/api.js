@@ -767,23 +767,6 @@ export const adminAPI = {
     return await response.text();
   },
 
-  // Employer Management
-  getAllEmployers: async (params = {}) => {
-    const queryParams = new URLSearchParams(params).toString();
-    return apiRequest(`/admin/employers${queryParams ? `?${queryParams}` : ''}`);
-  },
-
-  getEmployerById: async (employerId) => {
-    return apiRequest(`/admin/employers/${employerId}`);
-  },
-
-  approveEmployer: async (employerId, action, rejectionReason = '') => {
-    return apiRequest(`/admin/employers/${employerId}/approve`, {
-      method: 'PUT',
-      body: JSON.stringify({ action, rejectionReason }),
-    });
-  },
-
   // College Management
   getAllColleges: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
@@ -902,6 +885,16 @@ export const adminAPI = {
       method: 'DELETE',
     });
   },
+
+  // Job Management
+  getAllJobs: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/admin/jobs${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getJobById: async (jobId) => {
+    return apiRequest(`/admin/jobs/${jobId}`);
+  },
 };
 
 // Consultation API (Public)
@@ -910,6 +903,39 @@ export const consultationAPI = {
     return apiRequest('/consultation', {
       method: 'POST',
       body: JSON.stringify(consultationData),
+    });
+  },
+};
+
+// Job API (Public)
+export const jobAPI = {
+  getAllJobs: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return apiRequest(`/jobs${queryParams ? `?${queryParams}` : ''}`);
+  },
+
+  getJobById: async (jobId) => {
+    return apiRequest(`/jobs/${jobId}`);
+  },
+
+  // Admin only
+  createJob: async (jobData) => {
+    return apiRequest('/jobs', {
+      method: 'POST',
+      body: JSON.stringify(jobData),
+    });
+  },
+
+  updateJob: async (jobId, jobData) => {
+    return apiRequest(`/jobs/${jobId}`, {
+      method: 'PUT',
+      body: JSON.stringify(jobData),
+    });
+  },
+
+  deleteJob: async (jobId) => {
+    return apiRequest(`/jobs/${jobId}`, {
+      method: 'DELETE',
     });
   },
 };

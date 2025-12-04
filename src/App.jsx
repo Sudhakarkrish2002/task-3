@@ -11,7 +11,6 @@ import PlacementTraining from './pages/PlacementTraining.jsx'
 import Workshops from './pages/Workshops.jsx'
 import Internships from './pages/Internships.jsx'
 import InternshipApplication from './pages/InternshipApplication.jsx'
-import Employers from './pages/Employers.jsx'
 import CollegeRegistration from './pages/CollegeRegistration.jsx'
 import StudentMembership from './pages/StudentMembership.jsx'
 import AboutUs from './pages/AboutUs.jsx'
@@ -21,11 +20,9 @@ import Auth from './pages/Auth.jsx'
 import SearchResults from './pages/SearchResults.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import StudentInternshipApplicationDetails from './pages/StudentInternshipApplicationDetails.jsx'
-import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import CollegeDashboard from './pages/CollegeDashboard.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminStudents from './pages/admin/AdminStudents.jsx'
-import AdminEmployers from './pages/admin/AdminEmployers.jsx'
 import AdminColleges from './pages/admin/AdminColleges.jsx'
 import AdminCourses from './pages/admin/AdminCourses.jsx'
 import AdminBlogs from './pages/admin/AdminBlogs.jsx'
@@ -51,7 +48,6 @@ const routes = {
   '#/courses/workshops': <Workshops />,
   '#/internships': <Internships />,
   '#/internship-application': <InternshipApplication />,
-  '#/employers': <Employers />,
   '#/auth': <Auth />,
   '#/college-registration': <CollegeRegistration />,
   '#/student-membership': <StudentMembership />,
@@ -65,12 +61,10 @@ const routes = {
       <StudentInternshipApplicationDetails />
     </ProtectedRoute>
   ),
-  '#/dashboard/employer': <ProtectedRoute requiredRole="employer"><EmployerDashboard /></ProtectedRoute>,
   '#/dashboard/college': <ProtectedRoute requiredRole="college"><CollegeDashboard /></ProtectedRoute>,
   '#/dashboard/content': <ProtectedRoute requiredRole="content_writer"><ContentDashboard /></ProtectedRoute>,
   '#/admin': <ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>,
   '#/admin/students': <ProtectedRoute requiredRole="admin"><AdminStudents /></ProtectedRoute>,
-  '#/admin/employers': <ProtectedRoute requiredRole="admin"><AdminEmployers /></ProtectedRoute>,
   '#/admin/colleges': <ProtectedRoute requiredRole="admin"><AdminColleges /></ProtectedRoute>,
   '#/admin/courses': <ProtectedRoute requiredRole="admin"><AdminCourses /></ProtectedRoute>,
   '#/admin/blogs': <ProtectedRoute requiredRole="admin"><AdminBlogs /></ProtectedRoute>,

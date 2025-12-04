@@ -249,6 +249,47 @@ export default function ResearchDevelopment() {
         </div>
       </section>
 
+      {/* Kiwistron Website Section */}
+      <section className="py-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-600 rounded-full blur-3xl"></div>
+        </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 md:p-12">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-500 mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Explore Our Robotics & AI Solutions</h2>
+                <p className="text-lg text-gray-300 mb-2">
+                  We have a dedicated website for our cutting-edge robotics, AI, and embedded systems solutions.
+                </p>
+                <p className="text-base text-gray-400">
+                  Discover innovative industrial automation, smart systems integration, and customized hardware solutions at Kiwistron.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                  href="https://www.kiwistron.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 hover:bg-primary-700 px-8 py-4 text-white text-base font-semibold transition-all duration-300 ease-in-out shadow-lg hover:scale-105 hover:shadow-xl"
+                >
+                  <span>Visit Kiwistron</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-12 bg-linear-to-r from-primary-600 to-primary-800 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

@@ -35,15 +35,50 @@ const partnerColleges = [
 
 const testimonials = [
   {
-    name: 'Ananya Sharma',
-    role: 'Frontend Engineer at TechCorp',
+    name: 'Lakshmi Priya',
+    role: 'AI + IoT Engineer',
     quote:
       'The mentorship and projects helped me crack my first job within 8 weeks.',
   },
   {
-    name: 'Rahul Verma',
-    role: 'Data Analyst at FinEdge',
+    name: 'Karthik Rajan',
+    role: 'Edge AI & ML Developer',
     quote: 'Clear roadmap and guidance—exactly what I needed as a fresher.',
+  },
+  {
+    name: 'Divya Krishnan',
+    role: 'Autonomous Drone Systems Engineer',
+    quote: 'The placement-guaranteed course changed my career trajectory. Got placed with a package beyond my expectations!',
+  },
+  {
+    name: 'Arun Suresh',
+    role: 'IoT Solutions Developer',
+    quote: 'Excellent hands-on training with real-world projects. The certification helped me stand out in interviews.',
+  },
+  {
+    name: 'Nithya Raman',
+    role: 'Edge Computing Specialist',
+    quote: 'From zero knowledge to job-ready in 3 months! The structured curriculum and mentor support made all the difference.',
+  },
+  {
+    name: 'Vignesh Iyer',
+    role: 'AI Embedded Systems Engineer',
+    quote: 'The industry-relevant skills I learned here opened doors to multiple opportunities. Highly recommended!',
+  },
+  {
+    name: 'Meera Subramanian',
+    role: 'ML Engineer (Edge Deployment)',
+    quote: 'Best decision I made! The practical approach and continuous support helped me transition from a non-tech background.',
+  },
+  {
+    name: 'Surya Narayanan',
+    role: 'Autonomous Systems Developer',
+    quote: 'The workshops and live sessions were incredibly valuable. Found my dream job within 6 weeks of completing the course.',
+  },
+  {
+    name: 'Deepika Venkatesh',
+    role: 'Smart Systems Integration Engineer',
+    quote: 'The hands-on approach with real IoT projects made all the difference. I now work on cutting-edge AI-powered smart systems!',
   },
 ]
 
@@ -97,7 +132,6 @@ export default function Home() {
   const trendingScrollRef = useRef(null)
   const trendingContentRef = useRef(null)
   const cardWidthRef = useRef(0)
-  const trendingSectionRef = useRef(null)
   const bannerContainerRef = useRef(null)
   const heroSectionRef = useRef(null)
   const [currentCourseIndex, setCurrentCourseIndex] = useState(0)
@@ -108,6 +142,20 @@ export default function Home() {
   const [bannerIndex, setBannerIndex] = useState(0)
   const [isBannerHovered, setIsBannerHovered] = useState(false)
   const [isHeroVisible, setIsHeroVisible] = useState(false)
+  const [isTestimonialsVisible, setIsTestimonialsVisible] = useState(false)
+  const [isFeaturedVisible, setIsFeaturedVisible] = useState(false)
+  const [isTrendingVisible, setIsTrendingVisible] = useState(false)
+  const [isSkillsVisible, setIsSkillsVisible] = useState(false)
+  const [isStepsVisible, setIsStepsVisible] = useState(false)
+  const [isCompaniesVisible, setIsCompaniesVisible] = useState(false)
+  const [isCollegesVisible, setIsCollegesVisible] = useState(false)
+  const testimonialsRef = useRef(null)
+  const featuredRef = useRef(null)
+  const trendingRef = useRef(null)
+  const skillsRef = useRef(null)
+  const stepsRef = useRef(null)
+  const companiesRef = useRef(null)
+  const collegesRef = useRef(null)
 
   // Fetch featured courses
   useEffect(() => {
@@ -291,15 +339,93 @@ export default function Home() {
     }
   }, [])
 
+  // Testimonials section scroll animation observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsTestimonialsVisible(true)
+          }
+        })
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px'
+      }
+    )
+
+    if (testimonialsRef.current) {
+      observer.observe(testimonialsRef.current)
+    }
+
+    return () => {
+      if (testimonialsRef.current) {
+        observer.unobserve(testimonialsRef.current)
+      }
+    }
+  }, [])
+
+  // Generic scroll observer for all sections - optimized for performance
+  useEffect(() => {
+    const observers = []
+    const sections = [
+      { ref: featuredRef, setter: setIsFeaturedVisible },
+      { ref: trendingRef, setter: setIsTrendingVisible },
+      { ref: skillsRef, setter: setIsSkillsVisible },
+      { ref: stepsRef, setter: setIsStepsVisible },
+      { ref: companiesRef, setter: setIsCompaniesVisible },
+      { ref: collegesRef, setter: setIsCollegesVisible },
+    ]
+
+    sections.forEach(({ ref, setter }) => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setter(true)
+              // Unobserve after first intersection to reduce overhead
+              observer.unobserve(entry.target)
+            }
+          })
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '50px'
+        }
+      )
+
+      if (ref.current) {
+        observer.observe(ref.current)
+        observers.push({ observer, ref })
+      }
+    })
+
+    return () => {
+      observers.forEach(({ observer, ref }) => {
+        if (ref.current) {
+          observer.unobserve(ref.current)
+        }
+      })
+    }
+  }, [])
+
   const scrollToIndex = useCallback((index, behavior = 'smooth') => {
     const container = trendingScrollRef.current
     const cardWidth = cardWidthRef.current
     if (!container || cardWidth === 0 || trendingCourses.length === 0) return
     const clampedIndex = Math.max(0, Math.min(trendingCourses.length - 1, index))
-    container.scrollTo({
-      left: clampedIndex * cardWidth,
-      behavior,
-    })
+    const targetScroll = clampedIndex * cardWidth
+    
+    if (behavior === 'smooth') {
+      // Use smooth scroll with better easing
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth',
+      })
+    } else {
+      container.scrollLeft = targetScroll
+    }
   }, [trendingCourses.length])
 
   const measureCardWidth = useCallback(() => {
@@ -336,8 +462,21 @@ export default function Home() {
     const container = trendingScrollRef.current
     const cardWidth = cardWidthRef.current
     if (!container || cardWidth === 0) return
-    const newIndex = Math.round(container.scrollLeft / cardWidth)
-    setCurrentCourseIndex((prev) => (prev === newIndex ? prev : newIndex))
+    
+    // Throttle scroll updates to reduce lag
+    if (container._scrollTimeout) {
+      cancelAnimationFrame(container._scrollTimeout)
+    }
+    
+    container._scrollTimeout = requestAnimationFrame(() => {
+      const newIndex = Math.round(container.scrollLeft / cardWidth)
+      setCurrentCourseIndex((prev) => {
+        if (prev !== newIndex) {
+          return newIndex
+        }
+        return prev
+      })
+    })
   }, [])
 
 
@@ -384,8 +523,7 @@ export default function Home() {
                 style={{ 
                   transitionDuration: '1200ms',
                   transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                  transitionDelay: '0.1s',
-                  willChange: 'transform, opacity'
+                  transitionDelay: '0.1s'
                 }}
               >
                 Transforming Freshers into
@@ -399,8 +537,7 @@ export default function Home() {
                 style={{ 
                   transitionDuration: '1200ms',
                   transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                  transitionDelay: '0.3s',
-                  willChange: 'transform, opacity'
+                  transitionDelay: '0.3s'
                 }}
               >
                 Industry-Ready Professionals
@@ -408,8 +545,7 @@ export default function Home() {
             </h1>
             <p className="mt-5 text-white/95 text-base sm:text-lg drop-shadow-md">
               Welcome to KiwisEdutech, where we believe every student can build a
-              successful career. Explore certifications, internship opportunities, direct
-              hiring-links, and more — all in one place.
+              successful career. Explore certifications, internship opportunities, and more — all in one place.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <a 
@@ -432,10 +568,30 @@ export default function Home() {
       </section>
 
       {/* Featured Courses */}
-      <section className="py-16 bg-white border-t-2 border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="text-2xl font-semibold text-gray-900">Featured Certification Courses</h2>
+      <section ref={featuredRef} className="py-16 bg-primary-50 border-t-2 border-primary-200 relative overflow-hidden">
+        {/* Decorative background element */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-primary-200/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex items-end justify-between gap-4 mb-2">
+            <div className={`transition-all duration-1000 ease-out ${
+              isFeaturedVisible 
+                ? 'translate-y-0 opacity-100' 
+                : '-translate-y-8 opacity-0'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-6 h-6 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span className="text-sm font-semibold text-primary-600 uppercase tracking-wider">Featured</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 relative inline-block">
+                <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-primary-700 via-primary-600 to-primary-800">
+                  Certification Courses
+                </span>
+                <span className="absolute -bottom-1 left-0 w-full h-1 bg-linear-to-r from-primary-400 via-primary-600 to-primary-400 rounded-full transform scale-x-0 origin-left transition-transform duration-700" style={{ transform: isFeaturedVisible ? 'scaleX(1)' : 'scaleX(0)' }}></span>
+              </h2>
+            </div>
             <a href="#/courses" className="text-sm font-medium text-primary-700 transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-block">
               View All
             </a>
@@ -505,11 +661,28 @@ export default function Home() {
       </section>
 
       {/* Trending Courses */}
-      <section ref={trendingSectionRef} className="py-16 bg-linear-to-b from-primary-100 to-primary-50 border-t-2 border-primary-300">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section ref={trendingRef} className="py-16 bg-linear-to-b from-primary-200 via-primary-100/80 to-primary-100 border-t-2 border-primary-300 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-10 left-10 w-48 h-48 bg-primary-300/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 w-64 h-64 bg-primary-200/20 rounded-full blur-3xl"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-end justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">Trending Courses at KiwisEdutech</h2>
+            <div className={`transition-all duration-1000 ease-out ${
+              isTrendingVisible 
+                ? 'translate-x-0 opacity-100' 
+                : '-translate-x-8 opacity-0'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-orange-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M13 3L4 14v7h6v-6h6v6h6v-7L13 3z"/>
+                </svg>
+                <span className="text-sm font-semibold text-orange-600 uppercase tracking-wider">Trending Now</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 relative inline-block">
+                <span className="relative z-10">Courses at KiwisEdutech</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-1 bg-linear-to-r from-orange-500 via-primary-600 to-primary-600 rounded-full transition-all duration-1000" style={{ width: isTrendingVisible ? '100%' : '0%' }}></span>
+              </h2>
               <p className="mt-2 text-sm text-gray-600">Most popular courses chosen by our students</p>
             </div>
             <a href="#/courses" className="text-sm font-medium text-primary-700 transition-all duration-300 ease-in-out hover:text-primary-800 hover:font-bold hover:shadow-lg hover:shadow-primary-400/30 inline-block">
@@ -530,6 +703,7 @@ export default function Home() {
               style={{
                 maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
                 WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+                scrollBehavior: 'smooth',
               }}
             >
               <div ref={trendingContentRef} className="trending-courses-scroll-content">
@@ -554,16 +728,17 @@ export default function Home() {
                     return (
                       <div
                         key={`trending-${course._id}`}
-                        className={`group relative shrink-0 w-80 sm:w-96 mx-3 rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 ease-out ${isActive ? 'scale-[1.02] shadow-primary-200/50' : ''} hover:-translate-y-3 hover:shadow-2xl hover:shadow-primary-500/30 hover:scale-105 overflow-hidden`}
+                        className={`group relative shrink-0 w-80 sm:w-96 mx-3 rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 ease-out ${isActive ? 'shadow-primary-200/50' : ''} hover:-translate-y-3 hover:shadow-2xl hover:shadow-primary-500/30 overflow-hidden`}
+                        style={{ scrollSnapAlign: 'center', scrollSnapStop: 'always' }}
                       >
                         {/* Decorative icon circles */}
-                        <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-primary-100/50 -translate-x-10 -translate-y-10 group-hover:scale-150 transition-transform duration-500"></div>
-                        <div className="absolute bottom-0 right-0 w-16 h-16 rounded-full bg-primary-200/50 translate-x-8 translate-y-8 group-hover:scale-150 transition-transform duration-500"></div>
+                        <div className="absolute top-0 left-0 w-20 h-20 rounded-full bg-primary-100/50 -translate-x-10 -translate-y-10 transition-opacity duration-500"></div>
+                        <div className="absolute bottom-0 right-0 w-16 h-16 rounded-full bg-primary-200/50 translate-x-8 translate-y-8 transition-opacity duration-500"></div>
 
                         {/* Header with icon and rating */}
                         <div className="relative flex items-start justify-between mb-5">
                           {/* Icon circle */}
-                          <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-linear-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
+                          <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-linear-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30 group-hover:-rotate-6 transition-transform duration-300">
                             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
@@ -618,7 +793,7 @@ export default function Home() {
                           {/* CTA */}
                           <a 
                             href={`#/courses/syllabus?title=${encodeURIComponent(course.title)}`}
-                            className="px-4 py-2 rounded-xl bg-linear-to-r from-primary-600 to-primary-700 text-white text-sm font-semibold transition-all duration-300 hover:from-primary-700 hover:to-primary-800 hover:shadow-lg hover:shadow-primary-500/50 hover:scale-110 inline-flex items-center gap-2 group/btn"
+                            className="px-4 py-2 rounded-xl bg-linear-to-r from-primary-600 to-primary-700 text-white text-sm font-semibold transition-all duration-300 hover:from-primary-700 hover:to-primary-800 hover:shadow-lg hover:shadow-primary-500/50 inline-flex items-center gap-2 group/btn"
                           >
                             <span>Explore</span>
                             <svg className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -634,31 +809,37 @@ export default function Home() {
             </div>
           </div>
 
-          {hasMultipleCourses && (
-            <div className="mt-7 flex items-center justify-center gap-3">
-              {trendingCourses.map((course, index) => {
-                const isActive = currentCourseIndex === index
-                return (
-                  <button
-                    key={course.id || `trending-dot-${index}`}
-                    type="button"
-                    onClick={() => handleDotClick(index)}
-                    aria-label={`View slide ${index + 1}`}
-                    className={`h-2.5 w-6 rounded-full transition-all duration-200 ${isActive ? 'bg-primary-600 shadow-md shadow-primary-300/70' : 'bg-primary-200 hover:bg-primary-300'}`}
-                  />
-                )
-              })}
-            </div>
-          )}
         </div>
       </section>
 
       {/* Skills and Tools You Will Learn */}
-      <section className="py-16 bg-linear-to-b from-primary-100 via-primary-50 to-primary-100 border-t-2 border-primary-400">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section ref={skillsRef} className="py-16 bg-linear-to-b from-primary-300 via-primary-200 to-primary-100 border-t-2 border-primary-400 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-primary-300/15 rounded-full blur-3xl"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Skills and Tools You Will Learn</h2>
-            <p className="text-gray-600 text-lg">Essential technologies and tools required for freshers in current industry standards</p>
+            <div className={`inline-block transition-all duration-1000 ease-out ${
+              isSkillsVisible 
+                ? 'translate-y-0 opacity-100 scale-100' 
+                : 'translate-y-8 opacity-0 scale-95'
+            }`}>
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-20 bg-linear-to-r from-transparent via-primary-500 to-primary-500"></div>
+                <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <div className="h-px w-20 bg-linear-to-l from-transparent via-primary-500 to-primary-500"></div>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 relative inline-block">
+                <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-primary-700 via-primary-600 to-primary-800">
+                  Skills and Tools You Will Learn
+                </span>
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-linear-to-r from-primary-400 via-primary-600 to-primary-400 rounded-full"></span>
+              </h2>
+              <p className="text-gray-600 text-lg mt-4">Essential technologies and tools required for freshers in current industry standards</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -714,10 +895,36 @@ export default function Home() {
       </section>
 
       {/* Simple Steps Section */}
-      <section className="py-16 bg-white border-t-2 border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section ref={stepsRef} className="py-16 bg-linear-to-b from-primary-50 via-white to-primary-50 border-t-2 border-primary-200 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-100/30 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-56 h-56 bg-primary-200/30 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Simple Steps to Your Consultation</h2>
+            <div className={`transition-all duration-1000 ease-out ${
+              isStepsVisible 
+                ? 'translate-y-0 opacity-100' 
+                : '-translate-y-8 opacity-0'
+            }`}>
+              <div className="flex items-center justify-center mb-3">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-100 border-2 border-primary-300 shadow-lg">
+                  <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-primary-700 via-primary-600 to-primary-800">
+                  Simple Steps to Your Consultation
+                </span>
+              </h2>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-0.5 w-16 bg-linear-to-r from-transparent to-primary-400"></div>
+                <div className="w-2 h-2 rounded-full bg-primary-500"></div>
+                <div className="h-0.5 w-16 bg-linear-to-l from-transparent to-primary-400"></div>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
@@ -774,17 +981,78 @@ export default function Home() {
       </section>
 
       {/* Success Stories */}
-      <section className="py-16 bg-gray-50 border-t-2 border-gray-300">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-semibold text-gray-900">Placement Promise / Success Stories</h2>
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {testimonials.map((t) => (
-              <figure key={t.name} className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-xl hover:shadow-gray-400/50 transition-shadow">
-                <blockquote className="text-gray-700 text-sm">“{t.quote}”</blockquote>
-                <figcaption className="mt-4 text-sm font-medium text-gray-900">
-                  {t.name}
-                  <span className="block text-gray-600 font-normal">{t.role}</span>
+      <section 
+        ref={testimonialsRef}
+        className="py-16 bg-linear-to-b from-primary-100/50 via-primary-50/30 to-primary-100/50 border-t-2 border-primary-300 relative overflow-hidden"
+      >
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary-300/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Enhanced Heading */}
+          <div className="text-center mb-12">
+            <div className={`inline-block transition-all duration-1000 ease-out ${
+              isTestimonialsVisible 
+                ? 'translate-y-0 opacity-100' 
+                : '-translate-y-8 opacity-0'
+            }`}>
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-16 bg-linear-to-r from-transparent via-primary-500 to-primary-500"></div>
+                <svg className="w-8 h-8 text-primary-600 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <div className="h-px w-16 bg-linear-to-l from-transparent via-primary-500 to-primary-500"></div>
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 relative inline-block">
+                <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-primary-600 via-primary-700 to-primary-900">
+                  Testimonials
+                </span>
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-linear-to-r from-primary-400 via-primary-600 to-primary-400 rounded-full"></span>
+              </h2>
+              <p className="text-lg text-gray-600 mt-4">Hear from our successful graduates</p>
+            </div>
+          </div>
+          
+          {/* Animated Testimonial Cards */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonials.map((t, index) => (
+              <figure 
+                key={t.name} 
+                className={`rounded-xl border-2 border-gray-200 bg-white p-6 hover:shadow-2xl hover:shadow-primary-400/30 transition-all duration-500 hover:scale-105 hover:border-primary-300 relative overflow-hidden group ${
+                  isTestimonialsVisible 
+                    ? 'translate-y-0 opacity-100' 
+                    : 'translate-y-12 opacity-0'
+                }`}
+                style={{
+                  transitionDelay: `${index * 150}ms`
+                }}
+              >
+                {/* Decorative gradient overlay on hover */}
+                <div className="absolute inset-0 bg-linear-to-br from-primary-50/0 via-primary-100/0 to-primary-200/0 group-hover:from-primary-50/30 group-hover:via-primary-100/20 group-hover:to-primary-200/30 transition-all duration-500 rounded-xl"></div>
+                
+                {/* Quote icon */}
+                <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity duration-300">
+                  <svg className="w-16 h-16 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.984zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                  </svg>
+                </div>
+                
+                <blockquote className="relative z-10 text-gray-700 text-sm leading-relaxed mb-4">"{t.quote}"</blockquote>
+                <figcaption className="relative z-10 mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      {t.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">{t.name}</div>
+                      <div className="text-xs text-primary-600 font-medium">{t.role}</div>
+                    </div>
+                  </div>
                 </figcaption>
+                
+                {/* Animated border effect */}
+                <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-primary-400/50 transition-all duration-500 pointer-events-none"></div>
               </figure>
             ))}
           </div>
@@ -792,11 +1060,36 @@ export default function Home() {
       </section>
 
       {/* Where Do Our Students Work */}
-      <section className="py-16 bg-linear-to-b from-primary-100 to-primary-50 border-t-2 border-primary-300">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section ref={companiesRef} className="py-16 bg-linear-to-b from-primary-200/70 via-primary-100/60 to-primary-200/70 border-t-2 border-primary-400 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-primary-300/20 rounded-full blur-3xl"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Where Do Our Students Work?</h2>
-            <p className="text-gray-600">Our students are placed in top MNCs and leading companies</p>
+            <div className={`transition-all duration-1000 ease-out ${
+              isCompaniesVisible 
+                ? 'translate-y-0 opacity-100' 
+                : '-translate-y-8 opacity-0'
+            }`}>
+              <div className="flex items-center justify-center mb-3">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-100 border-2 border-primary-300 shadow-lg">
+                  <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-primary-700 via-primary-600 to-primary-800">
+                  Where Do Our Students Work?
+                </span>
+              </h2>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-0.5 w-16 bg-linear-to-r from-transparent to-primary-400"></div>
+                <div className="w-2 h-2 rounded-full bg-primary-500"></div>
+                <div className="h-0.5 w-16 bg-linear-to-l from-transparent to-primary-400"></div>
+              </div>
+              <p className="text-gray-600 text-lg">Our students are placed in top MNCs and leading companies</p>
+            </div>
           </div>
 
           {/* Row 1 - Scroll Left */}
@@ -918,11 +1211,38 @@ export default function Home() {
       </section>
 
       {/* Partner Colleges */}
-      <section className="py-16 bg-gray-50 border-t-2 border-gray-300">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section ref={collegesRef} className="py-16 bg-linear-to-b from-primary-50/80 via-white to-primary-50/80 border-t-2 border-primary-200 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-10 left-10 w-64 h-64 bg-primary-100/40 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 w-72 h-72 bg-primary-200/30 rounded-full blur-3xl"></div>
+        
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-2xl font-semibold text-gray-900">Partner Colleges</h2>
-            <p className="mt-2 text-gray-600">Trusted by leading educational institutions</p>
+            <div className={`transition-all duration-1000 ease-out ${
+              isCollegesVisible 
+                ? 'translate-y-0 opacity-100' 
+                : '-translate-y-8 opacity-0'
+            }`}>
+              <div className="flex items-center justify-center mb-3">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary-100 border-2 border-primary-300 shadow-lg">
+                  <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-primary-700 via-primary-600 to-primary-800">
+                  Partner Colleges
+                </span>
+              </h2>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-0.5 w-16 bg-linear-to-r from-transparent to-primary-400"></div>
+                <div className="w-2 h-2 rounded-full bg-primary-500"></div>
+                <div className="h-0.5 w-16 bg-linear-to-l from-transparent to-primary-400"></div>
+              </div>
+              <p className="text-gray-600 text-lg">Trusted by leading educational institutions</p>
+            </div>
           </div>
 
           {/* 3 Column Grid with Vertical Scrolling */}

@@ -497,12 +497,6 @@ export default function AdminDashboard() {
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                <span className="text-gray-600">Active Blogs</span>
-                <span className="font-semibold text-gray-900 text-lg">
-                  {additionalStats.activeBlogs || 0}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                 <span className="text-gray-600">Enrolled Students</span>
                 <span className="font-semibold text-gray-900 text-lg">
                   {additionalStats.enrolledStudents || 0}
@@ -520,13 +514,6 @@ export default function AdminDashboard() {
                 className="flex items-center justify-between w-full text-left px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-700 font-medium transition-colors group"
               >
                 <span>Manage Students</span>
-                <ArrowRightIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </a>
-              <a
-                href="#/admin/blogs"
-                className="flex items-center justify-between w-full text-left px-4 py-3 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-emerald-700 font-medium transition-colors group"
-              >
-                <span>Review Blogs</span>
                 <ArrowRightIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
               <a
